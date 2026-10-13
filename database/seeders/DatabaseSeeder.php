@@ -3,23 +3,28 @@
 namespace Database\Seeders;
 
 use App\Models\User;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
 {
-    use WithoutModelEvents;
-
-    /**
-     * Seed the application's database.
-     */
     public function run(): void
     {
-        // User::factory(10)->create();
+        // The admin account always exists
+        User::updateOrCreate(
+            ['email' => 'admin@school.test'],
+            ['name' => 'System Admin', 'password' => config('school.default_password'), 'role' => 'admin', 'is_active' => true]
+        );
 
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
-        ]);
+        // Each person owns one demo seeder. A missing one is skipped,
+        // so everybody can run "migrate:fresh --seed" before the final merge.
+        foreach ([
+            AdminDemoSeeder::class,    // Alass
+            TeacherDemoSeeder::class,  // Sumaiya
+            StudentDemoSeeder::class,  // Rajeeya
+        ] as $seeder) {
+            if (class_exists($seeder)) {
+                $this->call($seeder);
+            }
+        }
     }
 }
