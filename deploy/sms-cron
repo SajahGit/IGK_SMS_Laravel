@@ -1,0 +1,3 @@
+# SOP §27.1 - install with: crontab -u www-data deploy/sms-cron
+* * * * * cd /var/www/sms/current && php artisan schedule:run >> /dev/null 2>&1
+0 2 * * * /var/www/sms/current/deploy/backup.sh >> /var/log/sms-backup.log 2>&1

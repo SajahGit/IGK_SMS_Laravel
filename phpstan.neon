@@ -1,0 +1,10 @@
+# SOP §13 / NFR-10 - Larastan level 5.
+# Install first: composer require --dev larastan/larastan
+# Run:           vendor/bin/phpstan analyse
+includes:
+    - vendor/larastan/larastan/extension.neon
+
+parameters:
+    level: 5
+    paths:
+        - app

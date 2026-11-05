@@ -1,0 +1,16 @@
+# SOP §27.1 - systemd unit for the queue worker.
+# Install: cp deploy/sms-queue.service /etc/systemd/system/ && systemctl enable --now sms-queue
+[Unit]
+Description=SMS Laravel queue worker
+After=network.target mysql.service
+
+[Service]
+User=www-data
+Group=www-data
+Restart=always
+RestartSec=5
+WorkingDirectory=/var/www/sms/current
+ExecStart=/usr/bin/php artisan queue:work --tries=3 --max-time=3600
+
+[Install]
+WantedBy=multi-user.target
