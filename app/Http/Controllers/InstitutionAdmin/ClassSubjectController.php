@@ -19,6 +19,8 @@ class ClassSubjectController extends Controller
     {
         return view('InstitutionAdmin.InstitutionAdminClassSubjectsIndex', [
             'assignments' => ClassSubject::with(['schoolClass', 'subject', 'teacher.user', 'term'])
+                ->whereHas('schoolClass')
+                ->whereHas('subject')
                 ->orderBy('class_id')->orderBy('term_id')->orderBy('subject_id')->get(),
             'classes' => SchoolClass::orderBy('name')->orderBy('section')->get(),
             'subjects' => Subject::orderBy('name')->get(),
@@ -37,6 +39,8 @@ class ClassSubjectController extends Controller
                 ->where('term_id', $request->term_id)],
             'teacher_id' => 'required|exists:teachers,id',
         ], ['subject_id.unique' => 'This subject is already assigned to that class.']);
+
+        SchoolClass::findOrFail($data['class_id']);
 
         DB::transaction(function () use ($data) {
             $assignment = ClassSubject::create($data);

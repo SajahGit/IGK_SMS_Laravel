@@ -2,15 +2,24 @@
 
 namespace App\Models;
 
+use App\Models\Scopes\BranchOwned;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class SchoolClass extends Model
 {
+    use HasFactory;
+
     protected $table = 'classes';
 
-    protected $fillable = ['name', 'section', 'capacity', 'program_id', 'academic_year_id'];
+    protected $fillable = ['name', 'section', 'capacity', 'program_id', 'academic_year_id', 'branch_id'];
+
+    protected static function booted(): void
+    {
+        static::addGlobalScope(new BranchOwned);
+    }
 
     protected $attributes = [
         'capacity' => 40,

@@ -31,6 +31,15 @@
             @endforeach
         </select>
     </div>
+    <div class="col-md-6">
+        <label class="form-label">Campus</label>
+        <select name="branch_id" class="form-select" required>
+            <option value="">Select campus</option>
+            @foreach ($branches as $branch)
+                <option value="{{ $branch->id }}" @selected((string) old('branch_id', $isEdit ? $schoolClass->branch_id : '') === (string) $branch->id)>{{ $branch->name }}</option>
+            @endforeach
+        </select>
+    </div>
 </div>
 <div class="mt-4">
     <button class="btn btn-primary"><i class="bi bi-check2-circle me-1"></i>Save</button>

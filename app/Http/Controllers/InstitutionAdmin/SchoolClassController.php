@@ -4,6 +4,7 @@ namespace App\Http\Controllers\InstitutionAdmin;
 
 use App\Http\Controllers\Controller;
 use App\Models\AcademicYear;
+use App\Models\Branch;
 use App\Models\Program;
 use App\Models\SchoolClass;
 use App\Support\AuditLogger;
@@ -32,6 +33,7 @@ class SchoolClassController extends Controller
             'capacity' => ['required', 'integer', 'min:1'],
             'program_id' => ['nullable', 'exists:programs,id'],
             'academic_year_id' => ['nullable', 'exists:academic_years,id'],
+            'branch_id' => ['nullable', Rule::requiredIf(Branch::where('is_active', true)->exists()), 'exists:branches,id'],
         ], ['section.unique' => 'This class and section already exist.']);
 
         $schoolClass = SchoolClass::create($data);
@@ -54,6 +56,7 @@ class SchoolClassController extends Controller
             'capacity' => ['required', 'integer', 'min:1'],
             'program_id' => ['nullable', 'exists:programs,id'],
             'academic_year_id' => ['nullable', 'exists:academic_years,id'],
+            'branch_id' => ['nullable', Rule::requiredIf(Branch::where('is_active', true)->exists()), 'exists:branches,id'],
         ], ['section.unique' => 'This class and section already exist.']);
 
         $before = $schoolClass->toArray();
@@ -81,6 +84,7 @@ class SchoolClassController extends Controller
         return [
             'programs' => Program::orderBy('name')->get(),
             'academicYears' => AcademicYear::orderByDesc('start_date')->get(),
+            'branches' => Branch::where('is_active', true)->orderBy('name')->get(),
         ];
     }
 }

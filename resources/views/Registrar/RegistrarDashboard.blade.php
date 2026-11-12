@@ -37,7 +37,7 @@
                     <tr>
                         <td>{{ $student->admission_no }}</td>
                         <td>{{ $student->user->name }}</td>
-                        <td>{{ $student->class->full_name }}</td>
+                        <td>{{ $student->class?->full_name ?? 'Unassigned' }}</td>
                         <td>{{ $student->created_at->format('d M Y') }}</td>
                     </tr>
                 @empty
