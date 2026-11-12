@@ -6,6 +6,7 @@
     @if ($exam)
         <div class="no-print">
             <button class="btn btn-outline-secondary" onclick="window.print()"><i class="bi bi-printer me-1"></i>Print</button>
+            <a href="{{ route('reports.pdf', ['report' => 'results'] + request()->query()) }}" class="btn btn-outline-danger"><i class="bi bi-filetype-pdf me-1"></i>Download PDF</a>
             <a href="{{ route('reports.results.csv', request()->query()) }}" class="btn btn-outline-success"><i class="bi bi-filetype-csv me-1"></i>Download CSV</a>
         </div>
     @endif
@@ -17,7 +18,7 @@
             <option value="">Select exam</option>
             @foreach ($exams as $e)
                 <option value="{{ $e->id }}" @selected($exam && $exam->id == $e->id)>
-                    {{ $e->name }} - {{ $e->class->full_name }} - {{ $e->subject->name }} ({{ $e->exam_date->format('d M Y') }})
+                    {{ $e->name }} - {{ $e->class?->full_name ?? 'Unassigned' }} - {{ $e->subject->name }} ({{ $e->exam_date->format('d M Y') }})
                 </option>
             @endforeach
         </select>
@@ -30,7 +31,7 @@
 @endif
 
 @if ($exam)
-    <p class="text-muted">R6 · {{ $exam->name }} &middot; {{ $exam->class->full_name }} &middot; {{ $exam->subject->name }} &middot; Maximum marks: {{ $exam->max_marks }}</p>
+    <p class="text-muted">R6 · {{ $exam->name }} &middot; {{ $exam->class?->full_name ?? 'Unassigned' }} &middot; {{ $exam->subject->name }} &middot; Maximum marks: {{ $exam->max_marks }}</p>
 
     <div class="row g-3 mb-3">
         @foreach ([['Students', $stats['count'], 'people-fill', 'indigo'], ['Average', $stats['average'], 'bar-chart-fill', 'cyan'],

@@ -7,6 +7,7 @@ use App\Http\Controllers\Report\ClassResultSummaryReportController;
 use App\Http\Controllers\Report\DefaultersReportController;
 use App\Http\Controllers\Report\EnrollmentRegisterReportController;
 use App\Http\Controllers\Report\FeeCollectionReportController;
+use App\Http\Controllers\Report\ReportPdfController;
 use App\Http\Controllers\Report\ResultReportController;
 use App\Http\Controllers\Report\StudentFinancialLedgerReportController;
 use App\Http\Controllers\Report\StudentReportController;
@@ -45,3 +46,8 @@ Route::get('/defaulters/csv', [DefaultersReportController::class, 'csv'])->middl
 
 Route::get('/student-ledger', [StudentFinancialLedgerReportController::class, 'index'])->name('student-ledger');
 Route::get('/student-ledger/csv', [StudentFinancialLedgerReportController::class, 'csv'])->middleware('throttle:exports')->name('student-ledger.csv');
+
+Route::get('/{report}/pdf', [ReportPdfController::class, 'download'])
+    ->whereIn('report', ['students', 'enrollment', 'attendance', 'attendance-summary', 'class-attendance', 'results', 'class-result', 'subject-performance', 'fee-collection', 'defaulters', 'student-ledger'])
+    ->middleware('throttle:exports')
+    ->name('pdf');

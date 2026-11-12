@@ -9,6 +9,7 @@
     @if ($classId)
         <div class="no-print">
             <button class="btn btn-outline-secondary" onclick="window.print()"><i class="bi bi-printer me-1"></i>Print</button>
+            <a href="{{ route('reports.pdf', ['report' => 'attendance'] + request()->query()) }}" class="btn btn-outline-danger"><i class="bi bi-filetype-pdf me-1"></i>Download PDF</a>
             <a href="{{ route('reports.attendance.csv', request()->query()) }}" class="btn btn-outline-success"><i class="bi bi-filetype-csv me-1"></i>Download CSV</a>
         </div>
     @endif

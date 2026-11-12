@@ -5,6 +5,7 @@
     <h3 class="mb-0">Student report</h3>
     <div class="no-print">
         <button class="btn btn-outline-secondary" onclick="window.print()"><i class="bi bi-printer me-1"></i>Print</button>
+        <a href="{{ route('reports.pdf', ['report' => 'students'] + request()->query()) }}" class="btn btn-outline-danger"><i class="bi bi-filetype-pdf me-1"></i>Download PDF</a>
         <a href="{{ route('reports.students.csv', request()->query()) }}" class="btn btn-outline-success"><i class="bi bi-filetype-csv me-1"></i>Download CSV</a>
     </div>
 </div>
@@ -64,7 +65,7 @@
                 <td>{{ $s->admission_no }}</td>
                 <td>{{ $s->user->name }}</td>
                 <td>{{ $s->program?->name ?? $s->class->program?->name ?? '—' }}</td>
-                <td>{{ $s->class->full_name }}</td>
+                <td>{{ $s->class?->full_name ?? 'Unassigned' }}</td>
                 <td>{{ ucfirst($s->status) }}</td>
                 <td>{{ $s->admission_date?->format('d M Y') ?? '—' }}</td>
                 <td>{{ $s->primaryGuardian->first()?->phone ?? '—' }}</td>

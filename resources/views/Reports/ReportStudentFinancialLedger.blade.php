@@ -5,6 +5,7 @@
     <h3 class="mb-0">Student Financial Ledger</h3>
     <div class="no-print">
         @if ($selectedStudent)
+        <a href="{{ route($isStudent ? 'student.ledger.pdf' : $reportRoutePrefix.'.pdf', ($isStudent ? [] : ['report' => 'student-ledger']) + ['student_id' => $selectedStudent->id, 'academic_year_id' => $academicYearId]) }}" class="btn btn-outline-danger"><i class="bi bi-filetype-pdf me-1"></i>Download PDF</a>
         <a href="{{ route($isStudent ? 'student.ledger.csv' : $reportRoutePrefix.'.student-ledger.csv', ['student_id' => $selectedStudent->id, 'academic_year_id' => $academicYearId]) }}" class="btn btn-outline-success"><i class="bi bi-filetype-csv me-1"></i>Download CSV</a>
         @endif
     </div>
@@ -40,7 +41,7 @@
 <div class="card shadow-sm border-0 mb-3">
     <div class="card-body">
         <h5 class="card-title mb-1">Ledger for {{ $selectedStudent->user->name }} ({{ $selectedStudent->admission_no }})</h5>
-        <p class="card-text text-muted small">{{ $selectedStudent->class->full_name ?? 'No class assigned' }} @if($academicYearId) · Academic Year: {{ $academicYears->firstWhere('id', $academicYearId)?->name }} @endif</p>
+        <p class="card-text text-muted small">{{ $selectedStudent->class?->full_name ?? 'No class assigned' }} @if($academicYearId) · Academic Year: {{ $academicYears->firstWhere('id', $academicYearId)?->name }} @endif</p>
     </div>
 </div>
 

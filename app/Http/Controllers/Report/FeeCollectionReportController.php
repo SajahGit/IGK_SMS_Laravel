@@ -66,7 +66,7 @@ class FeeCollectionReportController extends Controller
             'to' => ['nullable', 'date', 'after_or_equal:from'],
             'term_id' => ['nullable', 'integer', 'exists:terms,id'],
             'program_id' => ['nullable', 'integer', 'exists:programs,id'],
-            'method' => ['nullable', 'in:cash,bank_transfer'],
+            'method' => ['nullable', 'in:cash,bank_transfer,cheque'],
         ]);
 
         return [
@@ -81,6 +81,7 @@ class FeeCollectionReportController extends Controller
     private function query(string $from, string $to, ?int $termId, ?int $programId, ?string $method)
     {
         return Payment::with(['invoice.term', 'invoice.student.user', 'invoice.student.class.program', 'invoice.student.program', 'receiver'])
+            ->whereHas('invoice.student.user')
             ->whereDate('paid_at', '>=', $from)
             ->whereDate('paid_at', '<=', $to)
             ->when($method, fn ($q) => $q->where('method', $method))

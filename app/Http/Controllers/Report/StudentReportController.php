@@ -33,7 +33,7 @@ class StudentReportController extends Controller
                     $s->admission_no,
                     $s->user->name,
                     $s->program?->name ?? $s->class->program?->name ?? '',
-                    $s->class->full_name,
+                    $s->class?->full_name ?? 'Unassigned',
                     $s->status,
                     $s->admission_date?->format('Y-m-d'),
                     $s->primaryGuardian->first()?->phone ?? '',

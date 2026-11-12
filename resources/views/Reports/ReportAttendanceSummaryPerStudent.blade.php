@@ -4,6 +4,7 @@
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h3 class="mb-0">Attendance Summary per Student</h3>
     <div class="no-print">
+        <a href="{{ route('reports.pdf', ['report' => 'attendance-summary'] + request()->query()) }}" class="btn btn-outline-danger"><i class="bi bi-filetype-pdf me-1"></i>Download PDF</a>
         <a href="{{ route('reports.attendance-summary.csv', request()->query()) }}" class="btn btn-outline-success"><i class="bi bi-filetype-csv me-1"></i>Download CSV</a>
     </div>
 </div>

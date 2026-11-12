@@ -34,7 +34,7 @@ class ClassResultSummaryReportController extends Controller
             foreach ($rows as $row) {
                 $grades = $subjects->map(fn ($subject) => $row['subjects'][$subject->id]['grade'] ?? '—')->all();
                 fputcsv($out, array_merge(
-                    [$row['rank'] ?? '—', $row['student']->class->full_name, $row['student']->admission_no, $row['student']->user->name],
+                    [$row['rank'] ?? '—', $row['student']->class?->full_name ?? 'Unassigned', $row['student']->admission_no, $row['student']->user->name],
                     $grades,
                     [$row['gpa'] ?? '—', $row['pass'] ? 'Pass' : 'Fail']
                 ));

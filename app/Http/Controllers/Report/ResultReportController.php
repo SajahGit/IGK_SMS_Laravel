@@ -25,7 +25,7 @@ class ResultReportController extends Controller
 
         return response()->streamDownload(function () use ($rows, $exam) {
             $out = fopen('php://output', 'w');
-            fputcsv($out, ['Exam: '.$exam->name, 'Section: '.$exam->class->full_name, 'Subject: '.$exam->subject->name, 'Max marks: '.$exam->max_marks]);
+            fputcsv($out, ['Exam: '.$exam->name, 'Section: '.($exam->class?->full_name ?? 'Unassigned'), 'Subject: '.$exam->subject->name, 'Max marks: '.$exam->max_marks]);
             fputcsv($out, ['Rank', 'Admission No', 'Name', 'Marks', 'Maximum', 'Percentage', 'Grade', 'Absent']);
             foreach ($rows as $r) {
                 fputcsv($out, [

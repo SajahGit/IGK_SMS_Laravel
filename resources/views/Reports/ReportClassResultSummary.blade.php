@@ -8,6 +8,7 @@
     </div>
     @if ($termId)
         <div class="no-print">
+            <a href="{{ route('reports.pdf', ['report' => 'class-result'] + request()->query()) }}" class="btn btn-outline-danger"><i class="bi bi-filetype-pdf me-1"></i>Download PDF</a>
             <a href="{{ route('reports.class-result.csv', request()->query()) }}" class="btn btn-outline-success"><i class="bi bi-filetype-csv me-1"></i>Download CSV</a>
         </div>
     @endif
@@ -66,7 +67,7 @@
             @forelse ($rows as $row)
                 <tr>
                     <td>{{ $row['rank'] ?? '—' }}</td>
-                    <td>{{ $row['student']->class->full_name }}</td>
+                    <td>{{ $row['student']->class?->full_name ?? 'Unassigned' }}</td>
                     <td>{{ $row['student']->admission_no }}</td>
                     <td>{{ $row['student']->user->name }}</td>
                     @foreach ($subjects as $subject)
