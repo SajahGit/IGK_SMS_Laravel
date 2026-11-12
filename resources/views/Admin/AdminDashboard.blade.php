@@ -25,7 +25,7 @@
             <thead><tr><th>Admission No</th><th>Name</th><th>Class</th></tr></thead>
             <tbody>
             @forelse ($latestStudents as $s)
-                <tr><td>{{ $s->admission_no }}</td><td>{{ $s->user->name }}</td><td>{{ $s->class->full_name }}</td></tr>
+                <tr><td>{{ $s->admission_no }}</td><td>{{ $s->user->name }}</td><td>{{ $s->class?->full_name ?? 'Unassigned' }}</td></tr>
             @empty
                 <tr><td colspan="3" class="text-center text-muted">No students yet.</td></tr>
             @endforelse

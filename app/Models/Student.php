@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Models\Scopes\BranchOwned;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -9,12 +11,19 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Student extends Model
 {
+    use HasFactory;
+
     protected $fillable = [
-        'user_id', 'class_id', 'program_id', 'academic_year_id', 'guardian_id',
+        'user_id', 'class_id', 'program_id', 'academic_year_id', 'guardian_id', 'branch_id',
         'admission_no', 'admission_date', 'dob', 'gender', 'national_id', 'phone', 'status',
     ];
 
     protected $casts = ['dob' => 'date', 'admission_date' => 'date'];
+
+    protected static function booted(): void
+    {
+        static::addGlobalScope(new BranchOwned);
+    }
 
     public function user(): BelongsTo
     {
@@ -88,5 +97,15 @@ class Student extends Model
     public function invoices(): HasMany
     {
         return $this->hasMany(Invoice::class);
+    }
+
+    public function transportAssignments(): HasMany
+    {
+        return $this->hasMany(StudentTransportAssignment::class);
+    }
+
+    public function hostelAssignments(): HasMany
+    {
+        return $this->hasMany(HostelAssignment::class);
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Contracts\SmsGateway;
 use App\Models\AcademicYear;
 use App\Models\Attendance;
 use App\Models\ClassSubject;
@@ -9,9 +10,14 @@ use App\Models\Curriculum;
 use App\Models\Department;
 use App\Models\Exam;
 use App\Models\Guardian;
+use App\Models\LibraryBook;
+use App\Models\LibraryCopy;
+use App\Models\LibraryFine;
+use App\Models\LibraryLoan;
 use App\Models\Program;
 use App\Models\SchoolClass;
 use App\Models\Setting;
+use App\Models\StaffAttendance;
 use App\Models\Student;
 use App\Models\Subject;
 use App\Models\Teacher;
@@ -21,6 +27,7 @@ use App\Observers\AuditObserver;
 use App\Policies\AcademicYearPolicy;
 use App\Policies\CurriculumPolicy;
 use App\Policies\DepartmentPolicy;
+use App\Policies\LibraryPolicy;
 use App\Policies\ProgramPolicy;
 use App\Policies\RolePolicy;
 use App\Policies\SchoolClassPolicy;
@@ -29,6 +36,7 @@ use App\Policies\StudentPolicy;
 use App\Policies\SubjectPolicy;
 use App\Policies\TermPolicy;
 use App\Policies\UserPolicy;
+use App\Services\ConfiguredHttpSmsGateway;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider;
 use Illuminate\Http\Request;
@@ -53,6 +61,10 @@ class AppServiceProvider extends AuthServiceProvider
         SchoolClass::class => SchoolClassPolicy::class,
         Student::class => StudentPolicy::class,
         Setting::class => SettingPolicy::class,
+        LibraryBook::class => LibraryPolicy::class,
+        LibraryCopy::class => LibraryPolicy::class,
+        LibraryLoan::class => LibraryPolicy::class,
+        LibraryFine::class => LibraryPolicy::class,
     ];
 
     /**
@@ -61,6 +73,7 @@ class AppServiceProvider extends AuthServiceProvider
     public function register(): void
     {
         parent::register();
+        $this->app->bind(SmsGateway::class, ConfiguredHttpSmsGateway::class);
     }
 
     public function boot(): void
@@ -71,6 +84,12 @@ class AppServiceProvider extends AuthServiceProvider
             $email = Str::lower((string) $request->input('email'));
 
             return Limit::perMinute(5)->by($email.'|'.$request->ip());
+        });
+
+        RateLimiter::for('two-factor', function (Request $request) {
+            $userId = $request->session()->get('two_factor.pending_user_id', 'setup');
+
+            return Limit::perMinute(5)->by($userId.'|'.$request->ip());
         });
 
         RateLimiter::for('exports', function (Request $request) {
@@ -88,6 +107,7 @@ class AppServiceProvider extends AuthServiceProvider
             Program::class,
             SchoolClass::class,
             Setting::class,
+            StaffAttendance::class,
             Subject::class,
             Teacher::class,
             Term::class,

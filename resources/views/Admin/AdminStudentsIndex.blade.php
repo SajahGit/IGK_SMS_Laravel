@@ -29,7 +29,7 @@
                     <td>{{ $s->admission_no }}</td>
                     <td>{{ $s->user->name }}</td>
                     <td>{{ $s->user->email }}</td>
-                    <td>{{ $s->class->full_name }}</td>
+                    <td>{{ $s->class?->full_name ?? 'Unassigned' }}</td>
                     <td>{{ $s->guardian?->user?->name ?? '-' }}</td>
                     <td class="text-end">
                         <a href="{{ route('admin.students.edit', $s) }}" class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil-square me-1"></i>Edit</a>

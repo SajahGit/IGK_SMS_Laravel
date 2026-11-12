@@ -17,6 +17,10 @@ class UserPolicy
             return false;
         }
 
+        if (! $this->sameBranch($user, $model)) {
+            return false;
+        }
+
         if ($user->id === $model->id) {
             return true;
         }
@@ -35,6 +39,10 @@ class UserPolicy
             return false;
         }
 
+        if (! $this->sameBranch($user, $model)) {
+            return false;
+        }
+
         if ($user->id === $model->id) {
             return true;
         }
@@ -45,6 +53,10 @@ class UserPolicy
     public function delete(User $user, User $model): bool
     {
         if ($model->isSuperAdmin() && ! $user->isSuperAdmin()) {
+            return false;
+        }
+
+        if (! $this->sameBranch($user, $model)) {
             return false;
         }
 
@@ -59,5 +71,11 @@ class UserPolicy
     public function forceDelete(User $user): bool
     {
         return $user->can('users.delete');
+    }
+
+    private function sameBranch(User $actor, User $target): bool
+    {
+        return $actor->isAdmin()
+            || ($actor->branch_id !== null && (int) $actor->branch_id === (int) $target->branch_id);
     }
 }

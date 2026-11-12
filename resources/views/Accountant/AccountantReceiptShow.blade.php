@@ -62,7 +62,7 @@
                     </tr>
                     <tr>
                         <td class="text-muted">Class & Section:</td>
-                        <td>{{ $payment->invoice->student->class->full_name }}</td>
+                        <td>{{ $payment->invoice->student->class?->full_name ?? 'Unassigned' }}</td>
                     </tr>
                     <tr>
                         <td class="text-muted">Academic Term:</td>

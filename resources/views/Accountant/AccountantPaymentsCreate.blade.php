@@ -29,13 +29,13 @@
                         <select name="invoice_id" id="invoice_id" class="form-select" required>
                             @if ($selectedInvoice)
                                 <option value="{{ $selectedInvoice->id }}" data-balance="{{ $selectedInvoice->balance }}" selected>
-                                    {{ $selectedInvoice->invoice_no }} &middot; {{ $selectedInvoice->student->user->name }} ({{ $selectedInvoice->student->class->full_name }}) &middot; Due: {{ \App\Support\Money::format($selectedInvoice->balance) }}
+                                    {{ $selectedInvoice->invoice_no }} &middot; {{ $selectedInvoice->student->user->name }} ({{ $selectedInvoice->student->class?->full_name ?? 'Unassigned' }}) &middot; Due: {{ \App\Support\Money::format($selectedInvoice->balance) }}
                                 </option>
                             @else
                                 <option value="">Select Invoice with Pending Balance</option>
                                 @foreach ($pendingInvoices as $inv)
                                     <option value="{{ $inv->id }}" data-balance="{{ $inv->balance }}" @selected(old('invoice_id') == $inv->id)>
-                                        {{ $inv->invoice_no }} &middot; {{ $inv->student->user->name }} ({{ $inv->student->class->full_name }}) &middot; Due: {{ \App\Support\Money::format($inv->balance) }}
+                                        {{ $inv->invoice_no }} &middot; {{ $inv->student->user->name }} ({{ $inv->student->class?->full_name ?? 'Unassigned' }}) &middot; Due: {{ \App\Support\Money::format($inv->balance) }}
                                     </option>
                                 @endforeach
                             @endif
@@ -64,6 +64,7 @@
                             <select name="method" id="method" class="form-select" required>
                                 <option value="cash" @selected(old('method') === 'cash')>Cash</option>
                                 <option value="bank_transfer" @selected(old('method') === 'bank_transfer')>Bank Transfer</option>
+                                <option value="cheque" @selected(old('method') === 'cheque')>Cheque</option>
                             </select>
                         </div>
                         <div class="col-md-6">

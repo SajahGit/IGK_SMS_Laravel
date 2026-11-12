@@ -10,6 +10,7 @@ use App\Models\AcademicYear;
 use App\Models\ClassSubject;
 use App\Models\Guardian;
 use App\Models\Program;
+use App\Models\SavedFilter;
 use App\Models\SchoolClass;
 use App\Models\Student;
 use App\Models\StudentDocument;
@@ -37,6 +38,10 @@ class StudentController extends Controller
         return view('InstitutionAdmin.InstitutionAdminStudentsIndex', [
             'students' => $students,
             'classes' => SchoolClass::orderBy('name')->orderBy('section')->get(),
+            'savedFilters' => SavedFilter::where('user_id', $request->user()->id)
+                ->where('scope', 'students')
+                ->orderBy('name')
+                ->get(),
         ]);
     }
 
@@ -56,7 +61,7 @@ class StudentController extends Controller
                         $student->admission_no,
                         $student->user->name,
                         $student->user->email,
-                        $student->class->full_name,
+                        $student->class?->full_name ?? 'Unassigned',
                         $student->primaryGuardian->first()?->user?->name,
                         $student->primaryGuardian->first()?->phone,
                         $student->phone,

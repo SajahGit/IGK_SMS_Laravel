@@ -35,4 +35,20 @@ return [
         ],
     ],
 
+    'payhere' => [
+        'enabled' => env('PAYHERE_ENABLED', false),
+        'merchant_id' => env('PAYHERE_MERCHANT_ID'),
+        'merchant_secret' => env('PAYHERE_MERCHANT_SECRET'),
+        'sandbox' => env('PAYHERE_SANDBOX', true),
+        'currency' => env('PAYHERE_CURRENCY', 'LKR'),
+    ],
+
+    'sms' => [
+        'enabled' => env('SMS_ENABLED', false),
+        'endpoint' => env('SMS_API_URL'),
+        'token' => env('SMS_API_TOKEN'),
+        'sender_id' => env('SMS_SENDER_ID'),
+        'timeout' => env('SMS_TIMEOUT', 10),
+    ],
+
 ];

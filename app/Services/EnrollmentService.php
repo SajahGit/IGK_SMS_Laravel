@@ -3,6 +3,8 @@
 namespace App\Services;
 
 use App\Exceptions\EnrollmentException;
+use App\Models\ClassSubject;
+use App\Models\Curriculum;
 use App\Models\SchoolClass;
 use App\Models\Student;
 use App\Models\Term;
@@ -80,12 +82,14 @@ class EnrollmentService
                 }
 
                 $user->update(['role' => 'student']);
+                $user->update(['branch_id' => $schoolClass->branch_id]);
             } else {
                 $user = User::create([
                     'name' => $data['name'],
                     'email' => $data['email'],
                     'password' => $data['password'],
                     'role' => 'student',
+                    'branch_id' => $schoolClass->branch_id,
                     'is_active' => true,
                     'must_change_password' => true,
                 ]);
@@ -98,6 +102,7 @@ class EnrollmentService
             $student = Student::create([
                 'user_id' => $user->id,
                 'class_id' => $schoolClass->id,
+                'branch_id' => $schoolClass->branch_id,
                 'program_id' => $programId,
                 'academic_year_id' => $academicYearId,
                 'guardian_id' => $data['primary_guardian_id'] ?? $data['guardian_id'] ?? null,
@@ -120,15 +125,34 @@ class EnrollmentService
 
     public static function syncClassSubjects(Student $student): void
     {
-        $currentTermId = Term::where('is_current', true)->value('id');
-        $classSubjectIds = $student->class->classSubjects()
+        $currentTerm = Term::query()
+            ->where('academic_year_id', $student->academic_year_id)
+            ->where('is_current', true)
+            ->first();
+        $currentTermId = $currentTerm?->id ?? Term::where('is_current', true)->value('id');
+        $offerings = $student->class->classSubjects()
             ->where(function ($query) use ($currentTermId) {
                 $query->whereNull('term_id');
                 if ($currentTermId) {
                     $query->orWhere('term_id', $currentTermId);
                 }
             })
-            ->pluck('class_subject.id');
+            ->get()
+            ->groupBy('subject_id')
+            ->map(fn ($matches) => $currentTermId
+                ? ($matches->firstWhere('term_id', $currentTermId) ?? $matches->first())
+                : $matches->first());
+        $classSubjectIds = $offerings->pluck('id');
+        $electiveSubjectIds = $student->program_id && $currentTerm
+            ? Curriculum::query()
+                ->where('program_id', $student->program_id)
+                ->where('term_number', $currentTerm->sequence)
+                ->where('is_elective', true)
+                ->pluck('subject_id')
+            : collect();
+        $requiredClassSubjectIds = $offerings
+            ->reject(fn (ClassSubject $offering) => $electiveSubjectIds->contains($offering->subject_id))
+            ->pluck('id');
 
         $existing = DB::table('student_subject_enrollments')
             ->where('student_id', $student->id)
@@ -146,7 +170,7 @@ class EnrollmentService
                 ->update(['status' => 'completed', 'updated_at' => $now]);
         }
 
-        $newEnrollments = $classSubjectIds
+        $newEnrollments = $requiredClassSubjectIds
             ->filter(fn ($id) => ! isset($existing[$id]) || $existing[$id]->status !== 'enrolled')
             ->mapWithKeys(fn ($id) => [
                 $id => [

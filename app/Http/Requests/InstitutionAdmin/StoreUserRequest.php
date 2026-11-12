@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\InstitutionAdmin;
 
+use App\Models\Branch;
 use App\Models\User;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -36,8 +37,27 @@ class StoreUserRequest extends FormRequest
                 Rule::notIn(['Student', 'student']),
                 ...($this->user()->isSuperAdmin() ? [] : [Rule::notIn(['Super Admin'])]),
             ],
+            'branch_id' => [
+                'nullable',
+                'integer',
+                Rule::exists('branches', 'id')->where('is_active', true),
+                Rule::requiredIf(fn () => $this->requiresBranchAssignment()),
+                ...($this->user()->branch_id && ! $this->user()->isSuperAdmin() && ! $this->user()->isInstitutionAdmin()
+                    ? [Rule::in([(int) $this->user()->branch_id])]
+                    : []),
+            ],
             'is_active' => ['nullable', 'boolean'],
             'must_change_password' => ['nullable', 'boolean'],
         ];
+    }
+
+    private function requiresBranchAssignment(): bool
+    {
+        $roles = $this->input('roles', []);
+        if (array_intersect($roles, ['Super Admin', 'Institution Admin']) !== []) {
+            return false;
+        }
+
+        return Branch::query()->where('is_active', true)->exists();
     }
 }

@@ -2,24 +2,36 @@
 
 namespace Database\Seeders;
 
+use App\Models\Department;
+use App\Models\Program;
+use App\Models\Subject;
 use Illuminate\Database\Seeder;
 
 class AcademicStructureSeeder extends Seeder
 {
     public function run(): void
     {
-        \App\Models\Department::firstOrCreate(['code' => 'SCI'], ['name' => 'Science']);
-        \App\Models\Department::firstOrCreate(['code' => 'ART'], ['name' => 'Arts']);
-        \App\Models\Department::firstOrCreate(['code' => 'COM'], ['name' => 'Commerce']);
+        Department::firstOrCreate(['code' => 'SCI'], ['name' => 'Science']);
+        Department::firstOrCreate(['code' => 'ART'], ['name' => 'Arts']);
+        Department::firstOrCreate(['code' => 'COM'], ['name' => 'Commerce']);
 
-        $deptSci = \App\Models\Department::where('code', 'SCI')->first();
-        \App\Models\Program::firstOrCreate(['code' => 'BSC'], ['name' => 'Bachelor of Science', 'department_id' => $deptSci?->id]);
-        \App\Models\Program::firstOrCreate(['code' => 'BA'], ['name' => 'Bachelor of Arts']);
-        \App\Models\Program::firstOrCreate(['code' => 'BCOM'], ['name' => 'Bachelor of Commerce']);
+        $departments = Department::whereIn('code', ['SCI', 'ART', 'COM'])->get()->keyBy('code');
+        Program::firstOrCreate(['code' => 'BSC'], ['name' => 'Bachelor of Science', 'department_id' => $departments['SCI']->id]);
+        Program::firstOrCreate(['code' => 'BA'], ['name' => 'Bachelor of Arts', 'department_id' => $departments['ART']->id]);
+        Program::firstOrCreate(['code' => 'BCOM'], ['name' => 'Bachelor of Commerce', 'department_id' => $departments['COM']->id]);
 
-        $subjects = ['Mathematics', 'Physics', 'Chemistry', 'Biology', 'English', 'History', 'Economics', 'Accounting'];
-        foreach ($subjects as $s) {
-            \App\Models\Subject::firstOrCreate(['code' => strtoupper(substr($s,0,3)).rand(100,999)], ['name' => $s, 'credit_hours' => 3]);
+        $subjects = [
+            'MTH' => 'Mathematics',
+            'PHY' => 'Physics',
+            'CHE' => 'Chemistry',
+            'BIO' => 'Biology',
+            'ENG' => 'English',
+            'HIS' => 'History',
+            'ECO' => 'Economics',
+            'ACC' => 'Accounting',
+        ];
+        foreach ($subjects as $code => $name) {
+            Subject::firstOrCreate(['code' => $code], ['name' => $name, 'credit_hours' => 3]);
         }
     }
 }

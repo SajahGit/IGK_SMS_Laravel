@@ -75,6 +75,9 @@
                             <a href="{{ route('student.invoices.pdf', $inv) }}" class="btn btn-sm btn-outline-primary">
                                 Download PDF
                             </a>
+                            @if ($inv->balance > 0 && in_array($inv->status, ['issued', 'partially_paid'], true) && config('services.payhere.merchant_id'))
+                                <a href="{{ route('student.payhere.create', $inv) }}" class="btn btn-sm btn-primary">Pay online</a>
+                            @endif
                         </td>
                     </tr>
                 @empty

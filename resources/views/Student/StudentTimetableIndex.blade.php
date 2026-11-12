@@ -4,7 +4,7 @@
 @section('content')
 <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
     <div>
-        <h3 class="mb-0">Class Timetable ({{ $student->class ? $student->class->full_name : 'Unassigned' }})</h3>
+        <h3 class="mb-0">Class Timetable ({{ $student->class?->full_name ?? 'Unassigned' }})</h3>
         <small class="text-muted">Weekly subject schedule, class timings, and classroom rooms.</small>
     </div>
     <button type="button" class="btn btn-outline-primary" onclick="window.print()">

@@ -56,7 +56,7 @@
             </div>
             <div class="col-sm-6 col-md-3">
                 <div class="text-muted small text-uppercase fw-semibold">Class & Section</div>
-                <div class="fw-bold fs-6">{{ $student->class ? $student->class->full_name : '—' }}</div>
+                <div class="fw-bold fs-6">{{ $student->class?->full_name ?? '—' }}</div>
             </div>
             <div class="col-sm-6 col-md-3">
                 <div class="text-muted small text-uppercase fw-semibold">Guardian</div>

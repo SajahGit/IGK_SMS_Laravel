@@ -56,18 +56,19 @@ class DatabaseSeeder extends Seeder
         );
 
         // ---- Admin ----
-        $admin = User::create([
-            'name' => 'System Admin',
+        $admin = User::firstOrCreate([
             'email' => 'admin@school.test',
-            'password' => 'password',
+        ], [
+            'name' => 'System Admin',
+            'password' => bcrypt('password'),
             'role' => 'admin',
-            'is_active' => true,
-            'must_change_password' => false,
+            'is_active' => 1,
+            'must_change_password' => 0,
         ]);
 
         // ---- Classes and subjects ----
-        $classA = SchoolClass::create(['name' => 'Grade 10', 'section' => 'A', 'capacity' => 40]);
-        $classB = SchoolClass::create(['name' => 'Grade 10', 'section' => 'B', 'capacity' => 40]);
+        $classA = SchoolClass::updateOrCreate(['name' => 'Grade 10', 'section' => 'A'], ['capacity' => 40]);
+        $classB = SchoolClass::updateOrCreate(['name' => 'Grade 10', 'section' => 'B'], ['capacity' => 40]);
 
         $maths = Subject::create(['name' => 'Mathematics', 'code' => 'MATH', 'credit_hours' => 4]);
         $science = Subject::create(['name' => 'Science', 'code' => 'SCI', 'credit_hours' => 4]);
@@ -354,3 +355,6 @@ class DatabaseSeeder extends Seeder
         ]);
     }
 }
+
+
+

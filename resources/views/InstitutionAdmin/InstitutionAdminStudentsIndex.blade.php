@@ -22,6 +22,23 @@
     <div class="col-md-2"><button class="btn btn-outline-secondary w-100">Filter</button></div>
 </form>
 
+<div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+    <form method="POST" action="{{ route('admin.students.filters.store') }}" class="d-flex gap-2">
+        @csrf
+        <input type="hidden" name="filters[q]" value="{{ request('q') }}">
+        <input type="hidden" name="filters[class_id]" value="{{ request('class_id') }}">
+        <input name="name" class="form-control form-control-sm" maxlength="80" placeholder="Name this filter" required>
+        <button class="btn btn-sm btn-outline-primary">Save filter</button>
+    </form>
+    @foreach ($savedFilters as $savedFilter)
+        <a class="btn btn-sm btn-outline-secondary" href="{{ route('admin.students.index', $savedFilter->filters) }}">{{ $savedFilter->name }}</a>
+        <form method="POST" action="{{ route('admin.students.filters.destroy', $savedFilter) }}">
+            @csrf @method('DELETE')
+            <button class="btn btn-sm btn-outline-danger" aria-label="Delete {{ $savedFilter->name }}">×</button>
+        </form>
+    @endforeach
+</div>
+
 <div class="card shadow-sm">
     <div class="table-responsive">
         <table class="table table-hover mb-0 align-middle">
@@ -32,7 +49,7 @@
                     <td>{{ $s->admission_no }}</td>
                     <td>{{ $s->user->name }}</td>
                     <td>{{ $s->user->email }}</td>
-                    <td>{{ $s->class->full_name }}</td>
+                    <td>{{ $s->class?->full_name ?? 'Unassigned' }}</td>
                     <td>{{ $s->primaryGuardian->first()?->user?->name ?? '-' }}</td>
                     <td class="text-end">
                         <a href="{{ route('admin.students.edit', $s) }}" class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil-square me-1"></i>Edit</a>

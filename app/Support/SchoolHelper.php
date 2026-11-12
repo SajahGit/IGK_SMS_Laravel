@@ -107,6 +107,7 @@ class SchoolHelper
 
         return ClassSubject::where('teacher_id', $teacher->id)
             ->whereHas('teacher', fn ($query) => $query->where('status', 'active'))
+            ->whereHas('schoolClass')
             ->where(function ($query) use ($currentTermId) {
                 $query->whereNull('term_id');
                 if ($currentTermId) {
