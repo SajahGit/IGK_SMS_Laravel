@@ -75,7 +75,7 @@
                             <div class="fw-bold">{{ $exam->name }}</div>
                             <small class="text-muted text-uppercase">Type: {{ $exam->type }} &middot; Max: {{ $exam->max_marks }} &middot; Weight: {{ $exam->weight }}%</small>
                         </td>
-                        <td>{{ $exam->class->full_name }}</td>
+                        <td>{{ $exam->class?->full_name ?? 'Unassigned' }}</td>
                         <td>{{ $exam->subject->name }}</td>
                         <td>{{ $exam->term ? $exam->term->name : '—' }}</td>
                         <td>{{ $exam->exam_date->format('d M Y') }}</td>

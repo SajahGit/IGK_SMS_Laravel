@@ -34,7 +34,7 @@
             <ul class="list-group list-group-flush">
                 @forelse ($upcomingExams as $e)
                     <li class="list-group-item d-flex justify-content-between">
-                        <span>{{ $e->name }} <span class="text-muted">({{ $e->class->full_name }})</span></span>
+                        <span>{{ $e->name }} <span class="text-muted">({{ $e->class?->full_name ?? 'Unassigned' }})</span></span>
                         <span class="text-muted">{{ $e->exam_date->format('d M Y') }}</span>
                     </li>
                 @empty

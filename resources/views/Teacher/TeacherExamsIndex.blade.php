@@ -12,7 +12,7 @@
         @forelse ($exams as $e)
             <tr>
                 <td>{{ $e->name }}</td>
-                <td>{{ $e->class->full_name }}</td>
+                <td>{{ $e->class?->full_name ?? 'Unassigned' }}</td>
                 <td>{{ $e->subject->name }}</td>
                 <td>{{ $e->exam_date->format('d M Y') }}</td>
                 <td>{{ $e->max_marks }}</td>

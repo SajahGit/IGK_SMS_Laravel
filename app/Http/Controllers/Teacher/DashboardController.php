@@ -17,7 +17,11 @@ class DashboardController extends Controller
 
         return view('Teacher.TeacherDashboard', [
             'assignments' => $teacher
-                ? ClassSubject::with(['schoolClass', 'subject'])->where('teacher_id', $teacher->id)->get()
+                ? ClassSubject::with(['schoolClass', 'subject'])
+                    ->where('teacher_id', $teacher->id)
+                    ->whereHas('schoolClass')
+                    ->whereHas('subject')
+                    ->get()
                 : collect(),
             'classCount' => $classIds->count(),
             'studentCount' => Student::whereIn('class_id', $classIds)->count(),

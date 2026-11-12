@@ -15,7 +15,11 @@ class ClassController extends Controller
         $teacher = auth()->user()->teacher;
 
         $assignments = $teacher
-            ? ClassSubject::with(['schoolClass', 'subject'])->where('teacher_id', $teacher->id)->get()
+            ? ClassSubject::with(['schoolClass', 'subject'])
+                ->where('teacher_id', $teacher->id)
+                ->whereHas('schoolClass')
+                ->whereHas('subject')
+                ->get()
             : collect();
 
         return view('Teacher.TeacherClassesIndex', compact('assignments'));

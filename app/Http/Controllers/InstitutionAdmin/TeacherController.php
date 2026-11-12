@@ -15,7 +15,13 @@ class TeacherController extends Controller
 {
     public function index(Request $request)
     {
-        $teachers = Teacher::with(['user', 'department', 'classSubjects.schoolClass', 'classSubjects.subject'])
+        $teachers = Teacher::with([
+            'user',
+            'department',
+            'classSubjects' => fn ($query) => $query->whereHas('schoolClass')->whereHas('subject'),
+            'classSubjects.schoolClass',
+            'classSubjects.subject',
+        ])
             ->when($request->q, fn ($query, $s) => $query->whereHas('user', fn ($u) => $u->where('name', 'like', "%{$s}%")))
             ->when($request->filled('status'), fn ($query) => $query->where('status', $request->input('status')))
             ->when($request->filled('department_id'), fn ($query) => $query->where('department_id', $request->integer('department_id')))

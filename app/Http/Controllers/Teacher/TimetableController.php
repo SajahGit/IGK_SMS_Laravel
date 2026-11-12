@@ -15,6 +15,8 @@ class TimetableController extends Controller
 
         $slots = TimetableSlot::with(['classSubject.schoolClass', 'classSubject.subject'])
             ->whereHas('classSubject', fn ($q) => $q->where('teacher_id', $teacher->id))
+            ->whereHas('classSubject.schoolClass')
+            ->whereHas('classSubject.subject')
             ->orderBy('day_of_week')
             ->orderBy('start_time')
             ->get()

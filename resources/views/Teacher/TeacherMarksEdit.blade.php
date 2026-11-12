@@ -6,7 +6,7 @@
     <div>
         <h3 class="mb-0">Enter Marks</h3>
         <p class="text-muted mb-0">
-            <strong>{{ $exam->name }}</strong> &middot; {{ $exam->class->full_name }} &middot; {{ $exam->subject->name }}
+            <strong>{{ $exam->name }}</strong> &middot; {{ $exam->class?->full_name ?? 'Unassigned' }} &middot; {{ $exam->subject->name }}
             @if ($exam->term)
                 &middot; <span class="badge bg-secondary-subtle text-secondary">{{ $exam->term->name }}</span>
             @endif

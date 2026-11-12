@@ -12,7 +12,7 @@
         @endif
     </div>
 </div>
-<p class="text-muted">{{ $exam->class->full_name }} &middot; {{ $exam->subject->name }} &middot; Maximum marks: {{ $exam->max_marks }}</p>
+<p class="text-muted">{{ $exam->class?->full_name ?? 'Unassigned' }} &middot; {{ $exam->subject->name }} &middot; Maximum marks: {{ $exam->max_marks }}</p>
 
 <div class="row g-3 mb-4">
     @foreach ([['Entered', $stats['count'], 'pencil-square', 'indigo'], ['Average', $stats['average'], 'bar-chart-fill', 'cyan'],
