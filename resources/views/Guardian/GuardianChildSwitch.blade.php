@@ -1,6 +1,7 @@
 <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
-    <h3 class="mb-0">{{ $student->user->name }} <small class="text-muted fs-6">{{ $student->class->full_name }}</small></h3>
+    <h3 class="mb-0">{{ $student->user->name }} <small class="text-muted fs-6">{{ $student->class?->full_name ?? 'Unassigned' }}</small></h3>
     <div class="d-flex gap-2">
+        <a href="{{ route('guardian.children.transcript', $student) }}" class="btn btn-outline-primary">Transcript</a>
         @if ($children->count() > 1)
             <select class="form-select" onchange="window.location = this.value">
                 @foreach ($children as $child)

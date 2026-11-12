@@ -5,6 +5,7 @@ namespace App\Http\Controllers\InstitutionAdmin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\InstitutionAdmin\StoreUserRequest;
 use App\Http\Requests\InstitutionAdmin\UpdateUserRequest;
+use App\Models\Branch;
 use App\Models\User;
 use App\Support\AuditLogger;
 use Illuminate\Http\RedirectResponse;
@@ -21,6 +22,7 @@ class UserController extends Controller
         $this->authorize('viewAny', User::class);
 
         $users = User::with(['roles'])
+            ->when(request()->user()->branch_id && ! request()->user()->isSuperAdmin() && ! request()->user()->isInstitutionAdmin(), fn ($query) => $query->where('branch_id', request()->user()->branch_id))
             ->when(! request()->user()->isSuperAdmin(), fn ($query) => $query
                 ->where('role', '!=', 'super-admin')
                 ->whereDoesntHave('roles', fn ($roles) => $roles->where('name', 'Super Admin')))
@@ -44,7 +46,9 @@ class UserController extends Controller
             ->orderBy('name')
             ->get();
 
-        return view('InstitutionAdmin.InstitutionAdminUsersCreate', compact('roles'));
+        $branches = Branch::where('is_active', true)->orderBy('name')->get();
+
+        return view('InstitutionAdmin.InstitutionAdminUsersCreate', compact('roles', 'branches'));
     }
 
     public function store(StoreUserRequest $request): RedirectResponse
@@ -61,6 +65,7 @@ class UserController extends Controller
                 'email' => $data['email'],
                 'password' => Hash::make($data['password']),
                 'role' => $this->roleValue($primaryRole),
+                'branch_id' => $data['branch_id'] ?? null,
                 'is_active' => $data['is_active'] ?? true,
                 'must_change_password' => true,
             ]);
@@ -91,7 +96,9 @@ class UserController extends Controller
             }];
         }
 
-        return view('InstitutionAdmin.InstitutionAdminUsersEdit', compact('user', 'roles', 'roleNames'));
+        $branches = Branch::where('is_active', true)->orderBy('name')->get();
+
+        return view('InstitutionAdmin.InstitutionAdminUsersEdit', compact('user', 'roles', 'roleNames', 'branches'));
     }
 
     public function update(UpdateUserRequest $request, User $user): RedirectResponse
@@ -106,6 +113,7 @@ class UserController extends Controller
             'name' => $data['name'],
             'email' => $data['email'],
             'role' => $this->roleValue($primaryRole),
+            'branch_id' => $data['branch_id'] ?? null,
             'is_active' => $data['is_active'] ?? false,
             'must_change_password' => $data['must_change_password'] ?? false,
         ];

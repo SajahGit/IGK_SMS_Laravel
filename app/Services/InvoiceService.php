@@ -133,6 +133,7 @@ class InvoiceService
 
             $invoice = Invoice::create([
                 'student_id' => $student->id,
+                'branch_id' => $student->branch_id,
                 'term_id' => $termId,
                 'invoice_no' => self::nextInvoiceNumber(),
                 'issue_date' => $issueDate,

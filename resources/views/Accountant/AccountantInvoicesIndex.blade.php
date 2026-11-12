@@ -81,6 +81,24 @@
     </div>
 </div>
 
+<div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+    <form method="POST" action="{{ route($financeRoutePrefix.'.invoices.filters.store') }}" class="d-flex gap-2">
+        @csrf
+        <input type="hidden" name="filters[q]" value="{{ $search }}">
+        <input type="hidden" name="filters[class_id]" value="{{ $classId }}">
+        <input type="hidden" name="filters[status]" value="{{ $status }}">
+        <input name="name" class="form-control form-control-sm" maxlength="80" placeholder="Name this filter" required>
+        <button class="btn btn-sm btn-outline-primary">Save filter</button>
+    </form>
+    @foreach ($savedFilters as $savedFilter)
+        <a class="btn btn-sm btn-outline-secondary" href="{{ route($financeRoutePrefix.'.invoices.index', $savedFilter->filters) }}">{{ $savedFilter->name }}</a>
+        <form method="POST" action="{{ route($financeRoutePrefix.'.invoices.filters.destroy', $savedFilter) }}">
+            @csrf @method('DELETE')
+            <button class="btn btn-sm btn-outline-danger" aria-label="Delete {{ $savedFilter->name }}">×</button>
+        </form>
+    @endforeach
+</div>
+
 @if ($classId && ($status === 'draft' || $invoices->contains(fn ($i) => $i->status === 'draft')) && \Illuminate\Support\Facades\Route::has($financeRoutePrefix.'.invoices.issue-drafts'))
     <form method="POST" action="{{ route($financeRoutePrefix.'.invoices.issue-drafts') }}" class="mb-3" onsubmit="return confirm('Issue every draft invoice of this class?')">
         @csrf
@@ -115,7 +133,7 @@
                         </td>
                         <td>
                             <div class="fw-semibold">{{ $inv->student->user->name }}</div>
-                            <small class="text-muted">{{ $inv->student->class->full_name }} &middot; Adm: {{ $inv->student->admission_no }}</small>
+                            <small class="text-muted">{{ $inv->student->class?->full_name ?? 'Unassigned' }} &middot; Adm: {{ $inv->student->admission_no }}</small>
                         </td>
                         <td>{{ $inv->term ? $inv->term->name : 'General' }}</td>
                         <td>

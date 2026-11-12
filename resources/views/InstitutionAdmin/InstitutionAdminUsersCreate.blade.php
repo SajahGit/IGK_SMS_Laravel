@@ -35,6 +35,13 @@
                     <div class="form-text">Select every role required for this user. Create student accounts from Students &gt; Add Student so each login has a linked profile.</div>
                 </div>
                 <div class="col-md-6">
+                    <label class="form-label">Campus</label>
+                    <select name="branch_id" class="form-select" @required($branches->isNotEmpty())>
+                        <option value="">Global / not assigned</option>
+                        @foreach ($branches as $branch)<option value="{{ $branch->id }}" @selected((string) old('branch_id') === (string) $branch->id)>{{ $branch->name }}</option>@endforeach
+                    </select>
+                </div>
+                <div class="col-md-6">
                     <div class="form-check">
                         <input class="form-check-input" type="checkbox" name="is_active" value="1" checked>
                         <label class="form-check-label">Active</label>

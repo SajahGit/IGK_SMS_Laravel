@@ -7,6 +7,7 @@ use App\Http\Requests\Accountant\CancelInvoiceRequest;
 use App\Http\Requests\Accountant\GenerateInvoicesRequest;
 use App\Models\FeeStructure;
 use App\Models\Invoice;
+use App\Models\SavedFilter;
 use App\Models\SchoolClass;
 use App\Models\Term;
 use App\Services\InvoiceService;
@@ -57,7 +58,13 @@ class InvoiceController extends Controller
             'totalBilled',
             'totalCollected',
             'totalOutstanding'
-        ) + ['financeRoutePrefix' => $this->financeRoutePrefix()]);
+        ) + [
+            'financeRoutePrefix' => $this->financeRoutePrefix(),
+            'savedFilters' => SavedFilter::where('user_id', $request->user()->id)
+                ->where('scope', 'invoices')
+                ->orderBy('name')
+                ->get(),
+        ]);
     }
 
     public function create(Request $request): View

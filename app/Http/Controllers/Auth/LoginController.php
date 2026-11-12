@@ -23,7 +23,7 @@ class LoginController extends Controller
         if (! Auth::validate($credentials)) {
             AuditLogger::log('login_failed', User::class, null, ['email' => $credentials['email']]);
 
-            return back()->withErrors(['email' => 'These credentials do not match our records.'])->onlyInput('email');
+            return back()->withErrors(['email' => 'Invalid email or password.'])->onlyInput('email');
         }
 
         /** @var User $user */
@@ -35,11 +35,19 @@ class LoginController extends Controller
             return back()->withErrors(['email' => 'Account disabled, contact administrator.'])->onlyInput('email');
         }
 
-        Auth::login($user, $request->boolean('remember'));
-
-        $user->update(['last_login_at' => now()]);
-
         $request->session()->regenerate();
+
+        if ($user->isAdmin() || $user->isSuperAdmin() || $user->isInstitutionAdmin()) {
+            $request->session()->put('two_factor.pending_user_id', $user->id);
+            $request->session()->put('two_factor.remember', $request->boolean('remember'));
+
+            return redirect()->route(
+                $user->two_factor_enabled_at ? 'two-factor.challenge' : 'two-factor.setup'
+            );
+        }
+
+        Auth::login($user, $request->boolean('remember'));
+        $user->update(['last_login_at' => now()]);
         AuditLogger::log('logged_in', $user, null, ['email' => $user->email]);
 
         if ($user->must_change_password) {

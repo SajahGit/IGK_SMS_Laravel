@@ -15,6 +15,15 @@
             'Manage' => [
                 ['Students', 'admin.students.index', 'admin.students.*', 'people-fill'],
                 ['Teachers', 'admin.teachers.index', 'admin.teachers.*', 'person-workspace'],
+                ['Staff Attendance', 'admin.staff-attendance.index', 'admin.staff-attendance.*', 'person-check-fill'],
+                ['HR Employees', 'admin.hr.employees.index', 'admin.hr.*', 'person-vcard'],
+                ['Leave Management', 'admin.hr.leaves.index', 'admin.hr.leaves.*', 'calendar2-minus'],
+                ['Payroll', 'admin.hr.payroll.index', 'admin.hr.payroll.*', 'cash-coin'],
+                ['Transport', 'admin.transport.index', 'admin.transport.*', 'bus-front-fill'],
+                ['Hostels', 'admin.hostels.index', 'admin.hostels.*', 'house-door-fill'],
+                ['Cafeteria', 'admin.cafeteria.index', 'admin.cafeteria.*', 'cup-hot-fill'],
+                ['Inventory', 'admin.inventory.index', 'admin.inventory.*', 'boxes'],
+                ['Bulk Import', 'admin.imports.index', 'admin.imports.*', 'file-earmark-arrow-up'],
                 ['Guardians', 'admin.guardians.index', 'admin.guardians.*', 'person-hearts'],
                 ['Classes', 'admin.classes.index', 'admin.classes.*', 'building'],
                 ['Subjects', 'admin.subjects.index', 'admin.subjects.*', 'book-fill'],
@@ -27,13 +36,27 @@
                 ['Term Results', 'admin.term-results.index', 'admin.term-results.*', 'trophy'],
                 ['Grade Scale', 'admin.grade-scale.edit', 'admin.grade-scale.*', 'sliders'],
             ],
+            'Library' => [
+                ['Dashboard', 'library.dashboard', 'library.dashboard', 'grid-1x2-fill'],
+                ['Loans', 'library.loans.index', 'library.loans.*', 'arrow-left-right'],
+                ['Copies', 'library.copies.index', 'library.copies.*', 'collection'],
+                ['Authors', 'library.authors.index', 'library.authors.*', 'person-lines-fill'],
+                ['Categories', 'library.categories.index', 'library.categories.*', 'tags-fill'],
+                ['Fines', 'library.fines.index', 'library.fines.*', 'cash-coin'],
+            ],
             'Finance' => [
+                ['Procurement', 'procurement.orders.index', 'procurement.*', 'cart-check'],
                 ['Fee Structures', 'admin.fee-structures.index', 'admin.fee-structures.*', 'cash-stack'],
                 ['Invoices & Billing', 'admin.invoices.index', 'admin.invoices.*', 'receipt'],
                 ['Record Payment', 'admin.payments.create', 'admin.payments.create', 'credit-card'],
+                ['Chart of Accounts', 'admin.accounts.index', 'admin.accounts.*', 'diagram-2'],
+                ['Journal Entries', 'admin.journals.index', 'admin.journals.*', 'journal-richtext'],
+                ['Trial Balance', 'admin.accounting.trial-balance', 'admin.accounting.trial-balance', 'calculator'],
+                ['General Ledger', 'admin.accounting.ledger', 'admin.accounting.ledger', 'journal-text'],
             ],
             'System' => [
                 ['Announcements', 'admin.announcements.index', 'admin.announcements.*', 'megaphone-fill'],
+                ['Branches', 'admin.branches.index', 'admin.branches.*', 'buildings'],
                 ['Audit Trail', 'admin.audit-logs.index', 'admin.audit-logs.*', 'clock-history'],
             ],
             'Reports' => [
@@ -50,6 +73,7 @@
             'Overview' => [['Dashboard', 'teacher.dashboard', 'teacher.dashboard', 'grid-1x2-fill']],
             'Teaching' => [
                 ['My Classes', 'teacher.classes.index', 'teacher.classes.*', 'easel2-fill'],
+                ['Learning Management', 'teacher.lms.index', 'teacher.lms.*', 'book-half'],
                 ['My Timetable', 'teacher.timetable.index', 'teacher.timetable.*', 'calendar-week'],
                 ['Mark Attendance', 'teacher.attendance.create', 'teacher.attendance.create', 'clipboard2-check-fill'],
                 ['Attendance History', 'teacher.attendance.index', 'teacher.attendance.index', 'clock-history'],
@@ -66,6 +90,7 @@
         'accountant' => [
             'Finance' => [
                 ['Dashboard', 'accountant.dashboard', 'accountant.dashboard', 'grid-1x2-fill'],
+                ['Procurement', 'procurement.orders.index', 'procurement.*', 'cart-check'],
                 ['Fee Structures', 'accountant.fee-structures.index', 'accountant.fee-structures.*', 'cash-stack'],
                 ['Invoices & Billing', 'accountant.invoices.index', 'accountant.invoices.*', 'receipt'],
                 ['Record Payment', 'accountant.payments.create', 'accountant.payments.*', 'credit-card'],
@@ -87,6 +112,7 @@
                 ['Classes', 'admin.classes.index', 'admin.classes.*', 'building'],
                 ['Create Class', 'admin.classes.create', 'admin.classes.create', 'building-add'],
                 ['Teachers', 'admin.teachers.index', 'admin.teachers.*', 'person-workspace'],
+                ['Bulk Import', 'admin.imports.index', 'admin.imports.*', 'file-earmark-arrow-up'],
                 ['Departments', 'admin.departments.index', 'admin.departments.*', 'diagram-3'],
                 ['Programs', 'admin.programs.index', 'admin.programs.*', 'mortarboard'],
                 ['Subjects', 'admin.subjects.index', 'admin.subjects.*', 'book-fill'],
@@ -109,14 +135,28 @@
                 ['Student Ledger', 'reports.student-ledger', 'reports.student-ledger*', 'journal-text'],
             ],
         ],
+        'librarian' => [
+            'Library' => [
+                ['Dashboard', 'library.dashboard', 'library.dashboard', 'grid-1x2-fill'],
+                ['Loans', 'library.loans.index', 'library.loans.*', 'arrow-left-right'],
+                ['Copies', 'library.copies.index', 'library.copies.*', 'collection'],
+                ['Authors', 'library.authors.index', 'library.authors.*', 'person-lines-fill'],
+                ['Categories', 'library.categories.index', 'library.categories.*', 'tags-fill'],
+                ['Fines', 'library.fines.index', 'library.fines.*', 'cash-coin'],
+            ],
+        ],
         'student' => [
             'My School' => [
                 ['Dashboard', 'student.dashboard', 'student.dashboard', 'grid-1x2-fill'],
                 ['My Profile', 'student.profile', 'student.profile*', 'person-badge-fill'],
                 ['Class Timetable', 'student.timetable', 'student.timetable', 'calendar-week'],
+                ['Learning Management', 'student.lms.index', 'student.lms.*', 'book-half'],
+                ['My Hostel', 'student.hostel', 'student.hostel', 'house-door-fill'],
+                ['Cafeteria', 'student.cafeteria', 'student.cafeteria*', 'cup-hot-fill'],
                 ['My Attendance', 'student.attendance', 'student.attendance', 'calendar2-check-fill'],
                 ['My Results', 'student.results', 'student.results', 'trophy-fill'],
                 ['Report Card', 'student.report-card', 'student.report-card', 'award-fill'],
+                ['Academic Transcript', 'student.transcript', 'student.transcript*', 'journal-bookmark-fill'],
                 ['Fee Invoices', 'student.invoices', 'student.invoices', 'receipt'],
                 ['My Financial Ledger', 'student.ledger', 'student.ledger*', 'journal-text'],
             ],
@@ -133,6 +173,7 @@
         default => strtolower($user->role),
     };
     $menu = $menus[$menuRole] ?? [];
+    $menu['Communication'][] = ['Private Messages', 'messages.index', 'messages.*', 'envelope'];
     if ($user->isSuperAdmin()) {
         $menu['System'][] = ['Roles & Permissions', 'admin.roles.index', 'admin.roles.*', 'shield-lock-fill'];
     }
@@ -155,7 +196,13 @@
                 @foreach ($items as [$label, $route, $pattern, $icon])
                     @php
                         $permission = match (true) {
+                            str_starts_with($route, 'messages.') => null,
                             str_starts_with($route, 'reports.') => str_contains($route, 'attendance') ? 'reports.attendance' : (in_array($route, ['reports.fee-collection', 'reports.defaulters', 'reports.student-ledger'], true) ? 'reports.financial' : 'reports.academic'),
+                            str_starts_with($route, 'admin.imports.') => 'imports.create',
+                            str_starts_with($route, 'admin.staff-attendance.') => 'staff_attendance.read',
+                            str_starts_with($route, 'admin.inventory.') => 'inventory.read',
+                            str_starts_with($route, 'library.') => 'library.read',
+                            str_starts_with($route, 'procurement.') => 'procurement.read',
                             $route === 'admin.students.index' => 'students.read',
                             $route === 'admin.students.create' => 'students.create',
                             $route === 'admin.guardians.index' => 'guardians.read',
@@ -179,7 +226,8 @@
                             default => null,
                         };
                         $roleRoutePrefix = $menuRole === 'parent' ? 'guardian.' : $menuRole.'.';
-                        $canSeeRoute = $user->isAdmin()
+                        $canSeeRoute = str_starts_with($route, 'messages.')
+                            || $user->isAdmin()
                             || ($permission && $user->can($permission))
                             || (! $permission && str_starts_with($route, $roleRoutePrefix));
                     @endphp
@@ -213,6 +261,18 @@
                 <div class="topbar-title">Hello, {{ explode(' ', trim($user->name))[0] }}</div>
                 <div class="topbar-sub">{{ $user->role === 'parent' ? 'Guardian' : $user->role }} portal</div>
             </div>
+            @if (($branchContextOptions ?? collect())->isNotEmpty())
+                <form method="POST" action="{{ route('admin.branch-context') }}" class="d-flex align-items-center gap-1">
+                    @csrf
+                    <label class="visually-hidden" for="active-branch">Active campus</label>
+                    <select class="form-select form-select-sm" id="active-branch" name="branch_id">
+                        @foreach ($branchContextOptions as $branchOption)
+                            <option value="{{ $branchOption->id }}" @selected(($activeBranch?->id ?? null) === $branchOption->id)>{{ $branchOption->name }}</option>
+                        @endforeach
+                    </select>
+                    <button class="btn btn-sm btn-outline-secondary">Switch campus</button>
+                </form>
+            @endif
             <span class="topbar-date"><i class="bi bi-calendar3 me-1"></i>{{ now()->format('D, d M Y') }}</span>
             <div class="dropdown">
                 <button class="icon-btn position-relative" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Notifications">

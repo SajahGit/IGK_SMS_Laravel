@@ -60,7 +60,7 @@
                             <div class="fw-semibold">{{ $inv->student->user->name }}</div>
                             <small class="text-muted">Adm: {{ $inv->student->admission_no }}</small>
                         </td>
-                        <td>{{ $inv->student->class->full_name }}</td>
+                        <td>{{ $inv->student->class?->full_name ?? 'Unassigned' }}</td>
                         <td>{{ $inv->term ? $inv->term->name : 'General' }}</td>
                         <td>
                             <span class="{{ today()->gt($inv->due_date) && $inv->balance > 0 ? 'text-danger fw-semibold' : '' }}">

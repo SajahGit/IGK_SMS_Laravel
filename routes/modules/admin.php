@@ -6,22 +6,30 @@ use App\Http\Controllers\Accountant\PaymentController;
 use App\Http\Controllers\InstitutionAdmin\AcademicYearController;
 use App\Http\Controllers\InstitutionAdmin\AnnouncementController;
 use App\Http\Controllers\InstitutionAdmin\AuditLogController;
+use App\Http\Controllers\InstitutionAdmin\BulkImportController;
 use App\Http\Controllers\InstitutionAdmin\ClassSubjectController;
 use App\Http\Controllers\InstitutionAdmin\CurriculumController;
+use App\Http\Controllers\InstitutionAdmin\CafeteriaController;
 use App\Http\Controllers\InstitutionAdmin\DashboardController;
 use App\Http\Controllers\InstitutionAdmin\DepartmentController;
 use App\Http\Controllers\InstitutionAdmin\ExamController;
 use App\Http\Controllers\InstitutionAdmin\GradeScaleController;
 use App\Http\Controllers\InstitutionAdmin\GuardianController;
+use App\Http\Controllers\InstitutionAdmin\HrPayrollController;
+use App\Http\Controllers\InstitutionAdmin\HostelController;
+use App\Http\Controllers\InstitutionAdmin\InventoryController;
 use App\Http\Controllers\InstitutionAdmin\ProgramController;
+use App\Http\Controllers\InstitutionAdmin\SavedFilterController;
 use App\Http\Controllers\InstitutionAdmin\SchoolClassController;
 use App\Http\Controllers\InstitutionAdmin\SettingController;
+use App\Http\Controllers\InstitutionAdmin\StaffAttendanceController;
 use App\Http\Controllers\InstitutionAdmin\StudentController;
 use App\Http\Controllers\InstitutionAdmin\SubjectController;
 use App\Http\Controllers\InstitutionAdmin\TeacherController;
 use App\Http\Controllers\InstitutionAdmin\TermController;
 use App\Http\Controllers\InstitutionAdmin\TermResultController;
 use App\Http\Controllers\InstitutionAdmin\TimetableController;
+use App\Http\Controllers\InstitutionAdmin\TransportController;
 use App\Http\Controllers\InstitutionAdmin\UserController;
 use App\Http\Controllers\SuperAdmin\RoleController;
 use App\Http\Controllers\Teacher\AttendanceController;
@@ -46,6 +54,93 @@ Route::middleware('role:admin')->group(function () {
     Route::put('teachers/{teacher}', [TeacherController::class, 'update'])->middleware('permission:staff.update')->name('teachers.update');
     Route::delete('teachers/{teacher}', [TeacherController::class, 'destroy'])->middleware('permission:staff.delete')->name('teachers.destroy');
 
+});
+
+Route::middleware('permission:imports.create')->group(function () {
+    Route::get('imports', [BulkImportController::class, 'index'])->name('imports.index');
+    Route::post('imports', [BulkImportController::class, 'store'])->name('imports.store');
+});
+
+Route::middleware('role:admin')->group(function () {
+    Route::get('inventory', [InventoryController::class, 'index'])->middleware('permission:inventory.read')->name('inventory.index');
+    Route::get('inventory/create', [InventoryController::class, 'create'])->middleware('permission:inventory.create')->name('inventory.create');
+    Route::post('inventory', [InventoryController::class, 'store'])->middleware('permission:inventory.create')->name('inventory.store');
+    Route::get('inventory/{inventoryItem}', [InventoryController::class, 'show'])->middleware('permission:inventory.read')->name('inventory.show');
+    Route::get('inventory/{inventoryItem}/edit', [InventoryController::class, 'edit'])->middleware('permission:inventory.update')->name('inventory.edit');
+    Route::put('inventory/{inventoryItem}', [InventoryController::class, 'update'])->middleware('permission:inventory.update')->name('inventory.update');
+    Route::delete('inventory/{inventoryItem}', [InventoryController::class, 'destroy'])->middleware('permission:inventory.delete')->name('inventory.destroy');
+    Route::post('inventory/{inventoryItem}/movements', [InventoryController::class, 'movement'])->middleware('permission:inventory_movements.create')->name('inventory.movements.store');
+});
+
+Route::middleware('role:admin')->prefix('transport')->name('transport.')->group(function () {
+    Route::get('/', [TransportController::class, 'index'])->middleware('permission:transport.read')->name('index');
+    Route::get('routes/create', [TransportController::class, 'routeCreate'])->middleware('permission:transport.create')->name('routes.create');
+    Route::post('routes', [TransportController::class, 'routeStore'])->middleware('permission:transport.create')->name('routes.store');
+    Route::get('routes/{transportRoute}/edit', [TransportController::class, 'routeEdit'])->middleware('permission:transport.read')->name('routes.edit');
+    Route::put('routes/{transportRoute}', [TransportController::class, 'routeUpdate'])->middleware('permission:transport.update')->name('routes.update');
+    Route::delete('routes/{transportRoute}', [TransportController::class, 'routeDestroy'])->middleware('permission:transport.delete')->name('routes.destroy');
+    Route::post('routes/{transportRoute}/stops', [TransportController::class, 'stopStore'])->middleware('permission:transport.update')->name('stops.store');
+    Route::put('routes/{transportRoute}/stops/{transportStop}', [TransportController::class, 'stopUpdate'])->middleware('permission:transport.update')->name('stops.update');
+    Route::delete('routes/{transportRoute}/stops/{transportStop}', [TransportController::class, 'stopDestroy'])->middleware('permission:transport.update')->name('stops.destroy');
+    Route::get('vehicles/create', [TransportController::class, 'vehicleCreate'])->middleware('permission:transport.create')->name('vehicles.create');
+    Route::post('vehicles', [TransportController::class, 'vehicleStore'])->middleware('permission:transport.create')->name('vehicles.store');
+    Route::get('vehicles/{vehicle}/edit', [TransportController::class, 'vehicleEdit'])->middleware('permission:transport.read')->name('vehicles.edit');
+    Route::put('vehicles/{vehicle}', [TransportController::class, 'vehicleUpdate'])->middleware('permission:transport.update')->name('vehicles.update');
+    Route::delete('vehicles/{vehicle}', [TransportController::class, 'vehicleDestroy'])->middleware('permission:transport.delete')->name('vehicles.destroy');
+    Route::get('assignments/create', [TransportController::class, 'assignmentCreate'])->middleware('permission:transport.assign')->name('assignments.create');
+    Route::post('assignments', [TransportController::class, 'assignmentStore'])->middleware('permission:transport.assign')->name('assignments.store');
+    Route::get('assignments/{assignment}/edit', [TransportController::class, 'assignmentEdit'])->middleware('permission:transport.assign')->name('assignments.edit');
+    Route::put('assignments/{assignment}', [TransportController::class, 'assignmentUpdate'])->middleware('permission:transport.assign')->name('assignments.update');
+    Route::post('assignments/{assignment}/end', [TransportController::class, 'assignmentEnd'])->middleware('permission:transport.assign')->name('assignments.end');
+});
+
+Route::middleware('role:admin')->prefix('hostels')->name('hostels.')->group(function () {
+    Route::get('/', [HostelController::class, 'index'])->name('index');
+    Route::post('/', [HostelController::class, 'storeHostel'])->name('store');
+    Route::put('/{hostel}', [HostelController::class, 'updateHostel'])->name('update');
+    Route::delete('/{hostel}', [HostelController::class, 'destroyHostel'])->name('destroy');
+    Route::post('/{hostel}/rooms', [HostelController::class, 'storeRoom'])->name('rooms.store');
+    Route::put('/rooms/{room}', [HostelController::class, 'updateRoom'])->name('rooms.update');
+    Route::delete('/rooms/{room}', [HostelController::class, 'destroyRoom'])->name('rooms.destroy');
+    Route::get('/assignments/create', [HostelController::class, 'createAssignment'])->name('assignments.create');
+    Route::get('/assignments/{assignment}/edit', [HostelController::class, 'editAssignment'])->name('assignments.edit');
+    Route::post('/assignments', [HostelController::class, 'storeAssignment'])->name('assignments.store');
+    Route::put('/assignments/{assignment}', [HostelController::class, 'updateAssignment'])->name('assignments.update');
+    Route::post('/assignments/{assignment}/end', [HostelController::class, 'endAssignment'])->name('assignments.end');
+});
+
+Route::middleware('role:admin')->prefix('cafeteria')->name('cafeteria.')->group(function () {
+    Route::get('/', [CafeteriaController::class, 'index'])->name('index');
+    Route::post('/items', [CafeteriaController::class, 'storeItem'])->name('items.store');
+    Route::put('/items/{item}', [CafeteriaController::class, 'updateItem'])->name('items.update');
+    Route::delete('/items/{item}', [CafeteriaController::class, 'destroyItem'])->name('items.destroy');
+    Route::post('/orders/{order}/fulfill', [CafeteriaController::class, 'fulfill'])->name('orders.fulfill');
+    Route::post('/orders/{order}/cancel', [CafeteriaController::class, 'cancel'])->name('orders.cancel');
+});
+
+Route::middleware(['role:admin', 'permission:staff_attendance.read'])->group(function () {
+    Route::get('staff-attendance', [StaffAttendanceController::class, 'index'])->name('staff-attendance.index');
+});
+Route::middleware(['role:admin', 'permission:staff_attendance.create'])->group(function () {
+    Route::post('staff-attendance', [StaffAttendanceController::class, 'store'])->name('staff-attendance.store');
+});
+
+Route::middleware('role:admin')->prefix('hr')->name('hr.')->group(function () {
+    Route::get('employees', [HrPayrollController::class, 'employees'])->middleware('permission:hr.read')->name('employees.index');
+    Route::get('employees/create', [HrPayrollController::class, 'employeeCreate'])->middleware('permission:hr.create')->name('employees.create');
+    Route::post('employees', [HrPayrollController::class, 'employeeStore'])->middleware('permission:hr.create')->name('employees.store');
+    Route::get('employees/{employee}/edit', [HrPayrollController::class, 'employeeEdit'])->middleware('permission:hr.update')->name('employees.edit');
+    Route::put('employees/{employee}', [HrPayrollController::class, 'employeeUpdate'])->middleware('permission:hr.update')->name('employees.update');
+    Route::delete('employees/{employee}', [HrPayrollController::class, 'employeeDestroy'])->middleware('permission:hr.delete')->name('employees.destroy');
+    Route::get('leaves', [HrPayrollController::class, 'leaves'])->middleware('permission:hr.read')->name('leaves.index');
+    Route::post('leaves', [HrPayrollController::class, 'leaveStore'])->middleware('permission:hr.create')->name('leaves.store');
+    Route::post('leaves/{leaveRequest}/review', [HrPayrollController::class, 'leaveReview'])->middleware('permission:hr.approve')->name('leaves.review');
+    Route::get('payroll', [HrPayrollController::class, 'payrollIndex'])->middleware('permission:payroll.read')->name('payroll.index');
+    Route::post('payroll', [HrPayrollController::class, 'payrollGenerate'])->middleware('permission:payroll.create')->name('payroll.generate');
+    Route::get('payroll/{payrollRun}', [HrPayrollController::class, 'payrollShow'])->middleware('permission:payroll.read')->name('payroll.show');
+    Route::put('payroll/entries/{payrollEntry}', [HrPayrollController::class, 'payrollEntryUpdate'])->middleware('permission:payroll.update')->name('payroll.entries.update');
+    Route::post('payroll/{payrollRun}/approve', [HrPayrollController::class, 'payrollApprove'])->middleware('permission:payroll.approve')->name('payroll.approve');
+    Route::post('payroll/{payrollRun}/paid', [HrPayrollController::class, 'payrollPaid'])->middleware('permission:payroll.pay')->name('payroll.paid');
 });
 
 Route::get('users', [UserController::class, 'index'])->middleware('permission:users.read')->name('users.index');
@@ -97,6 +192,8 @@ Route::put('curricula/{curriculum}', [CurriculumController::class, 'update'])->m
 Route::delete('curricula/{curriculum}', [CurriculumController::class, 'destroy'])->middleware('permission:curriculum.delete')->name('curricula.destroy');
 
 Route::get('students', [StudentController::class, 'index'])->middleware('permission:students.read')->name('students.index');
+Route::post('students/filters', [SavedFilterController::class, 'storeStudents'])->middleware('permission:students.read')->name('students.filters.store');
+Route::delete('students/filters/{savedFilter}', [SavedFilterController::class, 'destroyStudents'])->middleware('permission:students.read')->name('students.filters.destroy');
 Route::get('students/create', [StudentController::class, 'create'])->middleware('permission:students.create')->name('students.create');
 Route::post('students', [StudentController::class, 'store'])->middleware('permission:students.create')->name('students.store');
 Route::get('students/export', [StudentController::class, 'export'])->middleware(['permission:students.read', 'throttle:exports'])->name('students.export');
@@ -160,6 +257,8 @@ Route::post('fee-structures', [FeeStructureController::class, 'store'])->middlew
 Route::put('fee-structures/{feeStructure}', [FeeStructureController::class, 'update'])->middleware('permission:fee_structures.update')->name('fee-structures.update');
 Route::delete('fee-structures/{feeStructure}', [FeeStructureController::class, 'destroy'])->middleware('permission:fee_structures.delete')->name('fee-structures.destroy');
 Route::get('invoices', [InvoiceController::class, 'index'])->middleware('permission:invoices.read')->name('invoices.index');
+Route::post('invoices/filters', [SavedFilterController::class, 'storeInvoices'])->middleware('permission:invoices.read')->name('invoices.filters.store');
+Route::delete('invoices/filters/{savedFilter}', [SavedFilterController::class, 'destroyInvoices'])->middleware('permission:invoices.read')->name('invoices.filters.destroy');
 Route::get('invoices/create', [InvoiceController::class, 'create'])->middleware('permission:invoices.create')->name('invoices.create');
 Route::post('invoices', [InvoiceController::class, 'store'])->middleware('permission:invoices.create')->name('invoices.store');
 Route::get('invoices/{invoice}', [InvoiceController::class, 'show'])->middleware('permission:invoices.read')->name('invoices.show');
@@ -181,3 +280,5 @@ Route::post('announcements', [AnnouncementController::class, 'store'])->middlewa
 Route::put('announcements/{announcement}', [AnnouncementController::class, 'update'])->middleware('permission:announcements.update')->name('announcements.update');
 Route::delete('announcements/{announcement}', [AnnouncementController::class, 'destroy'])->middleware(['permission:announcements.delete', 'role:admin'])->name('announcements.destroy');
 Route::get('audit-logs', [AuditLogController::class, 'index'])->middleware(['permission:audit_logs.read', 'role:admin'])->name('audit-logs.index');
+
+require base_path('routes/accounting.php');

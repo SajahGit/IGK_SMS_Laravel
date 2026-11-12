@@ -37,6 +37,13 @@
                     @endif
                 </div>
                 <div class="col-md-6">
+                    <label class="form-label">Campus</label>
+                    <select name="branch_id" class="form-select" @required($branches->isNotEmpty())>
+                        <option value="">Global / not assigned</option>
+                        @foreach ($branches as $branch)<option value="{{ $branch->id }}" @selected((string) old('branch_id', $user->branch_id) === (string) $branch->id)>{{ $branch->name }}</option>@endforeach
+                    </select>
+                </div>
+                <div class="col-md-6">
                     <div class="form-check d-flex align-items-center">
                         <input class="form-check-input me-2" type="checkbox" name="is_active" value="1" {{ old('is_active', $user->is_active) ? 'checked' : '' }}>
                         <label class="form-check-label mb-0">Active</label>

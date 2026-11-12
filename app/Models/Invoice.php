@@ -2,8 +2,9 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
+use App\Models\Scopes\BranchOwned;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -14,6 +15,7 @@ class Invoice extends Model
 
     protected $fillable = [
         'student_id',
+        'branch_id',
         'term_id',
         'invoice_no',
         'issue_date',
@@ -34,6 +36,11 @@ class Invoice extends Model
         'amount_paid' => '0.00',
         'status' => 'issued',
     ];
+
+    protected static function booted(): void
+    {
+        static::addGlobalScope(new BranchOwned);
+    }
 
     protected function casts(): array
     {

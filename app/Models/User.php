@@ -2,23 +2,31 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
 {
-    use HasRoles, Notifiable;
+    use HasApiTokens, HasFactory, HasRoles, Notifiable;
 
     protected $fillable = [
         'name',
         'email',
         'password',
         'role',
+        'branch_id',
         'is_active',
         'must_change_password',
         'last_login_at',
+        'two_factor_secret',
+        'two_factor_recovery_codes',
+        'two_factor_enabled_at',
+        'two_factor_last_used_at',
     ];
 
     protected $attributes = [
@@ -36,12 +44,21 @@ class User extends Authenticatable
             'is_active' => 'boolean',
             'must_change_password' => 'boolean',
             'last_login_at' => 'datetime',
+            'two_factor_secret' => 'encrypted',
+            'two_factor_recovery_codes' => 'array',
+            'two_factor_enabled_at' => 'datetime',
+            'two_factor_last_used_at' => 'integer',
         ];
     }
 
     public function student(): HasOne
     {
         return $this->hasOne(Student::class);
+    }
+
+    public function branch(): BelongsTo
+    {
+        return $this->belongsTo(Branch::class);
     }
 
     public function teacher(): HasOne
@@ -103,6 +120,7 @@ class User extends Authenticatable
             'accountant' => 'accountant.dashboard',
             'registrar' => 'registrar.dashboard',
             'parent' => 'guardian.dashboard',
+            'librarian' => 'library.dashboard',
             'student' => 'student.dashboard',
             default => 'login',
         };

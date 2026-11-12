@@ -34,6 +34,7 @@ class RolePermissionSeeder extends Seeder
             'sections.create', 'sections.read', 'sections.update', 'sections.delete',
             // Staff
             'staff.create', 'staff.read', 'staff.update', 'staff.delete',
+            'staff_attendance.create', 'staff_attendance.read', 'staff_attendance.update',
             // Students
             'students.create', 'students.read', 'students.update', 'students.delete',
             // Guardians
@@ -74,6 +75,20 @@ class RolePermissionSeeder extends Seeder
             'reports.financial',
             // Audit logs
             'audit_logs.read',
+            'imports.create',
+            // Library circulation
+            'library.create', 'library.read', 'library.update', 'library.delete',
+            // Inventory and stock movements
+            'inventory.create', 'inventory.read', 'inventory.update', 'inventory.delete',
+            'inventory_movements.create',
+            // Suppliers and purchase orders
+            'suppliers.create', 'suppliers.read', 'suppliers.update', 'suppliers.delete',
+            'procurement.create', 'procurement.read', 'procurement.update', 'procurement.delete', 'procurement.approve',
+            // Human resources and payroll
+            'hr.create', 'hr.read', 'hr.update', 'hr.delete', 'hr.approve',
+            'payroll.create', 'payroll.read', 'payroll.update', 'payroll.approve', 'payroll.pay',
+            // School transportation
+            'transport.create', 'transport.read', 'transport.update', 'transport.delete', 'transport.assign',
         ];
 
         foreach ($permissions as $perm) {
@@ -87,6 +102,7 @@ class RolePermissionSeeder extends Seeder
         $teacher = Role::firstOrCreate(['name' => 'Teacher', 'guard_name' => 'web']);
         $accountant = Role::firstOrCreate(['name' => 'Accountant', 'guard_name' => 'web']);
         $student = Role::firstOrCreate(['name' => 'Student', 'guard_name' => 'web']);
+        $librarian = Role::firstOrCreate(['name' => 'Librarian', 'guard_name' => 'web']);
 
         // ---- Permission assignments per Section 7.2 matrix ----
         $superAdmin->givePermissionTo($permissions);
@@ -97,6 +113,7 @@ class RolePermissionSeeder extends Seeder
 
         $registrar->givePermissionTo([
             'users.read',
+            'imports.create',
             'academic_years.create', 'academic_years.read', 'academic_years.update', 'academic_years.delete',
             'terms.create', 'terms.read', 'terms.update', 'terms.delete',
             'departments.create', 'departments.read', 'departments.update', 'departments.delete',
@@ -150,8 +167,11 @@ class RolePermissionSeeder extends Seeder
             'fee_structures.create', 'fee_structures.read', 'fee_structures.update', 'fee_structures.delete',
             'invoices.create', 'invoices.read', 'invoices.update', 'invoices.delete',
             'payments.create', 'payments.read',
+            'suppliers.create', 'suppliers.read', 'suppliers.update', 'suppliers.delete',
+            'procurement.create', 'procurement.read', 'procurement.update', 'procurement.delete',
             'announcements.read',
             'reports.read', 'reports.financial',
+            'payroll.read',
         ]);
 
         $student->givePermissionTo([
@@ -159,6 +179,11 @@ class RolePermissionSeeder extends Seeder
             'classes.read',
             'report_card.read',
             'announcements.read',
+        ]);
+
+        $librarian->givePermissionTo([
+            'library.create', 'library.read', 'library.update', 'library.delete',
+            'students.read',
         ]);
 
         // ---- Create Super Admin user (password rules live in SuperAdminSeeder) ----
