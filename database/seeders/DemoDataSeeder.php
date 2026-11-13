@@ -18,7 +18,6 @@ use App\Models\PayrollRun;
 use App\Models\Program;
 use App\Models\PurchaseOrder;
 use App\Models\SchoolClass;
-use App\Models\Setting;
 use App\Models\StaffAttendance;
 use App\Models\Student;
 use App\Models\StudentTransportAssignment;
@@ -40,6 +39,7 @@ use App\Services\ProcurementService;
 use App\Services\ResultPublicationService;
 use App\Services\TermResultService;
 use App\Services\TransportService;
+use App\Support\Money;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Collection;
@@ -55,15 +55,13 @@ class DemoDataSeeder extends Seeder
         }
 
         $this->call(RolePermissionSeeder::class);
-        if (! Setting::query()->exists() && ! User::query()->exists()) {
-            $this->call(SettingSeeder::class);
-        }
+        $this->call(SettingSeeder::class);
         if (! GradeScale::query()->where('is_default', true)->exists()) {
             $this->call(GradeScaleSeeder::class);
         }
 
         $this->call(SuperAdminSeeder::class);
-        User::updateOrCreate(
+        User::firstOrCreate(
             ['email' => 'admin@school.test'],
             [
                 'name' => 'International School Administrator',
@@ -95,93 +93,61 @@ class DemoDataSeeder extends Seeder
         Term::where('is_current', true)->whereKeyNot($term->id)->update(['is_current' => false]);
         $term->update(['is_current' => true]);
 
-        $departments = collect([
-            ['code' => 'SCI', 'name' => 'Science'],
-            ['code' => 'ART', 'name' => 'Arts'],
-            ['code' => 'COM', 'name' => 'Commerce'],
-        ])->map(fn (array $data) => Department::firstOrCreate(['code' => $data['code']], ['name' => $data['name']]));
-
-        $programData = [
-            ['code' => 'EYEARS', 'name' => 'International Early Years', 'level' => 'early-years', 'department_id' => $departments[1]->id],
-            ['code' => 'PRIM', 'name' => 'International Primary', 'level' => 'primary', 'department_id' => $departments[1]->id],
-            ['code' => 'LOWSEC', 'name' => 'Cambridge Lower Secondary', 'level' => 'lower-secondary', 'department_id' => $departments[0]->id],
-            ['code' => 'IGCSE', 'name' => 'Cambridge International IGCSE', 'level' => 'upper-secondary', 'department_id' => $departments[0]->id],
+        $programCodes = [
+            'IBPYP', 'CAMPRIM', 'AMER-ELEM', 'IBMYP', 'CAMLS', 'AMER-MS',
+            'CA-IGCSE', 'ED-IGCSE', 'US-HS', 'IBDP', 'CAM-AL', 'ED-AL',
         ];
-        $programs = collect($programData)->map(function (array $data) {
-            $program = Program::firstOrCreate(['code' => $data['code']], $data + [
-                'duration_terms' => 4,
-                'is_active' => true,
-            ]);
-
-            return $program;
-        });
-
-        $subjectData = [
-            ['code' => 'ENP', 'name' => 'Early Literacy and Phonics', 'credit_hours' => 2],
-            ['code' => 'NUM', 'name' => 'Early Numeracy', 'credit_hours' => 2],
-            ['code' => 'PLS', 'name' => 'Practical Life Skills', 'credit_hours' => 2],
-            ['code' => 'SEN', 'name' => 'Sensorial Learning', 'credit_hours' => 2],
-            ['code' => 'EXP', 'name' => 'World Discovery', 'credit_hours' => 2],
-            ['code' => 'ENG', 'name' => 'English Language', 'credit_hours' => 3],
-            ['code' => 'MTH', 'name' => 'Mathematics', 'credit_hours' => 3],
-            ['code' => 'BIO', 'name' => 'Biology', 'credit_hours' => 3],
-            ['code' => 'CHE', 'name' => 'Chemistry', 'credit_hours' => 3],
-            ['code' => 'PHY', 'name' => 'Physics', 'credit_hours' => 3],
-            ['code' => 'ECO', 'name' => 'Economics', 'credit_hours' => 3],
-            ['code' => 'HIS', 'name' => 'History', 'credit_hours' => 3],
-            ['code' => 'GEO', 'name' => 'Geography', 'credit_hours' => 3],
-            ['code' => 'ACC', 'name' => 'Accounting', 'credit_hours' => 3],
-            ['code' => 'CS', 'name' => 'Computer Science', 'credit_hours' => 3],
-            ['code' => 'FRE', 'name' => 'French as a Foreign Language', 'credit_hours' => 3],
-            ['code' => 'SPA', 'name' => 'Spanish as a Foreign Language', 'credit_hours' => 3],
-            ['code' => 'MAN', 'name' => 'Mandarin Chinese', 'credit_hours' => 3],
-            ['code' => 'ARA', 'name' => 'Arabic Language', 'credit_hours' => 3],
-            ['code' => 'TAM', 'name' => 'Tamil Language', 'credit_hours' => 3],
-            ['code' => 'ARTS', 'name' => 'Art and Design', 'credit_hours' => 2],
-            ['code' => 'MUS', 'name' => 'Music', 'credit_hours' => 2],
-            ['code' => 'PE', 'name' => 'Physical Education', 'credit_hours' => 1],
-            ['code' => 'GPR', 'name' => 'Global Perspectives', 'credit_hours' => 2],
-            ['code' => 'BUS', 'name' => 'Business Studies', 'credit_hours' => 3],
-            ['code' => 'PSY', 'name' => 'Psychology', 'credit_hours' => 3],
-            ['code' => 'ENV', 'name' => 'Environmental Management', 'credit_hours' => 2],
-            ['code' => 'LIT', 'name' => 'English Literature', 'credit_hours' => 3],
-            ['code' => 'ICT', 'name' => 'Information and Communication Technology', 'credit_hours' => 3],
+        $programs = Program::query()->whereIn('code', $programCodes)->get()->keyBy('code');
+        $subjectCodes = [
+            'ENP', 'NUM', 'PLS', 'SEN', 'WLD', 'ENG', 'LIT', 'MTH', 'FMA',
+            'BIO', 'CHE', 'PHY', 'SCI', 'HIS', 'GEO', 'ECO', 'BUS', 'ACC',
+            'PSY', 'GPR', 'FRE', 'SPA', 'MAN', 'ARA', 'TAM', 'ART', 'MUS',
+            'PE', 'ICT', 'CS', 'ENV', 'TOK', 'EE', 'CAS', 'APCALC', 'APBIO',
+            'APCHEM', 'APPHYS', 'APCS', 'APUSH', 'APENG', 'APECON',
+            'SIN', 'HIN', 'JPN', 'SWA', 'MAL', 'ZUL', 'AFR',
         ];
-        foreach ($subjectData as $data) {
-            Subject::firstOrCreate(['code' => $data['code']], $data);
-        }
-        $subjectOrder = array_flip(array_column($subjectData, 'code'));
         $subjects = Subject::query()
-            ->whereIn('code', array_keys($subjectOrder))
+            ->whereIn('code', $subjectCodes)
             ->get()
-            ->sortBy(fn (Subject $subject) => $subjectOrder[$subject->code])
+            ->sortBy(fn (Subject $subject) => array_search($subject->code, $subjectCodes, true))
             ->values();
 
         $classLevels = [
-            ['Montessori', 'A', 'EYEARS'],
-            ['LKG', 'A', 'EYEARS'],
-            ['UKG', 'A', 'EYEARS'],
-            ['Grade 1', 'A', 'PRIM'],
-            ['Grade 2', 'A', 'PRIM'],
-            ['Grade 3', 'A', 'PRIM'],
-            ['Grade 4', 'A', 'PRIM'],
-            ['Grade 5', 'A', 'PRIM'],
-            ['Grade 6', 'A', 'LOWSEC'],
-            ['Grade 7', 'A', 'LOWSEC'],
-            ['Grade 8', 'A', 'LOWSEC'],
-            ['Grade 9', 'A', 'LOWSEC'],
-            ['Grade 10', 'A', 'IGCSE'],
-            ['Grade 11', 'A', 'IGCSE'],
-            ['Grade 12', 'A', 'IGCSE'],
+            ['Nursery', 'A', 'IBPYP'],
+            ['Pre-K', 'A', 'IBPYP'],
+            ['Reception', 'A', 'IBPYP'],
         ];
-        foreach (['B', 'C', 'D', 'E', 'F', 'G', 'H'] as $section) {
-            $classLevels[] = ['Grade 10', $section, 'IGCSE'];
+        foreach (range(1, 5) as $grade) {
+            foreach (['A' => 'IBPYP', 'B' => 'CAMPRIM', 'C' => 'AMER-ELEM'] as $section => $programCode) {
+                $classLevels[] = ["Grade {$grade}", $section, $programCode];
+            }
+        }
+        foreach (range(6, 8) as $grade) {
+            foreach (['A' => 'IBMYP', 'B' => 'CAMLS', 'C' => 'AMER-MS'] as $section => $programCode) {
+                $classLevels[] = ["Grade {$grade}", $section, $programCode];
+            }
+        }
+        foreach (range(1, 6) as $yearNumber) {
+            $classLevels[] = ["Year {$yearNumber}", 'A', 'CAMPRIM'];
+        }
+        foreach (range(7, 9) as $yearNumber) {
+            $classLevels[] = ["Year {$yearNumber}", 'A', 'CAMLS'];
+        }
+        foreach (range(9, 10) as $grade) {
+            foreach (['A' => 'IBMYP', 'B' => 'CA-IGCSE', 'C' => 'ED-IGCSE', 'D' => 'US-HS'] as $section => $programCode) {
+                $classLevels[] = ["Grade {$grade}", $section, $programCode];
+            }
+        }
+        foreach (range(11, 12) as $grade) {
+            foreach (['A' => 'IBDP', 'B' => 'CAM-AL', 'C' => 'ED-AL', 'D' => 'US-HS'] as $section => $programCode) {
+                $classLevels[] = ["Grade {$grade}", $section, $programCode];
+            }
         }
         $classes = collect($classLevels)->map(function (array $level) use ($programs, $year) {
             [$name, $section, $programCode] = $level;
             $attributes = [
                 'capacity' => 40,
-                'program_id' => $programs->firstWhere('code', $programCode)->id,
+                'program_id' => $programs[$programCode]->id,
                 'academic_year_id' => $year->id,
             ];
             $class = SchoolClass::firstOrCreate(
@@ -197,7 +163,7 @@ class DemoDataSeeder extends Seeder
             if (! $hasNonDemoStudents && $class->capacity !== $attributes['capacity']) {
                 $updates['capacity'] = $attributes['capacity'];
             }
-            if (! $class->program_id) {
+            if ($class->program_id === null) {
                 $updates['program_id'] = $attributes['program_id'];
             }
             if (! $class->academic_year_id) {
@@ -210,13 +176,20 @@ class DemoDataSeeder extends Seeder
             return $class;
         });
 
+        $departments = Department::query()
+            ->whereIn('code', ['EARLY', 'LANG', 'MATH', 'SCI', 'HUM', 'ARTS', 'TECH', 'WELL'])
+            ->orderBy('id')
+            ->get();
+        if ($departments->isEmpty()) {
+            throw new RuntimeException('International academic departments must be seeded before demo teachers.');
+        }
         $this->seedTeachers($departments);
-        $teachers = Teacher::query()->orderBy('id')->limit(12)->get();
+        $this->ensureWellbeingTeacher($departments);
+        $teachers = Teacher::query()->orderBy('id')->get();
         $admin = User::where('email', 'admin@school.test')->firstOrFail();
         $this->seedStudents($classes, $programs, $year, $admin);
         $this->seedOfferings($classes, $subjects, $teachers, $term);
         $this->command?->info('Student enrollments ready; generating attendance and HR data...');
-        $this->call(LmsDemoSeeder::class);
         $this->seedStudentAttendance($classes, $term, $teachers, $admin);
         $this->seedStaffAttendance($teachers, $admin);
         $this->seedHrPayroll($teachers, $admin);
@@ -229,6 +202,77 @@ class DemoDataSeeder extends Seeder
         $this->seedTransport($year);
         $this->call(HostelCafeteriaDemoSeeder::class);
         $this->call(LocalDemoCredentialsSeeder::class);
+        $this->call(TeacherSubjectAssignmentSeeder::class);
+        $this->call(LmsDemoSeeder::class);
+    }
+
+    private function samplePhone(int $number, string $nationality): string
+    {
+        $threeDigitSuffix = sprintf('%03d', $number % 1000);
+
+        return match ($nationality) {
+            'Sri Lankan' => '+94770000'.$threeDigitSuffix,
+            'Indian' => '+919860000'.$threeDigitSuffix,
+            'British' => '+447400000'.$threeDigitSuffix,
+            'American' => '+1202555'.sprintf('%04d', 100 + ($number % 100)),
+            'Emirati' => '+971501234'.$threeDigitSuffix,
+            'French' => '+33612000'.$threeDigitSuffix,
+            'Kenyan' => '+254701234'.$threeDigitSuffix,
+            'Chinese' => '+861380000'.sprintf('%04d', $number % 10000),
+            'Japanese' => '+81801234'.sprintf('%04d', $number % 10000),
+            'Singaporean' => '+658100'.sprintf('%04d', $number % 10000),
+            'South African' => '+27711234'.$threeDigitSuffix,
+            'Australian' => '+6141234'.sprintf('%04d', $number % 10000),
+            default => '+94770000'.$threeDigitSuffix,
+        };
+    }
+
+    /** @return array{document_type: string, issuing_country: string, document_number: string} */
+    private function sampleDocument(int $number, string $nationality): array
+    {
+        $country = [
+            'Sri Lankan' => 'LK',
+            'Indian' => 'IN',
+            'British' => 'GB',
+            'American' => 'US',
+            'Emirati' => 'AE',
+            'French' => 'FR',
+            'Kenyan' => 'KE',
+            'Chinese' => 'CN',
+            'Japanese' => 'JP',
+            'Singaporean' => 'SG',
+            'South African' => 'ZA',
+            'Australian' => 'AU',
+        ][$nationality];
+
+        if ($country === 'AU' || $number % 2 === 0) {
+            return [
+                'document_type' => 'passport',
+                'issuing_country' => $country,
+                'document_number' => 'P'.str_pad((string) $number, 7, '0', STR_PAD_LEFT),
+            ];
+        }
+
+        $nationalId = match ($country) {
+            'LK' => sprintf('%09d', 900000000 + $number).'V',
+            'IN' => sprintf('%012d', 200000000000 + $number),
+            'GB' => 'AB'.sprintf('%06d', $number).'A',
+            'US' => sprintf('%09d', 900000000 + $number),
+            'AE' => '7841990'.sprintf('%08d', $number),
+            'FR' => 'AB'.sprintf('%010d', $number),
+            'KE' => sprintf('%08d', 10000000 + $number),
+            'CN' => '110101199001'.sprintf('%03d', $number),
+            'JP' => sprintf('%012d', 100000000000 + $number),
+            'SG' => 'S'.sprintf('%07d', $number).'A',
+            'ZA' => '900101'.sprintf('%05d', $number).'08',
+            default => throw new RuntimeException("No demo identity format is defined for {$country}."),
+        };
+
+        return [
+            'document_type' => 'national_id',
+            'issuing_country' => $country,
+            'document_number' => $nationalId,
+        ];
     }
 
     /** @param Collection<int, Department> $departments */
@@ -254,14 +298,15 @@ class DemoDataSeeder extends Seeder
             if ($user->name !== $name) {
                 $user->update(['name' => $name]);
             }
-            Teacher::firstOrCreate(
+            $teacher = Teacher::firstOrCreate(
                 ['user_id' => $user->id],
                 [
                     'department_id' => $departments[($number - 1) % $departments->count()]->id,
-                    'phone' => sprintf('555%07d', $number),
+                    'phone' => $this->samplePhone($number, 'Sri Lankan'),
                     'status' => 'active',
                 ]
             );
+            $teacher->update(['phone' => $this->samplePhone($number, 'Sri Lankan')]);
         }
 
         User::query()->where('email', 'like', 'demo.staff.%@school.test')->get()->each(function (User $user) use ($firstNames, $lastNames): void {
@@ -269,6 +314,41 @@ class DemoDataSeeder extends Seeder
                 $user->update(['name' => $this->sampleName((int) $matches[1], $firstNames, $lastNames)]);
             }
         });
+    }
+
+    /** @param Collection<int, Department> $departments */
+    private function ensureWellbeingTeacher(Collection $departments): void
+    {
+        $department = $departments->firstWhere('code', 'WELL');
+        if (! $department) {
+            throw new RuntimeException('The Physical Education and Wellbeing department must be seeded before demo teachers.');
+        }
+
+        if (Teacher::query()->where('department_id', $department->id)->exists()) {
+            return;
+        }
+
+        $user = User::firstOrCreate(
+            ['email' => 'demo.staff.wellbeing@school.test'],
+            [
+                'name' => 'Rafael Mensah',
+                'password' => 'password',
+                'role' => 'teacher',
+                'is_active' => true,
+                'must_change_password' => false,
+            ]
+        );
+        $teacher = Teacher::firstOrCreate(
+            ['user_id' => $user->id],
+            [
+                'department_id' => $department->id,
+                'phone' => $this->samplePhone(13, 'Sri Lankan'),
+                'status' => 'active',
+            ]
+        );
+        if ($teacher->department_id !== $department->id) {
+            $teacher->update(['department_id' => $department->id]);
+        }
     }
 
     /** @param Collection<int, SchoolClass> $classes
@@ -279,90 +359,145 @@ class DemoDataSeeder extends Seeder
         $studentFirstNames = ['Aarav', 'Aisha', 'Amara', 'Anaya', 'Arjun', 'Ava', 'Daniel', 'Ethan', 'Fatima', 'Hana', 'Isabella', 'Kai', 'Leila', 'Liam', 'Maya', 'Mei', 'Noah', 'Olivia', 'Priya', 'Rohan', 'Sofia', 'Zara', 'Zoya', 'Lucas'];
         $guardianFirstNames = ['Adrian', 'Amina', 'Anil', 'Carla', 'David', 'Farah', 'Grace', 'Imran', 'Joseph', 'Meera', 'Ravi', 'Sara', 'Samira', 'Thomas', 'Yasmin', 'Arun', 'Helen', 'Nadia', 'Kiran', 'Rafael', 'Leena', 'Omar', 'Ruth', 'Vikram'];
         $familyNames = ['Abraham', 'Ali', 'Bennett', 'Chen', 'Das', 'Fernandes', 'Garcia', 'Haddad', 'Ibrahim', 'Khan', 'Kim', 'Kumar', 'Lee', 'Martin', 'Mensah', 'Nair', 'Patel', 'Rahman', 'Silva', 'Tan'];
-        $students = Student::query()->orderBy('id')->get();
+        $nationalities = ['Sri Lankan', 'Indian', 'British', 'American', 'Emirati', 'French', 'Kenyan', 'Chinese', 'Japanese', 'Singaporean', 'South African', 'Australian'];
         $classCounts = $classes->mapWithKeys(fn (SchoolClass $class) => [
             $class->id => $class->students()->count(),
         ]);
+        $demoCounts = $classes->mapWithKeys(fn (SchoolClass $class) => [
+            $class->id => $class->students()->whereHas('user', fn ($query) => $query
+                ->where('email', 'like', 'demo.student.%@school.test')
+                ->orWhere('email', 'student@school.test'))->count(),
+        ]);
 
-        foreach ($students as $student) {
-            $class = $classes->firstWhere('id', $student->class_id);
-            if ($class && (! $student->program_id || ! $student->academic_year_id)) {
-                $student->update([
-                    'program_id' => $student->program_id ?: $class->program_id,
-                    'academic_year_id' => $student->academic_year_id ?: $class->academic_year_id,
-                ]);
-            }
-        }
+        Student::query()
+            ->select(['id', 'class_id', 'program_id', 'academic_year_id'])
+            ->chunkById(250, function (EloquentCollection $students) use ($classes): void {
+                foreach ($students as $student) {
+                    $class = $classes->firstWhere('id', $student->class_id);
+                    if ($class && (! $student->program_id || ! $student->academic_year_id)) {
+                        $student->update([
+                            'program_id' => $student->program_id ?: $class->program_id,
+                            'academic_year_id' => $student->academic_year_id ?: $class->academic_year_id,
+                        ]);
+                    }
+                }
+            });
         User::query()->where('email', 'like', 'demo.student.%@school.test')->get()->each(function (User $user) use ($studentFirstNames, $familyNames): void {
             if (preg_match('/demo\.student\.(\d+)@school\.test/', $user->email, $matches)) {
                 $user->update(['name' => $this->sampleName((int) $matches[1], $studentFirstNames, $familyNames)]);
             }
         });
-        User::query()->where('email', 'like', 'demo.guardian.%@school.test')->get()->each(function (User $user) use ($guardianFirstNames, $familyNames): void {
+        User::query()->where('email', 'like', 'demo.guardian.%@school.test')->get()->each(function (User $user) use ($guardianFirstNames, $familyNames, $nationalities): void {
             if (preg_match('/demo\.guardian\.(\d+)@school\.test/', $user->email, $matches)) {
-                $user->update(['name' => $this->sampleName((int) $matches[1], $guardianFirstNames, $familyNames)]);
+                $number = (int) $matches[1];
+                $user->update(['name' => $this->sampleName($number, $guardianFirstNames, $familyNames)]);
+                Guardian::query()->where('user_id', $user->id)->update([
+                    'phone' => $this->samplePhone($number, $nationalities[($number - 1) % count($nationalities)]),
+                    'nationality' => $nationalities[($number - 1) % count($nationalities)],
+                ]);
             }
         });
-        $guardianLinks = Student::query()
-            ->whereNotNull('guardian_id')
-            ->get(['id', 'guardian_id'])
-            ->map(fn (Student $student) => [
-                'guardian_id' => $student->guardian_id,
-                'student_id' => $student->id,
-                'is_primary' => true,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ])
-            ->all();
-        foreach (array_chunk($guardianLinks, 500) as $chunk) {
-            DB::table('guardian_student')->insertOrIgnore($chunk);
+        $legacyDemoStudentEmails = ['student@school.test'];
+        foreach (range(2, 11) as $studentNumber) {
+            $legacyDemoStudentEmails[] = "student{$studentNumber}@school.test";
         }
+        Student::query()
+            ->whereHas('user', fn ($query) => $query
+                ->where('email', 'like', 'demo.student.%@school.test')
+                ->orWhereIn('email', $legacyDemoStudentEmails))
+            ->with('user')
+            ->get()
+            ->each(function (Student $student): void {
+                if ($student->document_number !== null) {
+                    return;
+                }
 
+                $number = preg_match('/demo\.student\.(\d+)@school\.test/', $student->user->email, $matches) === 1
+                    ? (int) $matches[1]
+                    : 10000 + (preg_match('/student(\d*)@school\.test/', $student->user->email, $matches) === 1
+                        ? max(1, (int) $matches[1])
+                        : 1);
+                $nationalities = ['Sri Lankan', 'Indian', 'British', 'American', 'Emirati', 'French', 'Kenyan', 'Chinese', 'Japanese', 'Singaporean', 'South African', 'Australian'];
+                $student->update($this->sampleDocument($number, $nationalities[($number - 1) % count($nationalities)]));
+            });
+        Student::query()
+            ->whereNotNull('guardian_id')
+            ->select(['id', 'guardian_id'])
+            ->chunkById(500, function (EloquentCollection $students): void {
+                $guardianLinks = $students->map(fn (Student $student) => [
+                    'guardian_id' => $student->guardian_id,
+                    'student_id' => $student->id,
+                    'is_primary' => true,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+                DB::table('guardian_student')->insertOrIgnore($guardianLinks->all());
+            });
+
+        $basePerClass = intdiv(240, max(1, $classes->count()));
+        $additionalStudents = 240 % max(1, $classes->count());
+        $classTargets = $classes->values()->mapWithKeys(fn (SchoolClass $class, int $index) => [
+            $class->id => $basePerClass + ($index < $additionalStudents ? 1 : 0),
+        ]);
         $next = 1;
-        $studentsPerClass = (int) ceil(240 / max(1, $classes->count()));
-        while (true) {
-            $class = $classes->first(fn (SchoolClass $candidate) => $classCounts[$candidate->id] < $studentsPerClass);
+        $demoStudentCount = (int) $demoCounts->sum();
+        while ($demoStudentCount < 240) {
+            $class = $classes->first(fn (SchoolClass $candidate) => $demoCounts[$candidate->id] < $classTargets[$candidate->id]
+                && $classCounts[$candidate->id] < (int) $candidate->capacity);
+            $class ??= $classes->first(fn (SchoolClass $candidate) => $classCounts[$candidate->id] < (int) $candidate->capacity);
             if (! $class) {
-                break;
+                throw new RuntimeException('The international demo dataset needs 240 available student places across its grade sections.');
             }
 
             do {
                 $number = $next++;
-                $emails = [
-                    sprintf('demo.guardian.%03d@school.test', $number),
-                    sprintf('demo.student.%03d@school.test', $number),
-                ];
-            } while (User::query()->whereIn('email', $emails)->exists());
+                $studentEmail = sprintf('demo.student.%03d@school.test', $number);
+                $guardianEmail = sprintf('demo.guardian.%03d@school.test', $number);
+            } while (User::query()->where('email', $studentEmail)->exists());
 
             $guardianName = $this->sampleName($number, $guardianFirstNames, $familyNames);
             $studentName = $this->sampleName($number, $studentFirstNames, $familyNames);
-            $guardianUser = User::create([
+            $nationality = $nationalities[($number - 1) % count($nationalities)];
+            $guardianUser = User::firstOrCreate(['email' => $guardianEmail], [
                 'name' => $guardianName,
-                'email' => sprintf('demo.guardian.%03d@school.test', $number),
                 'password' => 'password',
                 'role' => 'parent',
                 'is_active' => true,
                 'must_change_password' => false,
             ]);
-            $guardian = Guardian::create([
-                'user_id' => $guardianUser->id,
-                'phone' => sprintf('555%07d', $number),
-            ]);
+            $guardian = Guardian::firstOrCreate(
+                ['user_id' => $guardianUser->id],
+                [
+                    'phone' => $this->samplePhone($number, $nationality),
+                    'nationality' => $nationality,
+                ]
+            );
+            $programCode = $class->program_id ? null : $this->programCodeForClass($class);
+            if ($class->program_id === null && $programCode === null) {
+                throw new RuntimeException("No curriculum track is defined for {$class->full_name}.");
+            }
+            if ($programCode !== null && ! isset($programs[$programCode])) {
+                throw new RuntimeException("The demo curriculum program {$programCode} is missing.");
+            }
 
             EnrollmentService::enrollStudent([
                 'name' => $studentName,
-                'email' => sprintf('demo.student.%03d@school.test', $number),
+                'email' => $studentEmail,
                 'password' => 'password',
                 'class_id' => $class->id,
-                'program_id' => $class->program_id ?: $programs[($number - 1) % $programs->count()]->id,
+                'program_id' => $class->program_id ?: $programs[$programCode]->id,
                 'academic_year_id' => $class->academic_year_id ?: $year->id,
                 'primary_guardian_id' => $guardian->id,
                 'gender' => $number % 2 === 0 ? 'female' : 'male',
+                'nationality' => $nationality,
+                ...$this->sampleDocument($number, $nationality),
                 'dob' => sprintf('%04d-05-%02d', $this->birthYearForClass($class), ($number % 27) + 1),
                 'admission_date' => '2026-09-01',
             ]);
 
             $classCounts->put($class->id, $classCounts[$class->id] + 1);
+            $demoCounts->put($class->id, $demoCounts[$class->id] + 1);
+            $demoStudentCount++;
         }
 
         if ($admin->exists) {
@@ -373,13 +508,39 @@ class DemoDataSeeder extends Seeder
     private function birthYearForClass(SchoolClass $class): int
     {
         return match ($class->name) {
-            'Montessori' => 2023,
-            'LKG' => 2022,
-            'UKG' => 2021,
-            default => preg_match('/^Grade (\d+)$/', $class->name, $matches) === 1
+            'Nursery' => 2023,
+            'Pre-K' => 2022,
+            'Reception' => 2021,
+            default => preg_match('/^(?:Grade|Year) (\d+)$/', $class->name, $matches) === 1
                 ? 2021 - (int) $matches[1]
                 : 2010,
         };
+    }
+
+    private function programCodeForClass(SchoolClass $class): ?string
+    {
+        if (in_array($class->name, ['Nursery', 'Pre-K', 'Reception'], true)) {
+            return 'IBPYP';
+        }
+
+        if (preg_match('/^Grade (\d+)$/', $class->name, $matches) === 1) {
+            $grade = (int) $matches[1];
+            $sectionPrograms = match (true) {
+                $grade >= 1 && $grade <= 5 => ['A' => 'IBPYP', 'B' => 'CAMPRIM', 'C' => 'AMER-ELEM'],
+                $grade >= 6 && $grade <= 8 => ['A' => 'IBMYP', 'B' => 'CAMLS', 'C' => 'AMER-MS'],
+                $grade >= 9 && $grade <= 10 => ['A' => 'IBMYP', 'B' => 'CA-IGCSE', 'C' => 'ED-IGCSE', 'D' => 'US-HS'],
+                $grade >= 11 && $grade <= 12 => ['A' => 'IBDP', 'B' => 'CAM-AL', 'C' => 'ED-AL', 'D' => 'US-HS'],
+                default => [],
+            };
+
+            return $sectionPrograms[$class->section] ?? null;
+        }
+
+        if (preg_match('/^Year (\d+)$/', $class->name, $matches) === 1) {
+            return (int) $matches[1] <= 6 ? 'CAMPRIM' : 'CAMLS';
+        }
+
+        return null;
     }
 
     /** @param Collection<int, SchoolClass> $classes
@@ -388,13 +549,27 @@ class DemoDataSeeder extends Seeder
      */
     private function seedOfferings(Collection $classes, EloquentCollection $subjects, EloquentCollection $teachers, Term $term): void
     {
+        $programCodes = Program::query()->whereIn('id', $classes->pluck('program_id')->unique())->pluck('code', 'id');
         foreach ($classes as $class) {
-            $subjectCodes = match (true) {
-                in_array($class->name, ['Montessori', 'LKG', 'UKG'], true) => ['ENP', 'NUM', 'PLS', 'SEN', 'EXP', 'ENG', 'MTH', 'ARTS', 'MUS', 'PE'],
-                preg_match('/^Grade ([1-5])$/', $class->name) === 1 => ['ENG', 'MTH', 'BIO', 'HIS', 'GEO', 'ICT', 'ARTS', 'MUS', 'PE', 'GPR'],
-                preg_match('/^Grade ([6-9])$/', $class->name) === 1 => ['ENG', 'MTH', 'BIO', 'CHE', 'HIS', 'GEO', 'ICT', 'FRE', 'ARTS', 'PE'],
-                default => ['ENG', 'MTH', 'BIO', 'CHE', 'PHY', 'ECO', 'HIS', 'GEO', 'ACC', 'CS'],
+            $programCode = $class->program_id
+                ? ($programCodes[$class->program_id] ?? '')
+                : ($this->programCodeForClass($class) ?? '');
+            $subjectCodes = match ($programCode) {
+                'IBPYP' => ['ENP', 'NUM', 'PLS', 'SEN', 'WLD', 'ENG', 'MTH', 'SCI', 'GPR', 'ART', 'MUS', 'PE'],
+                'CAMPRIM' => ['ENG', 'MTH', 'SCI', 'HIS', 'GEO', 'ICT', 'FRE', 'ART', 'MUS', 'PE', 'GPR'],
+                'AMER-ELEM', 'AMER-MS' => ['ENG', 'MTH', 'SCI', 'HIS', 'GEO', 'ICT', 'ART', 'MUS', 'PE', 'CS'],
+                'IBMYP' => ['ENG', 'LIT', 'MTH', 'BIO', 'CHE', 'PHY', 'HIS', 'GEO', 'FRE', 'GPR', 'ART', 'MUS', 'PE', 'CS'],
+                'CAMLS' => ['ENG', 'MTH', 'SCI', 'BIO', 'CHE', 'PHY', 'HIS', 'GEO', 'ICT', 'FRE', 'GPR', 'ART', 'PE'],
+                'CA-IGCSE', 'ED-IGCSE' => ['ENG', 'LIT', 'MTH', 'BIO', 'CHE', 'PHY', 'HIS', 'GEO', 'ECO', 'BUS', 'ACC', 'CS', 'FRE'],
+                'IBDP' => ['ENG', 'LIT', 'MTH', 'BIO', 'CHE', 'PHY', 'HIS', 'GEO', 'ECO', 'PSY', 'FRE', 'MAN', 'ART', 'TOK', 'EE', 'CAS'],
+                'CAM-AL', 'ED-AL' => ['ENG', 'LIT', 'MTH', 'FMA', 'BIO', 'CHE', 'PHY', 'HIS', 'GEO', 'ECO', 'BUS', 'ACC', 'PSY', 'CS'],
+                'US-HS' => ['ENG', 'LIT', 'MTH', 'BIO', 'CHE', 'PHY', 'HIS', 'GEO', 'ECO', 'CS', 'APCALC', 'APBIO', 'APCHEM', 'APPHYS', 'APCS', 'APUSH', 'APENG', 'APECON'],
+                default => [],
             };
+            $subjectCodes = array_values(array_unique(array_merge(
+                $subjectCodes,
+                ['SIN', 'HIN', 'JPN', 'SWA', 'MAL', 'ZUL', 'AFR', 'TAM', 'MAN', 'ARA', 'FRE', 'SPA']
+            )));
             foreach ($subjectCodes as $index => $subjectCode) {
                 $subject = $subjects->firstWhere('code', $subjectCode);
                 if (! $subject) {
@@ -417,18 +592,7 @@ class DemoDataSeeder extends Seeder
     /** @param Collection<int, SchoolClass> $classes */
     private function seedSampleTimetable(Collection $classes, Term $term): void
     {
-        $samples = [
-            ['Montessori', ['08:00', '08:45']],
-            ['Grade 5', ['09:30', '10:15']],
-            ['Grade 10', ['11:00', '11:45']],
-        ];
-
-        foreach ($samples as [$className, $times]) {
-            $class = $classes->firstWhere('name', $className);
-            if (! $class) {
-                continue;
-            }
-
+        foreach ($classes as $class) {
             $offerings = ClassSubject::query()
                 ->where('class_id', $class->id)
                 ->where('term_id', $term->id)
@@ -438,7 +602,7 @@ class DemoDataSeeder extends Seeder
 
             foreach (range(1, 5) as $day) {
                 foreach ($offerings->slice(($day - 1) * 2, 2)->values() as $period => $offering) {
-                    $start = $times[$period].':00';
+                    $start = $period === 0 ? '08:00:00' : '08:45:00';
                     $end = date('H:i:s', strtotime($start.' +40 minutes'));
                     TimetableSlot::firstOrCreate(
                         [
@@ -447,7 +611,7 @@ class DemoDataSeeder extends Seeder
                             'start_time' => $start,
                             'end_time' => $end,
                         ],
-                        ['room' => 'Demo '.$class->name.' '.$class->section]
+                        ['room' => 'Learning Centre '.$class->id]
                     );
                 }
             }
@@ -578,6 +742,16 @@ class DemoDataSeeder extends Seeder
                 ->map(fn ($matches) => $matches->firstWhere('term_id', $term->id) ?? $matches->first());
 
             foreach ($offerings as $offering) {
+                $studentIds = DB::table('student_subject_enrollments')
+                    ->join('students', 'student_subject_enrollments.student_id', '=', 'students.id')
+                    ->where('student_subject_enrollments.class_subject_id', $offering->id)
+                    ->where('student_subject_enrollments.status', 'enrolled')
+                    ->where('students.status', 'active')
+                    ->pluck('student_subject_enrollments.student_id');
+                if ($studentIds->isEmpty()) {
+                    continue;
+                }
+
                 $exam = Exam::firstOrCreate(
                     [
                         'name' => 'Term 1 - '.$offering->subject->code,
@@ -594,10 +768,10 @@ class DemoDataSeeder extends Seeder
                     ]
                 );
 
-                $rows = Student::where('class_id', $class->id)->get(['id'])->map(fn (Student $student) => [
+                $rows = $studentIds->map(fn (int $studentId) => [
                     'exam_id' => $exam->id,
-                    'student_id' => $student->id,
-                    'marks' => 55 + (($student->id * 17 + $offering->subject_id * 13) % 46),
+                    'student_id' => $studentId,
+                    'marks' => 55 + (($studentId * 17 + $offering->subject_id * 13) % 46),
                     'is_absent' => false,
                     'is_excused' => false,
                     'created_at' => now(),
@@ -636,7 +810,15 @@ class DemoDataSeeder extends Seeder
     private function seedInvoices(Collection $classes, Collection $programs, AcademicYear $year, Term $term, User $admin): void
     {
         foreach ($programs as $program) {
-            FeeStructure::firstOrCreate(
+            $currency = config('school.program_currencies.'.$program->code, config('school.default_currency', 'LKR'));
+            $amount = [
+                'LKR' => '450000.00',
+                'USD' => '1800.00',
+                'GBP' => '1400.00',
+                'EUR' => '1650.00',
+                'AED' => '6600.00',
+            ][$currency] ?? '450000.00';
+            FeeStructure::updateOrCreate(
                 [
                     'name' => 'International School Term Tuition',
                     'program_id' => $program->id,
@@ -644,14 +826,22 @@ class DemoDataSeeder extends Seeder
                     'class_id' => null,
                     'term_id' => $term->id,
                 ],
-                ['amount' => '45000.00', 'is_active' => true]
+                ['amount' => $amount, 'currency' => $currency, 'is_active' => true]
             );
         }
 
         foreach ($classes as $class) {
+            $programId = $class->program_id;
+            if ($programId === null) {
+                $programCode = $this->programCodeForClass($class);
+                if ($programCode === null || ! isset($programs[$programCode])) {
+                    throw new RuntimeException("No curriculum track is defined for {$class->full_name}.");
+                }
+                $programId = $programs[$programCode]->id;
+            }
             $feeStructureIds = FeeStructure::query()
                 ->whereNull('class_id')
-                ->where('program_id', $class->program_id)
+                ->where('program_id', $programId)
                 ->where('academic_year_id', $year->id)
                 ->where('term_id', $term->id)
                 ->where('is_active', true)
@@ -667,42 +857,40 @@ class DemoDataSeeder extends Seeder
             );
         }
 
-        $index = 0;
         foreach (DB::table('invoices')->where('term_id', $term->id)->orderBy('id')->get() as $invoice) {
-            if ((float) $invoice->balance <= 0 || (float) $invoice->amount_paid > 0) {
+            if (
+                (float) $invoice->balance <= 0
+                || (float) $invoice->amount_paid > 0
+                || DB::table('payments')->where('invoice_id', $invoice->id)->exists()
+            ) {
                 continue;
             }
 
-            if ($index % 10 === 0) {
+            if ($invoice->id % 10 === 0) {
                 PaymentService::recordPayment($invoice->id, $invoice->balance, 'cash', 'DEMO-'.$invoice->id, today()->toDateString(), $admin->id);
-            } elseif ($index % 10 === 1) {
-                $amount = min(5000, (int) $invoice->balance);
-                if ($amount > 0) {
-                    PaymentService::recordPayment($invoice->id, (string) $amount, 'cash', 'DEMO-'.$invoice->id, today()->toDateString(), $admin->id);
+            } elseif ($invoice->id % 10 === 1) {
+                $amount = Money::mul($invoice->balance, '0.20');
+                if (Money::comp($amount, '0.00') > 0) {
+                    PaymentService::recordPayment($invoice->id, $amount, 'cash', 'DEMO-'.$invoice->id, today()->toDateString(), $admin->id);
                 }
             }
-
-            $index++;
         }
     }
 
     private function seedInventory(User $admin): void
     {
         $items = [
-            ['sku' => 'DEMO-LAB-001', 'name' => 'Science Lab Kit', 'category' => 'Laboratory', 'unit' => 'kit', 'quantity' => 24, 'reorder_level' => 5],
-            ['sku' => 'DEMO-STA-001', 'name' => 'Student Desk', 'category' => 'Furniture', 'unit' => 'piece', 'quantity' => 48, 'reorder_level' => 8],
-            ['sku' => 'DEMO-STAT-001', 'name' => 'Exercise Book', 'category' => 'Stationery', 'unit' => 'book', 'quantity' => 180, 'reorder_level' => 50],
-            ['sku' => 'DEMO-IT-001', 'name' => 'Keyboard', 'category' => 'IT Equipment', 'unit' => 'piece', 'quantity' => 12, 'reorder_level' => 4],
-            ['sku' => 'DEMO-IT-002', 'name' => 'Projector Lamp', 'category' => 'IT Equipment', 'unit' => 'piece', 'quantity' => 2, 'reorder_level' => 3],
+            ['sku' => 'DEMO-LAB-001', 'name' => 'International Science Lab Equipment Set', 'category' => 'Laboratory', 'unit' => 'kit', 'quantity' => 24, 'reorder_level' => 5, 'description' => 'Microscope slides, glassware and safety equipment for Cambridge and IB practical science classes.'],
+            ['sku' => 'DEMO-STA-001', 'name' => 'Adjustable Student Desk', 'category' => 'Furniture', 'unit' => 'piece', 'quantity' => 48, 'reorder_level' => 8, 'description' => 'Height-adjustable classroom desks for Early Years through Grade 12 learning spaces.'],
+            ['sku' => 'DEMO-STAT-001', 'name' => 'International Curriculum Exercise Book', 'category' => 'Stationery', 'unit' => 'book', 'quantity' => 180, 'reorder_level' => 50, 'description' => 'Ruled exercise books for English, humanities and international programme coursework.'],
+            ['sku' => 'DEMO-IT-001', 'name' => 'Multilingual USB Keyboard', 'category' => 'IT Equipment', 'unit' => 'piece', 'quantity' => 12, 'reorder_level' => 4, 'description' => 'USB keyboards for the school computing and digital literacy suites.'],
+            ['sku' => 'DEMO-IT-002', 'name' => 'Interactive Classroom Projector Lamp', 'category' => 'IT Equipment', 'unit' => 'piece', 'quantity' => 2, 'reorder_level' => 3, 'description' => 'Replacement lamps for interactive teaching projectors in upper-secondary classrooms.'],
         ];
 
         foreach ($items as $data) {
             $initialQuantity = $data['quantity'];
             unset($data['quantity']);
-            $item = InventoryItem::firstOrCreate(
-                ['sku' => $data['sku']],
-                $data + ['is_active' => true, 'description' => 'Sample inventory item']
-            );
+            $item = InventoryItem::firstOrCreate(['sku' => $data['sku']], $data + ['is_active' => true]);
             if ((int) $item->quantity_on_hand === 0 && $item->movements()->doesntExist() && $initialQuantity > 0) {
                 InventoryService::recordMovement(
                     $item,
@@ -735,13 +923,13 @@ class DemoDataSeeder extends Seeder
             );
         }
 
-        if (! LeaveRequest::where('reason', 'Demo leave request')->exists()) {
+        if (! LeaveRequest::where('reason', 'Family visit during the autumn mid-term break')->exists()) {
             HrPayrollService::requestLeave([
                 'employee_id' => Employee::where('employee_no', 'DEMO-EMP-001')->value('id'),
                 'leave_type' => 'annual',
                 'start_date' => '2026-11-20',
                 'end_date' => '2026-11-22',
-                'reason' => 'Demo leave request',
+                'reason' => 'Family visit during the autumn mid-term break',
             ], $admin->id);
         }
 
@@ -751,23 +939,23 @@ class DemoDataSeeder extends Seeder
         if (! $run) {
             $run = HrPayrollService::generatePayroll('2026-10-01', '2026-10-31', $admin->id);
             $firstEntry = $run->entries()->orderBy('id')->firstOrFail();
-            HrPayrollService::updateEntry($firstEntry, '5000.00', '0.00', 'Demo allowance');
+            HrPayrollService::updateEntry($firstEntry, '5000.00', '0.00', 'International curriculum coordination allowance');
         }
     }
 
     private function seedProcurement(User $admin): void
     {
-        $supplier = Supplier::firstOrCreate(
-            ['name' => 'Demo School Supplies'],
+        $supplier = Supplier::updateOrCreate(
+            ['name' => 'Lanka Academic Resources (Pvt) Ltd'],
             [
-                'contact_name' => 'Demo Supplier',
-                'email' => 'demo.supplier@school.test',
-                'phone' => '5550000000',
-                'address' => 'Demo data only',
+                'contact_name' => 'Kavindu Perera',
+                'email' => 'orders@lanka-academic.example',
+                'phone' => '+94112674300',
+                'address' => 'No. 18, Nawala Road, Colombo 05, Sri Lanka',
                 'is_active' => true,
             ]
         );
-        if (PurchaseOrder::where('notes', 'Demo procurement sample')->exists()) {
+        if (PurchaseOrder::where('notes', 'Cambridge and IB science laboratory consumables for Term 1')->exists()) {
             return;
         }
 
@@ -776,7 +964,7 @@ class DemoDataSeeder extends Seeder
             'supplier_id' => $supplier->id,
             'order_date' => '2026-10-01',
             'expected_date' => '2026-10-15',
-            'notes' => 'Demo procurement sample',
+            'notes' => 'Cambridge and IB science laboratory consumables for Term 1',
             'items' => [[
                 'inventory_item_id' => $item->id,
                 'quantity_ordered' => 50,
@@ -785,24 +973,24 @@ class DemoDataSeeder extends Seeder
         ], $admin->id);
         ProcurementService::submit($order);
         ProcurementService::approve($order, $admin->id);
-        ProcurementService::receive($order, [$order->items()->value('id') => 50], $admin->id, 'DEMO-DELIVERY', 'Sample received goods');
+        ProcurementService::receive($order, [$order->items()->value('id') => 50], $admin->id, 'LAR-DEL-261015', 'Term 1 exercise books and laboratory consumables received');
     }
 
     private function seedTransport(AcademicYear $year): void
     {
         $vehicleData = [
-            ['registration_number' => 'DEMO-BUS-01', 'vehicle_type' => 'School bus', 'capacity' => 40, 'driver_name' => 'Ravi Nair', 'driver_phone' => '+1-555-0201', 'insurance_expiry' => '2027-08-31', 'inspection_expiry' => '2027-06-30', 'status' => 'active'],
-            ['registration_number' => 'DEMO-BUS-02', 'vehicle_type' => 'Electric school bus', 'capacity' => 40, 'driver_name' => 'Maya Ibrahim', 'driver_phone' => '+1-555-0202', 'insurance_expiry' => '2027-08-31', 'inspection_expiry' => '2027-06-30', 'status' => 'active'],
-            ['registration_number' => 'DEMO-VAN-01', 'vehicle_type' => 'Minibus', 'capacity' => 40, 'driver_name' => 'Daniel Chen', 'driver_phone' => '+1-555-0203', 'insurance_expiry' => '2027-08-31', 'inspection_expiry' => '2027-06-30', 'status' => 'active'],
+            ['registration_number' => 'WP ND-4821', 'vehicle_type' => 'School bus', 'capacity' => 40, 'driver_name' => 'Ravi Nair', 'driver_phone' => '+94775123401', 'insurance_expiry' => '2027-08-31', 'inspection_expiry' => '2027-06-30', 'status' => 'active'],
+            ['registration_number' => 'WP NB-3168', 'vehicle_type' => 'Electric school bus', 'capacity' => 40, 'driver_name' => 'Maya Ibrahim', 'driver_phone' => '+94716234502', 'insurance_expiry' => '2027-08-31', 'inspection_expiry' => '2027-06-30', 'status' => 'active'],
+            ['registration_number' => 'WP NC-9074', 'vehicle_type' => 'Minibus', 'capacity' => 18, 'driver_name' => 'Daniel Chen', 'driver_phone' => '+94767345603', 'insurance_expiry' => '2027-08-31', 'inspection_expiry' => '2027-06-30', 'status' => 'active'],
         ];
-        $vehicles = collect($vehicleData)->map(fn (array $data) => TransportVehicle::firstOrCreate(
+        $vehicles = collect($vehicleData)->map(fn (array $data) => TransportVehicle::updateOrCreate(
             ['registration_number' => $data['registration_number']],
             $data
         ));
         $routeData = [
-            ['code' => 'DEMO-NORTH', 'name' => 'North Residential Loop', 'vehicle_id' => $vehicles[0]->id, 'monthly_fee' => '6500.00', 'is_active' => true],
-            ['code' => 'DEMO-RIVERSIDE', 'name' => 'Riverside and Central Route', 'vehicle_id' => $vehicles[1]->id, 'monthly_fee' => '7200.00', 'is_active' => true],
-            ['code' => 'DEMO-SOUTH', 'name' => 'South Park and Garden Route', 'vehicle_id' => $vehicles[2]->id, 'monthly_fee' => '5800.00', 'is_active' => true],
+            ['code' => 'COL-NORTH', 'name' => 'Colombo North to IGK Main Campus', 'vehicle_id' => $vehicles[0]->id, 'monthly_fee' => '6500.00', 'is_active' => true],
+            ['code' => 'COL-CENTRAL', 'name' => 'Rajagiriya and Colombo Central Shuttle', 'vehicle_id' => $vehicles[1]->id, 'monthly_fee' => '7200.00', 'is_active' => true],
+            ['code' => 'COL-SOUTH', 'name' => 'Nugegoda and Colombo South Shuttle', 'vehicle_id' => $vehicles[2]->id, 'monthly_fee' => '5800.00', 'is_active' => true],
         ];
         $routes = collect($routeData)->map(fn (array $data) => TransportRoute::firstOrCreate(
             ['code' => $data['code']],
@@ -841,19 +1029,29 @@ class DemoDataSeeder extends Seeder
                     ->orWhere('email', 'student@school.test');
             }))
             ->orderBy('id')
-            ->limit(90)
             ->get();
-        foreach ($students->chunk(30)->values() as $index => $group) {
-            $route = $routes[$index];
-            $stop = $route->stops()->orderBy('sequence')->firstOrFail();
-            foreach ($group as $student) {
-                if (StudentTransportAssignment::query()
-                    ->where('student_id', $student->id)
-                    ->where('academic_year_id', $year->id)
-                    ->exists()) {
-                    continue;
-                }
+        $assignedStudentIds = StudentTransportAssignment::query()
+            ->where('academic_year_id', $year->id)
+            ->where('status', 'active')
+            ->pluck('student_id')
+            ->all();
 
+        foreach ($routes as $route) {
+            $stop = $route->stops()->orderBy('sequence')->firstOrFail();
+            $vehicle = $vehicles->firstWhere('id', $route->vehicle_id);
+            $remainingSeats = max(
+                0,
+                (int) $vehicle->capacity - StudentTransportAssignment::query()
+                    ->where('academic_year_id', $year->id)
+                    ->where('status', 'active')
+                    ->whereHas('route', fn ($query) => $query->where('vehicle_id', $vehicle->id))
+                    ->count()
+            );
+            $group = $students
+                ->reject(fn (Student $student) => in_array($student->id, $assignedStudentIds, true))
+                ->take($remainingSeats);
+
+            foreach ($group as $student) {
                 TransportService::assignStudent(null, [
                     'student_id' => $student->id,
                     'transport_route_id' => $route->id,
@@ -862,6 +1060,7 @@ class DemoDataSeeder extends Seeder
                     'start_date' => $year->start_date->toDateString(),
                     'status' => 'active',
                 ]);
+                $assignedStudentIds[] = $student->id;
             }
         }
     }

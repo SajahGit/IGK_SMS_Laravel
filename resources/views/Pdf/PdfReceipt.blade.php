@@ -52,14 +52,14 @@
 
     <div class="amount">
         <div>Amount received</div>
-        <strong>{{ \App\Support\Money::format($payment->amount) }}</strong>
+        <strong>{{ \App\Support\Money::format($payment->amount, $payment->currency.' ') }}</strong>
         <div class="words">{{ $amountInWords }}</div>
     </div>
 
     <table>
-        <tr><td class="label">Invoice Total</td><td>{{ \App\Support\Money::format($payment->invoice->total) }}</td></tr>
-        <tr><td class="label">Total Paid</td><td>{{ \App\Support\Money::format($payment->invoice->amount_paid) }}</td></tr>
-        <tr><td class="label">Outstanding Balance</td><td>{{ \App\Support\Money::format($payment->invoice->balance) }}</td></tr>
+        <tr><td class="label">Invoice Total</td><td>{{ \App\Support\Money::format($payment->invoice->total, $payment->invoice->currency.' ') }}</td></tr>
+        <tr><td class="label">Total Paid</td><td>{{ \App\Support\Money::format($payment->invoice->amount_paid, $payment->invoice->currency.' ') }}</td></tr>
+        <tr><td class="label">Outstanding Balance</td><td>{{ \App\Support\Money::format($payment->invoice->balance, $payment->invoice->currency.' ') }}</td></tr>
     </table>
 
     @if ($payment->isReversed())

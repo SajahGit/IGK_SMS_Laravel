@@ -39,7 +39,7 @@
                     <div class="input-icon">
                         <i class="bi bi-lock"></i>
                         <input type="password" id="password" name="password" placeholder="New password"
-                               class="form-control @error('password') is-invalid @enderror" required autocomplete="new-password">
+                               class="form-control @error('password') is-invalid @enderror" required minlength="8" maxlength="32" autocomplete="new-password">
                         <button type="button" class="pw-toggle" id="pwToggle" aria-label="Show password"><i class="bi bi-eye"></i></button>
                     </div>
                     @error('password') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
@@ -49,7 +49,7 @@
                     <div class="input-icon">
                         <i class="bi bi-lock-fill"></i>
                         <input type="password" id="password_confirmation" name="password_confirmation" placeholder="Confirm new password"
-                               class="form-control @error('password_confirmation') is-invalid @enderror" required autocomplete="new-password">
+                               class="form-control @error('password_confirmation') is-invalid @enderror" required minlength="8" maxlength="32" autocomplete="new-password">
                     </div>
                     @error('password_confirmation') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
                 </div>

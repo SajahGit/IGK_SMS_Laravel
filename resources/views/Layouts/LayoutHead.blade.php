@@ -11,5 +11,7 @@
 </script>
 <link href="{{ asset('vendor/bootstrap/bootstrap.min.css') }}" rel="stylesheet">
 <link href="{{ asset('vendor/bootstrap-icons/bootstrap-icons.min.css') }}" rel="stylesheet">
+<link href="{{ asset('vendor/flag-icons/css/flag-icons.min.css') }}" rel="stylesheet">
+<link href="{{ asset('vendor/flag-icons/css/territory-flags.css') }}" rel="stylesheet">
 <link href="{{ asset('vendor/inter/inter.css') }}" rel="stylesheet">
 <link href="{{ asset('css/glass.css') }}" rel="stylesheet">

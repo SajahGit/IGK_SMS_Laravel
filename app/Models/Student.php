@@ -16,9 +16,21 @@ class Student extends Model
     protected $fillable = [
         'user_id', 'class_id', 'program_id', 'academic_year_id', 'guardian_id', 'branch_id',
         'admission_no', 'admission_date', 'dob', 'gender', 'national_id', 'phone', 'status',
+        'nationality', 'document_type', 'issuing_country', 'document_number',
     ];
 
     protected $casts = ['dob' => 'date', 'admission_date' => 'date'];
+
+    public function setDocumentNumberAttribute(?string $value): void
+    {
+        $this->attributes['document_number'] = $value;
+        $this->attributes['national_id'] = $value;
+    }
+
+    public function getDocumentNumberAttribute(): ?string
+    {
+        return $this->attributes['document_number'] ?? $this->attributes['national_id'] ?? null;
+    }
 
     protected static function booted(): void
     {

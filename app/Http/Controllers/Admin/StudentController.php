@@ -7,9 +7,16 @@ use App\Models\Guardian;
 use App\Models\SchoolClass;
 use App\Models\Student;
 use App\Models\User;
+use App\Rules\UniqueStudentDocumentNumber;
+use App\Rules\ValidInternationalPhone;
+use App\Rules\ValidPersonName;
+use App\Rules\ValidStudentDocument;
+use App\Support\InternationalPhoneNumber;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 class StudentController extends Controller
 {
@@ -19,7 +26,7 @@ class StudentController extends Controller
             ->when($request->q, function ($query, $search) {
                 $query->where(function ($w) use ($search) {
                     $w->where('admission_no', 'like', "%{$search}%")
-                      ->orWhereHas('user', fn ($u) => $u->where('name', 'like', "%{$search}%"));
+                        ->orWhereHas('user', fn ($u) => $u->where('name', 'like', "%{$search}%"));
                 });
             })
             ->when($request->class_id, fn ($query, $classId) => $query->where('class_id', $classId))
@@ -40,16 +47,23 @@ class StudentController extends Controller
 
     public function store(Request $request)
     {
+        InternationalPhoneNumber::normalizeRequest($request);
+        $this->normalizeDocumentNumber($request);
         $data = $request->validate([
-            'name' => 'required|string|max:100',
+            'name' => ['required', 'string', 'max:100', new ValidPersonName],
             'email' => 'required|email|unique:users,email',
-            'password' => 'required|min:8',
+            'password' => 'required|string|min:8|max:32',
             'class_id' => 'required|exists:classes,id',
             'admission_no' => 'required|max:30|unique:students,admission_no',
             'dob' => 'nullable|date|before:today',
-            'phone' => 'nullable|max:20',
+            'document_type' => ['required', Rule::in(['national_id', 'passport'])],
+            'issuing_country' => ['required', 'string', 'size:2'],
+            'document_number' => ['required', 'string', 'max:30', new ValidStudentDocument($request->input('document_type'), $request->input('issuing_country')), new UniqueStudentDocumentNumber],
+            'nationality' => ['nullable', Rule::in(array_column(config('school.demo_nationalities', []), 'label'))],
+            'phone' => ['nullable', 'string', 'max:20', Rule::unique('students', 'phone'), new ValidInternationalPhone($request->input('phone_region'))],
             'guardian_id' => 'nullable|exists:guardians,id',
         ]);
+        $this->ensureClassHasCapacity((int) $data['class_id']);
 
         DB::transaction(function () use ($data) {
             $user = User::create([
@@ -65,6 +79,10 @@ class StudentController extends Controller
                 'guardian_id' => $data['guardian_id'] ?? null,
                 'admission_no' => $data['admission_no'],
                 'dob' => $data['dob'] ?? null,
+                'document_type' => $data['document_type'],
+                'issuing_country' => $data['issuing_country'],
+                'document_number' => $data['document_number'],
+                'nationality' => $data['nationality'] ?? null,
                 'phone' => $data['phone'] ?? null,
             ]);
         });
@@ -79,16 +97,23 @@ class StudentController extends Controller
 
     public function update(Request $request, Student $student)
     {
+        InternationalPhoneNumber::normalizeRequest($request);
+        $this->normalizeDocumentNumber($request);
         $data = $request->validate([
-            'name' => 'required|string|max:100',
+            'name' => ['required', 'string', 'max:100', new ValidPersonName],
             'email' => ['required', 'email', Rule::unique('users', 'email')->ignore($student->user_id)],
-            'password' => 'nullable|min:8',
+            'password' => 'nullable|string|min:8|max:32',
             'class_id' => 'required|exists:classes,id',
             'admission_no' => ['required', 'max:30', Rule::unique('students', 'admission_no')->ignore($student->id)],
             'dob' => 'nullable|date|before:today',
-            'phone' => 'nullable|max:20',
+            'document_type' => ['required', Rule::in(['national_id', 'passport'])],
+            'issuing_country' => ['required', 'string', 'size:2'],
+            'document_number' => ['required', 'string', 'max:30', new ValidStudentDocument($request->input('document_type'), $request->input('issuing_country')), new UniqueStudentDocumentNumber($student->id)],
+            'nationality' => ['nullable', Rule::in(array_column(config('school.demo_nationalities', []), 'label'))],
+            'phone' => ['nullable', 'string', 'max:20', Rule::unique('students', 'phone')->ignore($student), new ValidInternationalPhone($request->input('phone_region'))],
             'guardian_id' => 'nullable|exists:guardians,id',
         ]);
+        $this->ensureClassHasCapacity((int) $data['class_id'], $student);
 
         DB::transaction(function () use ($data, $student) {
             $user = $student->user;
@@ -104,6 +129,10 @@ class StudentController extends Controller
                 'guardian_id' => $data['guardian_id'] ?? null,
                 'admission_no' => $data['admission_no'],
                 'dob' => $data['dob'] ?? null,
+                'document_type' => $data['document_type'],
+                'issuing_country' => $data['issuing_country'],
+                'document_number' => $data['document_number'],
+                'nationality' => $data['nationality'] ?? null,
                 'phone' => $data['phone'] ?? null,
             ]);
         });
@@ -121,8 +150,35 @@ class StudentController extends Controller
     private function formData(): array
     {
         return [
-            'classes' => SchoolClass::orderBy('name')->orderBy('section')->get(),
+            'classes' => SchoolClass::withCount('students')->orderBy('name')->orderBy('section')->get()
+                ->sortBy(fn (SchoolClass $schoolClass) => $schoolClass->students_count >= $schoolClass->capacity ? 1 : 0)
+                ->values(),
             'guardians' => Guardian::with('user')->get()->sortBy(fn ($g) => $g->user->name),
         ];
+    }
+
+    private function normalizeDocumentNumber(Request $request): void
+    {
+        if (is_string($request->input('document_number'))) {
+            $request->merge(['document_number' => Str::upper(trim($request->input('document_number')))]);
+        }
+        if (is_string($request->input('issuing_country'))) {
+            $request->merge(['issuing_country' => Str::upper(trim($request->input('issuing_country')))]);
+        }
+    }
+
+    private function ensureClassHasCapacity(int $classId, ?Student $student = null): void
+    {
+        $schoolClass = SchoolClass::findOrFail($classId);
+        $enrollment = Student::query()
+            ->where('class_id', $classId)
+            ->when($student, fn ($query) => $query->where('id', '!=', $student->id))
+            ->count();
+
+        if ($enrollment >= $schoolClass->capacity) {
+            throw ValidationException::withMessages([
+                'class_id' => "Class {$schoolClass->full_name} has reached maximum capacity ({$schoolClass->capacity} students).",
+            ]);
+        }
     }
 }

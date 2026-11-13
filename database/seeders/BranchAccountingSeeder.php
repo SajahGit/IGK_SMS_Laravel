@@ -28,12 +28,12 @@ class BranchAccountingSeeder extends Seeder
     private function seedBranches(): void
     {
         $branches = [
-            ['code' => 'MAIN', 'name' => 'IGK Main Campus', 'city' => 'Colombo', 'address' => '12 School Lane, Colombo 07', 'phone' => '0112345678', 'email' => 'main@igk.test', 'principal_name' => 'Dr. A. Rahman', 'is_main' => true],
-            ['code' => 'KAN', 'name' => 'IGK Kandy Campus', 'city' => 'Kandy', 'address' => '45 Hill Street, Kandy', 'phone' => '0812234567', 'email' => 'kandy@igk.test', 'principal_name' => 'Mrs. S. Fernando', 'is_main' => false],
-            ['code' => 'GAL', 'name' => 'IGK Galle Campus', 'city' => 'Galle', 'address' => '8 Fort Road, Galle', 'phone' => '0912223344', 'email' => 'galle@igk.test', 'principal_name' => 'Mr. M. Nazeer', 'is_main' => false],
+            ['code' => 'MAIN', 'name' => 'IGK Main Campus', 'city' => 'Colombo', 'address' => '12 School Lane, Colombo 07', 'phone' => '+94112345678', 'email' => 'main@igk.test', 'principal_name' => 'Aisha Rahman', 'is_main' => true],
+            ['code' => 'KAN', 'name' => 'IGK Kandy Campus', 'city' => 'Kandy', 'address' => '45 Hill Street, Kandy', 'phone' => '+94812234567', 'email' => 'kandy@igk.test', 'principal_name' => 'Fernando Silva', 'is_main' => false],
+            ['code' => 'GAL', 'name' => 'IGK Galle Campus', 'city' => 'Galle', 'address' => '8 Fort Road, Galle', 'phone' => '+94912223344', 'email' => 'galle@igk.test', 'principal_name' => 'Mohamed Nazeer', 'is_main' => false],
         ];
         foreach ($branches as $b) {
-            Branch::firstOrCreate(['code' => $b['code']], $b + ['is_active' => true]);
+            Branch::updateOrCreate(['code' => $b['code']], $b + ['is_active' => true]);
         }
 
         // Keep the sample campus assignment consistent across parent records.
@@ -51,25 +51,29 @@ class BranchAccountingSeeder extends Seeder
         if (Schema::hasTable('students') && Schema::hasColumn('students', 'branch_id')) {
             DB::table('students as students')
                 ->leftJoin('classes', 'classes.id', '=', 'students.class_id')
-                ->select(['students.id', 'classes.branch_id as class_branch_id'])
-                ->get()
-                ->each(function ($student) use ($ids): void {
-                    DB::table('students')->where('id', $student->id)->update([
-                        'branch_id' => $student->class_branch_id ?? $ids[$student->id % count($ids)],
-                    ]);
-                });
+                ->select(['students.id as id', 'classes.branch_id as class_branch_id'])
+                ->orderBy('students.id')
+                ->chunkById(500, function ($students) use ($ids): void {
+                    foreach ($students as $student) {
+                        DB::table('students')->where('id', $student->id)->update([
+                            'branch_id' => $student->class_branch_id ?? $ids[$student->id % count($ids)],
+                        ]);
+                    }
+                }, 'students.id', 'id');
         }
 
         if (Schema::hasTable('invoices') && Schema::hasColumn('invoices', 'branch_id')) {
             DB::table('invoices as invoices')
                 ->join('students', 'students.id', '=', 'invoices.student_id')
-                ->select(['invoices.id', 'students.branch_id as student_branch_id'])
-                ->get()
-                ->each(function ($invoice) use ($ids): void {
-                    DB::table('invoices')->where('id', $invoice->id)->update([
-                        'branch_id' => $invoice->student_branch_id ?? $ids[$invoice->id % count($ids)],
-                    ]);
-                });
+                ->select(['invoices.id as id', 'students.branch_id as student_branch_id'])
+                ->orderBy('invoices.id')
+                ->chunkById(500, function ($invoices) use ($ids): void {
+                    foreach ($invoices as $invoice) {
+                        DB::table('invoices')->where('id', $invoice->id)->update([
+                            'branch_id' => $invoice->student_branch_id ?? $ids[$invoice->id % count($ids)],
+                        ]);
+                    }
+                }, 'invoices.id', 'id');
         }
 
         if ($mainBranchId) {

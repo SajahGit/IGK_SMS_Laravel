@@ -6,6 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Models\Department;
 use App\Models\Teacher;
 use App\Models\User;
+use App\Rules\ValidInternationalPhone;
+use App\Rules\ValidPersonName;
+use App\Support\InternationalPhoneNumber;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
@@ -39,11 +42,12 @@ class TeacherController extends Controller
 
     public function store(Request $request)
     {
+        InternationalPhoneNumber::normalizeRequest($request);
         $data = $request->validate([
-            'name' => 'required|string|max:100',
+            'name' => ['required', 'string', 'max:100', new ValidPersonName],
             'email' => 'required|email|unique:users,email',
             'password' => ['required', 'string', Password::defaults()],
-            'phone' => 'nullable|max:20',
+            'phone' => ['nullable', 'string', 'max:20', Rule::unique('teachers', 'phone'), new ValidInternationalPhone($request->input('phone_region'))],
             'department_id' => 'nullable|exists:departments,id',
             'status' => 'required|in:active,inactive,on_leave',
         ]);
@@ -77,11 +81,12 @@ class TeacherController extends Controller
 
     public function update(Request $request, Teacher $teacher)
     {
+        InternationalPhoneNumber::normalizeRequest($request);
         $data = $request->validate([
-            'name' => 'required|string|max:100',
+            'name' => ['required', 'string', 'max:100', new ValidPersonName],
             'email' => ['required', 'email', Rule::unique('users', 'email')->ignore($teacher->user_id)],
             'password' => ['nullable', 'string', Password::defaults()],
-            'phone' => 'nullable|max:20',
+            'phone' => ['nullable', 'string', 'max:20', Rule::unique('teachers', 'phone')->ignore($teacher), new ValidInternationalPhone($request->input('phone_region'))],
             'department_id' => 'nullable|exists:departments,id',
             'status' => 'required|in:active,inactive,on_leave',
         ]);

@@ -8,7 +8,7 @@
             @csrf
             <div class="mb-3">
                 <label for="recipient_id" class="form-label">Recipient</label>
-                <select id="recipient_id" name="recipient_id" class="form-select" required>
+                <select id="recipient_id" name="recipient_id" class="form-select recipient-select" size="8" required>
                     <option value="">Select a recipient</option>
                     @foreach ($recipients as $recipient)
                         <option value="{{ $recipient->id }}" @selected(old('recipient_id') == $recipient->id)>

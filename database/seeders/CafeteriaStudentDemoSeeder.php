@@ -45,7 +45,7 @@ class CafeteriaStudentDemoSeeder extends Seeder
                     'quantity_on_hand' => 0,
                     'reorder_level' => 10,
                     'is_active' => true,
-                    'description' => 'Synthetic branch-specific cafeteria demo stock',
+                    'description' => 'Freshly stocked cafeteria item for students and staff at the assigned campus.',
                 ]
             );
             if ($inventory->branch_id !== (int) $student->branch_id) {
@@ -57,7 +57,7 @@ class CafeteriaStudentDemoSeeder extends Seeder
                     'receipt',
                     $row['stock'],
                     'DEMO-CAF-OPENING-B'.$student->branch_id,
-                    'Synthetic demo cafeteria opening stock',
+                    'Cafeteria opening delivery for the student dining service',
                     User::query()->where('email', 'admin@school.test')->value('id')
                 );
             }
@@ -66,7 +66,7 @@ class CafeteriaStudentDemoSeeder extends Seeder
                 ['inventory_item_id' => $inventory->id],
                 [
                     'name' => $row['name'],
-                    'description' => 'Sample menu item. Demo price only.',
+                    'description' => 'Available for purchase by enrolled students during the school day.',
                     'price' => $row['price'],
                     'is_available' => true,
                 ]

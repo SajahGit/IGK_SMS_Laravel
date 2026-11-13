@@ -266,6 +266,9 @@
                     @csrf
                     <label class="visually-hidden" for="active-branch">Active campus</label>
                     <select class="form-select form-select-sm" id="active-branch" name="branch_id">
+                        @if ($user->isSuperAdmin())
+                            <option value="all" @selected($allCampusesSelected ?? false)>All campuses</option>
+                        @endif
                         @foreach ($branchContextOptions as $branchOption)
                             <option value="{{ $branchOption->id }}" @selected(($activeBranch?->id ?? null) === $branchOption->id)>{{ $branchOption->name }}</option>
                         @endforeach
@@ -273,7 +276,7 @@
                     <button class="btn btn-sm btn-outline-secondary">Switch campus</button>
                 </form>
             @endif
-            <span class="topbar-date"><i class="bi bi-calendar3 me-1"></i>{{ now()->format('D, d M Y') }}</span>
+            <span class="topbar-date"><i class="bi bi-calendar3 me-1"></i><time data-live-date data-timezone="{{ config('app.timezone') }}">{{ now()->format('D, d M Y') }}</time></span>
             <div class="dropdown">
                 <button class="icon-btn position-relative" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Notifications">
                     <i class="bi bi-bell"></i>

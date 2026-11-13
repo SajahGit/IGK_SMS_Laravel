@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Accountant;
 use App\Http\Controllers\Controller;
 use App\Models\Invoice;
 use App\Models\Payment;
-use App\Support\Money;
 use Illuminate\View\View;
 
 class DashboardController extends Controller
@@ -15,10 +14,23 @@ class DashboardController extends Controller
         // Aggregate in SQL: never load every invoice / payment row just to add them up.
         $live = Invoice::live();
         $invoiceCount = (clone $live)->count();
-        $totalBilled = Money::add((clone $live)->sum('total'), '0.00');
-        $totalOutstanding = Money::add((clone $live)->sum('balance'), '0.00');
+        $totalBilled = (clone $live)
+            ->selectRaw('currency, SUM(total) as amount')
+            ->groupBy('currency')
+            ->pluck('amount', 'currency')
+            ->all();
+        $totalOutstanding = (clone $live)
+            ->selectRaw('currency, SUM(balance) as amount')
+            ->groupBy('currency')
+            ->pluck('amount', 'currency')
+            ->all();
         $visiblePayments = Payment::whereHas('invoice.student.user');
-        $totalCollected = Money::add((clone $visiblePayments)->whereNull('reversed_at')->sum('amount'), '0.00');
+        $totalCollected = (clone $visiblePayments)
+            ->whereNull('reversed_at')
+            ->selectRaw('currency, SUM(amount) as amount')
+            ->groupBy('currency')
+            ->pluck('amount', 'currency')
+            ->all();
 
         return view('Accountant.AccountantDashboard', [
             'invoiceCount' => $invoiceCount,

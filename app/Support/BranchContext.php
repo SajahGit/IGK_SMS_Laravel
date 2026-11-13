@@ -27,6 +27,9 @@ class BranchContext
 
         if (self::isGlobalAdmin($user)) {
             $selected = session()->get('active_branch_id');
+            if ($selected === 'all' && $user->isSuperAdmin()) {
+                return null;
+            }
             if ($selected) {
                 return (int) $selected;
             }

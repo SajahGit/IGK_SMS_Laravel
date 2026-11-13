@@ -1,0 +1,9 @@
+ac.png: Flag of Ascension Island by HowFalcons, Wikimedia Commons.
+Source: https://commons.wikimedia.org/wiki/File:Flag_of_Ascension_Island.svg
+License: CC BY-SA 3.0 (https://creativecommons.org/licenses/by-sa/3.0/).
+The image is the unmodified 330px Wikimedia thumbnail.
+
+ta.png: Flag of Tristan da Cunha, Wikimedia Commons.
+Source: https://commons.wikimedia.org/wiki/File:Flag_of_Tristan_da_Cunha.svg
+License: Public domain, Crown copyright.
+The image is the unmodified 330px Wikimedia thumbnail.

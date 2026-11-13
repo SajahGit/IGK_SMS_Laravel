@@ -43,17 +43,16 @@ class TeacherLearningDemoSeeder extends Seeder
             throw new RuntimeException('The demo teacher needs a same-branch class subject for sample learning data.');
         }
 
-        $offering = ClassSubject::with(['schoolClass', 'subject', 'term'])->findOrFail($offeringId);
-        $description = 'Demo course with learning modules and past examination practice.';
-        $courseTitle = $offering->subject->name === 'English'
-            ? 'English Language: Reading and Writing'
-            : $offering->subject->name.': Demo Learning Course';
+        $offering = ClassSubject::with(['schoolClass.program', 'subject', 'term'])->findOrFail($offeringId);
+        $track = $offering->schoolClass->program?->name ?? 'International School Programme';
+        $courseTitle = $track.': '.$offering->subject->name.' ('.$offering->schoolClass->full_name.')';
+        $description = 'Term 1 learning materials and assessment practice for '.$offering->schoolClass->full_name.' in the '.$track.'.';
         $course = LmsCourse::query()
             ->where('class_subject_id', $offering->id)
             ->first();
         if (! $course) {
             $course = LmsCourse::query()
-                ->where('description', 'Demo course with learning modules and past examination practice.')
+                ->where('description', 'like', 'Term 1 learning materials and assessment practice%')
                 ->whereHas('classSubject', fn ($query) => $query->where('teacher_id', $teacher->id))
                 ->first();
             if ($course) {
@@ -70,18 +69,18 @@ class TeacherLearningDemoSeeder extends Seeder
             }
         }
 
-        LmsLesson::firstOrCreate(
+        LmsLesson::updateOrCreate(
             ['course_id' => $course->id, 'position' => 1],
             [
-                'title' => 'Module 1: Learning foundations',
-                'content' => 'Review the attached module PDF. Identify its key ideas, explain the important terms, and support your answers with evidence from the material.',
+                'title' => $offering->subject->name.' - Term 1 foundations',
+                'content' => $this->lessonContent($offering->subject->name, $track, $offering->schoolClass->full_name),
                 'published_at' => now(),
             ]
         );
         LmsAssignment::firstOrCreate(
-            ['course_id' => $course->id, 'title' => 'Module 1 practice assignment'],
+            ['course_id' => $course->id, 'title' => $offering->subject->name.' - evidence-based practice'],
             [
-                'instructions' => 'Complete the questions in the published module and support your answers with evidence from the material.',
+                'instructions' => 'Complete the '.$offering->subject->name.' practice task for '.$offering->schoolClass->full_name.'. Show your working or evidence, use the subject vocabulary taught in the '.$track.', and check your response against the published lesson.',
                 'due_at' => now()->addDays(14),
                 'max_points' => 20,
                 'published_at' => now(),
@@ -90,7 +89,7 @@ class TeacherLearningDemoSeeder extends Seeder
 
         Exam::updateOrCreate(
             [
-                'name' => 'Demo Term Assessment - '.$offering->subject->name,
+                'name' => $offering->schoolClass->full_name.' '.$offering->subject->name.' Term 1 Assessment',
                 'created_by' => $teacherUser->id,
             ],
             [
@@ -108,16 +107,24 @@ class TeacherLearningDemoSeeder extends Seeder
             $course,
             $teacherUser,
             'module',
-        'Module 1: Learning foundations',
-        'Sample course module PDF with learning content and practice.'
+        $offering->subject->name.' - Term 1 foundations',
+        'Curriculum-aligned '.$offering->subject->name.' learning material for '.$offering->schoolClass->full_name.'.'
         );
         $this->seedPdfMaterial(
             $course,
             $teacherUser,
             'past_paper',
-        'Past Paper - Sample Practice',
-        'Sample past-paper questions for this course.'
+        $offering->subject->name.' - Examination Practice',
+        'Practice questions and worked-response guidance for '.$offering->schoolClass->full_name.' '.$offering->subject->name.'.'
         );
+    }
+
+    private function lessonContent(string $subject, string $track, string $className): string
+    {
+        return "Course: {$subject}\nProgramme: {$track}\nClass: {$className}\n\n"
+            ."Learning goals: explain the key concepts in {$subject}, apply subject-specific vocabulary, "
+            ."interpret evidence or worked examples, and communicate a clear conclusion. "
+            ."Complete the class practice and use the assessment criteria published for this programme.";
     }
 
     private function seedPdfMaterial(

@@ -78,7 +78,12 @@ class SubjectPerformanceReportController extends Controller
         $classes = $allowedClasses->when($programId, fn ($items) => $items->filter(
             fn ($class) => (int) $class->program_id === (int) $programId
         ))->when($classId, fn ($items) => $items->where('id', (int) $classId))->values();
-        $gradeLabels = GradeScaleService::defaultItems()->pluck('grade')->all();
+        $classes = $classes->load('program.gradeScale.items');
+        $gradeLabels = $classes
+            ->flatMap(fn ($class) => GradeScaleService::items($class->program?->gradeScale)->pluck('grade'))
+            ->unique()
+            ->values()
+            ->all();
         $subjectResults = SubjectResult::query()
             ->whereIn('class_id', $classes->pluck('id'))
             ->where('result_status', 'graded')
@@ -103,7 +108,7 @@ class SubjectPerformanceReportController extends Controller
             ->selectRaw('subject_id, COUNT(*) as total')
             ->groupBy('subject_id')
             ->pluck('total', 'subject_id');
-        $subjects = $subjectResults->map(function ($rows) use ($gradeLabels, $examCounts) {
+        $subjects = $subjectResults->map(function ($rows) use ($gradeLabels, $examCounts, $classes) {
             $subject = $rows->first()->subject;
             $studentTermResults = $rows->unique(fn ($row) => $row->term_id.':'.$row->student_id);
             $grades = collect(array_fill_keys($gradeLabels, 0));
@@ -113,7 +118,10 @@ class SubjectPerformanceReportController extends Controller
                 }
             }
             $percentages = $studentTermResults->pluck('percentage')->map(fn ($value) => (float) $value);
-            $passed = $studentTermResults->filter(fn ($result) => GradeScaleService::isPassing((float) $result->percentage))->count();
+            $passed = $studentTermResults->filter(fn ($result) => GradeScaleService::isPassing(
+                (float) $result->percentage,
+                $classes->firstWhere('id', $result->class_id)?->program?->gradeScale
+            ))->count();
 
             return [
                 'subject' => $subject,

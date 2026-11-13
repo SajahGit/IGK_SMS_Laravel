@@ -3,6 +3,7 @@
 namespace App\Http\Requests\InstitutionAdmin;
 
 use App\Models\Branch;
+use App\Rules\ValidPersonName;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
@@ -35,7 +36,7 @@ class UpdateUserRequest extends FormRequest
         }
 
         return [
-            'name' => ['required', 'string', 'max:100'],
+            'name' => ['required', 'string', 'max:100', new ValidPersonName],
             'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users', 'email')->ignore($userId)],
             'password' => ['nullable', 'string', Password::defaults()],
             'roles' => ['required', 'array', 'min:1'],

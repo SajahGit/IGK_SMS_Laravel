@@ -45,9 +45,9 @@ class InvoiceController extends Controller
 
         // Cancelled invoices are void: they are excluded from every headline figure.
         $live = Invoice::live();
-        $totalBilled = (clone $live)->sum('total');
-        $totalCollected = (clone $live)->sum('amount_paid');
-        $totalOutstanding = (clone $live)->sum('balance');
+        $totalBilled = (clone $live)->selectRaw('currency, SUM(total) as amount')->groupBy('currency')->pluck('amount', 'currency')->all();
+        $totalCollected = (clone $live)->selectRaw('currency, SUM(amount_paid) as amount')->groupBy('currency')->pluck('amount', 'currency')->all();
+        $totalOutstanding = (clone $live)->selectRaw('currency, SUM(balance) as amount')->groupBy('currency')->pluck('amount', 'currency')->all();
 
         return view('Accountant.AccountantInvoicesIndex', compact(
             'invoices',

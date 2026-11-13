@@ -15,6 +15,8 @@ class ReportCardData
     {
         $terms = Term::with('academicYear')->orderBy('sequence')->get();
         $selectedTerm = $termId ? Term::find($termId) : Term::where('is_current', true)->first();
+        $student->load(['program.gradeScale.items', 'class.program.gradeScale.items']);
+        $gradeScale = $student->program?->gradeScale ?? $student->class?->program?->gradeScale;
 
         $resultsQuery = Result::with(['exam.subject', 'exam.term'])
             ->where('student_id', $student->id)
@@ -46,8 +48,10 @@ class ReportCardData
             'results' => $results,
             'termResult' => $termResult,
             'subjectResults' => $subjectResults,
-            'gradeItems' => GradeScaleService::defaultItems(),
-            'gpa' => $termResult ? $termResult->gpa : SchoolHelper::calculateTermGpa($results),
+            'gradeItems' => GradeScaleService::items($gradeScale),
+            'gradePointMax' => GradeScaleService::items($gradeScale)->max(fn ($item) => (float) $item->grade_point) ?? 4,
+            'gradeScale' => $gradeScale,
+            'gpa' => $termResult ? $termResult->gpa : SchoolHelper::calculateTermGpa($results, $gradeScale),
             'attendance' => SchoolHelper::attendanceSummary($student->id),
             'terms' => $terms,
             'selectedTerm' => $selectedTerm,

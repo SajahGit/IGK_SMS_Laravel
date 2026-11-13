@@ -28,14 +28,14 @@
                         <label for="invoice_id" class="form-label">Invoice <span class="text-danger">*</span></label>
                         <select name="invoice_id" id="invoice_id" class="form-select" required>
                             @if ($selectedInvoice)
-                                <option value="{{ $selectedInvoice->id }}" data-balance="{{ $selectedInvoice->balance }}" selected>
-                                    {{ $selectedInvoice->invoice_no }} &middot; {{ $selectedInvoice->student->user->name }} ({{ $selectedInvoice->student->class?->full_name ?? 'Unassigned' }}) &middot; Due: {{ \App\Support\Money::format($selectedInvoice->balance) }}
+                                <option value="{{ $selectedInvoice->id }}" data-balance="{{ $selectedInvoice->balance }}" data-currency="{{ $selectedInvoice->currency }}" selected>
+                                    {{ $selectedInvoice->invoice_no }} &middot; {{ $selectedInvoice->student->user->name }} ({{ $selectedInvoice->student->class?->full_name ?? 'Unassigned' }}) &middot; Due: {{ \App\Support\Money::format($selectedInvoice->balance, $selectedInvoice->currency.' ') }}
                                 </option>
                             @else
                                 <option value="">Select Invoice with Pending Balance</option>
                                 @foreach ($pendingInvoices as $inv)
-                                    <option value="{{ $inv->id }}" data-balance="{{ $inv->balance }}" @selected(old('invoice_id') == $inv->id)>
-                                        {{ $inv->invoice_no }} &middot; {{ $inv->student->user->name }} ({{ $inv->student->class?->full_name ?? 'Unassigned' }}) &middot; Due: {{ \App\Support\Money::format($inv->balance) }}
+                                    <option value="{{ $inv->id }}" data-balance="{{ $inv->balance }}" data-currency="{{ $inv->currency }}" @selected(old('invoice_id') == $inv->id)>
+                                        {{ $inv->invoice_no }} &middot; {{ $inv->student->user->name }} ({{ $inv->student->class?->full_name ?? 'Unassigned' }}) &middot; Due: {{ \App\Support\Money::format($inv->balance, $inv->currency.' ') }}
                                     </option>
                                 @endforeach
                             @endif
@@ -44,7 +44,7 @@
 
                     <div class="row g-3 mb-3">
                         <div class="col-md-6">
-                            <label for="amount" class="form-label">Amount (LKR) <span class="text-danger">*</span></label>
+                            <label for="amount" class="form-label">Amount (<span id="currencyCode">{{ $selectedInvoice?->currency ?? config('school.default_currency', 'LKR') }}</span>) <span class="text-danger">*</span></label>
                             <input type="number" step="0.01" min="0.01" name="amount" id="amount"
                                    class="form-control"
                                    value="{{ old('amount', $selectedInvoice ? $selectedInvoice->balance : '') }}"
@@ -95,6 +95,7 @@
                 var selected = this.options[this.selectedIndex];
                 if (selected && selected.dataset.balance) {
                     amountInput.value = selected.dataset.balance;
+                    document.getElementById('currencyCode').textContent = selected.dataset.currency || 'LKR';
                 }
             });
         }

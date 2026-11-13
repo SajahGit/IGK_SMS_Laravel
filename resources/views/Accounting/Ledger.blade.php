@@ -1,7 +1,7 @@
 @extends('Layouts.LayoutApp')
 @section('title', 'General Ledger')
 @section('content')
-<div class="mb-3"><h3 class="mb-0">General Ledger</h3><small class="text-muted">Account activity with running balance.</small></div>
+<div class="mb-3"><h3 class="mb-0">General Ledger</h3><small class="text-muted">Account activity with running balance in {{ $currency }}.</small></div>
 <form method="GET" class="row g-2 mb-3">
     <div class="col-md-4">
         <select name="account_id" class="form-select" required>
@@ -10,7 +10,8 @@
         </select>
     </div>
     <div class="col-md-3"><input type="date" name="from" class="form-control" value="{{ request('from') }}"></div>
-    <div class="col-md-3"><input type="date" name="to" class="form-control" value="{{ request('to') }}"></div>
+    <div class="col-md-2"><input type="date" name="to" class="form-control" value="{{ request('to') }}"></div>
+    <div class="col-md-2"><select name="currency" class="form-select">@foreach (config('school.currencies', ['LKR']) as $option)<option value="{{ $option }}" @selected($currency === $option)>{{ $option }}</option>@endforeach</select></div>
     <div class="col-md-2"><button class="btn btn-outline-secondary w-100">Show</button></div>
 </form>
 @if ($account)

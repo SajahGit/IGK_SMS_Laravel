@@ -17,6 +17,8 @@
                     <input type="text" name="description" class="form-control" required value="{{ old('description') }}"></div>
                 <div class="col-md-2"><label class="form-label">Reference</label>
                     <input type="text" name="reference" class="form-control" value="{{ old('reference') }}"></div>
+                <div class="col-md-2"><label class="form-label">Currency</label>
+                    <select name="currency" class="form-select" required>@foreach (config('school.currencies', ['LKR']) as $currency)<option value="{{ $currency }}" @selected(old('currency', config('school.default_currency', 'LKR')) === $currency)>{{ $currency }}</option>@endforeach</select></div>
                 <div class="col-md-2"><label class="form-label">Branch</label>
                     <select name="branch_id" class="form-select"><option value="">—</option>
                         @foreach ($branches as $b)<option value="{{ $b->id }}" @selected((string) old('branch_id') === (string) $b->id)>{{ $b->name }}</option>@endforeach

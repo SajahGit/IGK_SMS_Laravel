@@ -24,7 +24,9 @@
             </form>
             <form method="POST" action="{{ route('two-factor.cancel') }}" class="mt-3">
                 @csrf
-                <button class="btn btn-link px-0">Cancel sign in</button>
+                <button class="btn btn-outline-secondary w-100">
+                    <i class="bi bi-arrow-left me-1"></i>Cancel sign in
+                </button>
             </form>
         </section>
     </div>

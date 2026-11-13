@@ -57,8 +57,8 @@ class TermResultsWorkflowTest extends TestCase
         $this->assertSame([], $second['missing_pairs']);
         $this->assertSame(1, $first['generated_subject_results']);
         $this->assertSame(1, SubjectResult::count());
-        $this->assertSame('A', SubjectResult::first()->grade);
-        $this->assertSame(4.0, (float) TermResult::first()->gpa);
+        $this->assertSame('7', SubjectResult::first()->grade);
+        $this->assertSame(7.0, (float) TermResult::first()->gpa);
 
         $admin = User::create(['name' => 'Admin', 'email' => 'workflow-admin@school.test', 'password' => 'password', 'role' => 'admin']);
         $service->submitForApproval($context['term'], $context['class']->id, $admin);

@@ -1,6 +1,6 @@
 # Known Issues & Backlog (known-issues.md)
 
-**Project:** IGK School ERP — Laravel 12.70.0  
+**Project:** IGK International School ERP — Laravel 12.71.0
 **SOP Reference:** §29 Handover Artefact #11  
 **Owner:** D6  
 
@@ -17,9 +17,10 @@
 | ID | Module | Description | Workaround | Est. Effort |
 |---|---|---|---|---|
 | KI-001 | Coverage | Test coverage not measured (no Xdebug/PCOV available) | Rely on dedicated tests for new logic | 4h (env setup) |
-| KI-002 | Manual testing | Full signed end-to-end workflow UAT remains pending; six local role login/dashboard checks and the Super Admin/Institution Admin role boundary were verified in-browser | Automated suite plus local role/queue-worker smoke evidence; team and owner acceptance still required | 8h (workflow UAT) |
+| KI-002 | Manual testing | Full signed end-to-end workflow UAT remains pending; the shared browser is at login and no authenticated role-dashboard walkthrough has been performed | Automated suite; team and owner acceptance still required. Do not bypass 2FA | 8h (workflow UAT) |
 | KI-003 | Larastan | Larastan not installed; static analysis not run | Pint runs clean | 2h (install + config) |
-| KI-006 | SOP seeding/performance | `DatabaseSeeder` currently creates 11 students and 2 teachers; the SOP's dedicated 240-student `DemoDataSeeder`, 5,000-student `PerfSeeder`, and factories for every model are not implemented | Existing migrations and feature tests use explicit fixtures; do not seed production data for performance checks | Requires isolated seeder/factory implementation and performance validation |
+| KI-006 | SOP seeding/performance | `PerfSeeder` creates exactly 5,000 international-school student records and is repeatability-tested; the `PerfSeeder` → `FullSampleDataSeeder` sequence now passes under the test process's 128 MiB memory limit. Response-time/concurrency thresholds and factories for every model remain unverified | Do not claim NFR-1 performance compliance from record-count/seeding tests | Measure SOP response-time and concurrency thresholds |
+| KI-007 | Full-suite regressions | Latest `php artisan test` run: 9 failures remain across accountant total formatting, 2FA login redirect expectations, registrar authorization, and report CSV/stream responses | The changed international-seeding, input-validation, role, and UI-filter paths pass their focused checks; resolve these failures before claiming full-suite acceptance | Investigate by failing test and align behavior with the SOP |
 
 ## Low Issues
 
@@ -28,24 +29,21 @@
 | KI-004 | Curriculum UI | Curriculum model/migration exist; UI completeness partially verified | CurriculumModuleTest covers CRUD + teacher 403 | 4h (full UI verification) |
 | KI-005 | Reports acceptance | R1-R11 filters, table columns, and CSV headers were reviewed and aligned; product-owner sign-off and SOP-sized performance checks remain | `ReportsParityTest` covers filter behavior, persisted result data, and R1-R11 CSV/table headers | 3h (owner review/performance check) |
 
-## Post-MVP Backlog (Phase 2 Planning)
+## Expanded SOP scope gaps
 
-| Item | Est. Effort | Notes |
-|---|---|---|
-| HR and Payroll | 80h | Separate legal/finance domain; requires separate approval |
-| Inventory and Stock | 45h | Not in brief |
-| Procurement | 45h | Not in brief |
-| Multi-Branch Management | 45h + regression | `campus_id` reserved but unused |
-| Library Management | 70h | Largest single cut per SOP |
-| Transportation Management | 35h | Not in brief |
-| LMS | 40h | Not in brief |
-| Extended Communication (internal messaging/inbox) | 45h | Announcements exist as replacement |
-| Advanced Accounting (GL/COA/Double-entry) | — | Correctly excluded per SOP |
-| Transcripts & CGPA across years | 40h | Report card per term only in MVP |
-| Online Payment Gateway | 50h + compliance | Manual payments only in MVP |
-| Biometric/RFID Attendance | 35h | Manual attendance only |
-| SMS Notifications | 18h | Email/in-app only per Q18 |
-| Multi-language/RTL | 30h | English only per A7 |
+The user requests that SHOULD-HAVE and POST-MVP work be treated as mandatory even where the HTML SOP explicitly excludes it from MVP. Do not silently rewrite the HTML authority or claim these gaps are complete.
+
+| Item | Current status |
+|---|---|
+| Dashboard charts | Not implemented; dashboards currently show role-based indicators. |
+| Saved filters | No saved-filter entity or workflow found. |
+| Multi-year transcript/CGPA sample | Transcript and CGPA views/services exist, but the demo seed currently contains one academic year. |
+| SMS history/workflow | Outbound gateway abstraction exists; no persisted SMS workflow/history or safe sample records. |
+| Multilingual/RTL | English LTR only. |
+| Legacy migration | Validated CSV import exists, but no legacy mapping, reconciliation or rehearsed migration. |
+| Mobile app | No native app; responsive web is not equivalent. |
+| Authenticated UAT and security enrollment | Full role-by-role screen acceptance remains pending; 2FA secrets must be enrolled by each user and are deliberately not demo-seeded. |
+| Performance NFR | Exact 5,000-student dataset is tested; response-time/concurrency thresholds are not measured. |
 
 ---
 
@@ -59,13 +57,8 @@
 | Environment docs | Created | Every `.env` key documented |
 | Install guide | Created | Local setup from zero |
 
-## Update (SOP gap-closing pass)
+## Verification record
 
-Added without UI changes: `school:verify-integrity`, `school:generate-invoices`, `school:close-term`,
-`PaymentExceedsBalanceException`, `tests/Unit/MoneyTest.php`, `deploy/` server files, `pint.json`, `phpstan.neon`,
-ADR-001..003, Teacher and Student guides. These were written without a PHP runtime available;
-run `php artisan test` and `vendor/bin/pint --test` before relying on them.
+The international demo-seeder and 5,000-student performance tests pass, including repeatability and international-level/track consistency. The full-module seeder also passes after the performance dataset in the normal test memory limit. Full sample data includes pending PayHere, matched/unmatched biometric events and a deliberately expired API token without external calls or usable token secrets. Phone/document validation, CSV import and field-level feedback tests pass. The latest full suite still has nine failures (KI-007); authenticated role-dashboard UAT remains pending because the available shared browser page is at login and 2FA must not be bypassed.
 
-## Update (Accounts completion pass #2, 4 Nov 2026)
-Written without a PHP runtime again. Before relying on it run: `php artisan migrate`, `php artisan test`, `vendor\bin\pint`, `npm run build`.
-Finance regression tests are recorded in `docs/testing/finance-test-case-register.md`; see `IGK_ERP_FINAL_SOP_COMPLIANCE_AUDIT.md` for current acceptance status.
+Finance regression tests are recorded in `docs/testing/finance-test-case-register.md`; the HTML SOP is the requirements authority.

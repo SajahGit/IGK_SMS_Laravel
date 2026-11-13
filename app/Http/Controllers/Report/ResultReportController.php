@@ -42,7 +42,7 @@ class ResultReportController extends Controller
         abort_unless($request->user()->isAdmin() || $request->user()->can('reports.academic'), 403);
         $classes = SchoolHelper::allowedClasses($request->user());
 
-        $exams = Exam::with(['class', 'subject'])
+        $exams = Exam::with(['class.program.gradeScale.items', 'subject'])
             ->whereIn('class_id', $classes->pluck('id'))
             ->orderByDesc('exam_date')
             ->get();
@@ -59,7 +59,8 @@ class ResultReportController extends Controller
 
             $rank = 0;
             $previous = null;
-            $rows = $results->values()->map(function ($result, $index) use (&$rank, &$previous, $exam) {
+            $gradeScale = $exam->class?->program?->gradeScale;
+            $rows = $results->values()->map(function ($result, $index) use (&$rank, &$previous, $exam, $gradeScale) {
                 $marks = $result->is_absent ? 0.0 : (float) ($result->marks ?? 0);
                 if ($previous === null || $marks !== (float) $previous) {
                     $rank = $index + 1;
@@ -71,7 +72,7 @@ class ResultReportController extends Controller
                     'rank' => $rank,
                     'result' => $result,
                     'percentage' => $percentage,
-                    'grade' => SchoolHelper::gradeFor($percentage),
+                    'grade' => SchoolHelper::gradeFor($percentage, $gradeScale),
                     'absent' => $result->is_absent,
                 ];
             });
@@ -81,7 +82,7 @@ class ResultReportController extends Controller
                 'average' => $rows->count() ? round($rows->avg('percentage'), 1) : 0,
                 'highest' => $results->max('marks'),
                 'lowest' => $results->min('marks'),
-                'passed' => $rows->filter(fn ($r) => $r['percentage'] !== null && GradingService::isPassing($r['percentage']))->count(),
+                'passed' => $rows->filter(fn ($r) => $r['percentage'] !== null && GradingService::isPassing($r['percentage'], $gradeScale))->count(),
             ];
         }
 

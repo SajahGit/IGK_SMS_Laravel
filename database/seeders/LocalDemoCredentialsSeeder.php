@@ -34,7 +34,6 @@ class LocalDemoCredentialsSeeder extends Seeder
                     'teacher@school.test',
                     'teacher2@school.test',
                     'accountant@school.test',
-                    'librarian@school.test',
                     'student@school.test',
                     'guardian@school.test',
                 ])
@@ -62,7 +61,7 @@ class LocalDemoCredentialsSeeder extends Seeder
             'student' => 'Student',
             'registrar' => 'Registrar',
             'accountant' => 'Accountant',
-            'librarian' => 'Librarian',
+            'parent' => 'Guardian',
         ];
         $users->each(function (User $user) use ($roleMap): void {
             if (isset($roleMap[$user->role])) {
@@ -74,9 +73,8 @@ class LocalDemoCredentialsSeeder extends Seeder
     private function ensureRoleLoginAccounts(): void
     {
         foreach ([
-            'registrar@school.test' => ['Demo Registrar', 'registrar'],
-            'accountant@school.test' => ['Demo Accountant', 'accountant'],
-            'librarian@school.test' => ['Demo Librarian', 'librarian'],
+            'registrar@school.test' => ['Amina Rahman', 'registrar'],
+            'accountant@school.test' => ['Daniel Osei', 'accountant'],
         ] as $email => [$name, $role]) {
             User::firstOrCreate(['email' => $email], [
                 'name' => $name,
@@ -87,11 +85,12 @@ class LocalDemoCredentialsSeeder extends Seeder
             ]);
         }
 
-        $this->ensureProfileLogin('teacher@school.test', 'Demo Teacher', 'teacher', Teacher::class, 'user_id');
-        $this->ensureProfileLogin('student@school.test', 'Demo Student', 'student', Student::class, 'user_id');
+        $this->ensureProfileLogin('teacher@school.test', 'Mr. Lathif', 'teacher', Teacher::class, 'user_id');
+        $this->ensureProfileLogin('teacher2@school.test', 'Ms. Nisha', 'teacher', Teacher::class, 'user_id');
+        $this->ensureProfileLogin('student@school.test', 'Aarav Chen', 'student', Student::class, 'user_id');
 
         $guardian = User::firstOrCreate(['email' => 'guardian@school.test'], [
-            'name' => 'Demo Guardian',
+            'name' => 'Nadia Hassan',
             'password' => 'password',
             'role' => 'parent',
             'is_active' => true,
@@ -102,7 +101,7 @@ class LocalDemoCredentialsSeeder extends Seeder
                 $query->where('email', 'like', 'demo.student.%@school.test');
             })->first()?->guardian;
             if ($source) {
-                $source->update(['user_id' => $guardian->id]);
+                $source->update(['user_id' => $guardian->id, 'nationality' => 'Sri Lankan']);
             }
         }
     }
@@ -116,6 +115,10 @@ class LocalDemoCredentialsSeeder extends Seeder
             'is_active' => true,
             'must_change_password' => false,
         ]);
+
+        if ($profileClass === Teacher::class && $user->name !== $name) {
+            $user->update(['name' => $name]);
+        }
 
         if ($profileClass::where($foreignKey, $user->id)->exists()) {
             return;

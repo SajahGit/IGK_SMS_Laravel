@@ -30,7 +30,7 @@
     <div class="col-sm-6 col-lg-4">
         @include('Layouts.LayoutStat', [
             'icon' => 'exclamation-octagon-fill',
-            'value' => \App\Support\Money::format($totalBalance),
+            'value' => \App\Support\Money::formatTotals($totalBalance),
             'label' => 'Total Outstanding Balance',
             'tone' => 'danger',
         ])
@@ -136,9 +136,9 @@
                             <small class="text-muted"><i class="bi bi-telephone me-1"></i>{{ $primaryGuardian?->phone ?: 'No phone' }}</small>
                         </td>
                         <td>{{ $inv->due_date->format('d M Y') }}</td>
-                        <td>{{ \App\Support\Money::format($inv->total) }}</td>
-                        <td class="text-success">{{ \App\Support\Money::format($inv->amount_paid) }}</td>
-                        <td class="fw-bold text-danger">{{ \App\Support\Money::format($inv->balance) }}</td>
+                        <td>{{ \App\Support\Money::format($inv->total, $inv->currency.' ') }}</td>
+                        <td class="text-success">{{ \App\Support\Money::format($inv->amount_paid, $inv->currency.' ') }}</td>
+                        <td class="fw-bold text-danger">{{ \App\Support\Money::format($inv->balance, $inv->currency.' ') }}</td>
                         <td>
                             @if ($daysOverdue > 0)
                                 <span class="badge bg-danger">{{ $daysOverdue }} days overdue</span>

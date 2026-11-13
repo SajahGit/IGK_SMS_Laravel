@@ -4,6 +4,7 @@ namespace App\Support;
 
 use App\Models\Attendance;
 use App\Models\ClassSubject;
+use App\Models\GradeScale;
 use App\Models\Result;
 use App\Models\SchoolClass;
 use App\Models\Teacher;
@@ -75,9 +76,9 @@ class SchoolHelper
     }
 
     /** A 75+, B 65-74, C 55-64, S 40-54, F below 40 */
-    public static function gradeFor($percentage): string
+    public static function gradeFor($percentage, ?GradeScale $scale = null): string
     {
-        return GradingService::grade((float) $percentage);
+        return GradingService::grade((float) $percentage, $scale);
     }
 
     /** Average percentage over all exam results of a student (null when no results). */
@@ -165,27 +166,37 @@ class SchoolHelper
 
     public static function gradeBadge(string $grade): string
     {
-        return match ($grade) {
-            'A' => 'success',
-            'B' => 'primary',
-            'C' => 'info',
-            'S' => 'warning',
-            default => 'danger',
-        };
+        if (in_array($grade, ['A*', 'A', '9', '8', '7', 'Exceeding'], true)) {
+            return 'success';
+        }
+
+        if (in_array($grade, ['B', '6', '5', 'Secure'], true)) {
+            return 'primary';
+        }
+
+        if (in_array($grade, ['C', '4', '3', 'Developing'], true)) {
+            return 'info';
+        }
+
+        if (in_array($grade, ['D', 'E', 'F', 'G', '1', '2', 'Emerging'], true)) {
+            return 'warning';
+        }
+
+        return 'danger';
     }
 
     /** Grade points mapping: A (75-100) = 4.0, B (65-74) = 3.0, C (55-64) = 2.0, S (40-54) = 1.0, F (0-39) = 0.0 */
-    public static function gradePointFor(float|int|null $percentage): float
+    public static function gradePointFor(float|int|null $percentage, ?GradeScale $scale = null): float
     {
-        return GradingService::gradePoint($percentage ?? 0.0);
+        return GradingService::gradePoint($percentage ?? 0.0, $scale);
     }
 
     /**
      * Calculate Term GPA from a collection of results with exam.subject.
      * sum(grade_point * subject.credit_hours) / sum(subject.credit_hours) rounded to 2 decimal places.
      */
-    public static function calculateTermGpa(Collection $results): ?float
+    public static function calculateTermGpa(Collection $results, ?GradeScale $scale = null): ?float
     {
-        return GradingService::calculateTermGpa($results);
+        return GradingService::calculateTermGpa($results, $scale);
     }
 }

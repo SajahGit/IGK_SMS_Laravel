@@ -80,6 +80,14 @@ class InvoiceService
             ]);
         }
 
+        $currencies = $fees->pluck('currency')->unique()->values();
+        if ($currencies->count() !== 1) {
+            throw ValidationException::withMessages([
+                'fee_structure_ids' => 'All fee structures on one invoice must use the same currency.',
+            ]);
+        }
+        $currency = $currencies->first();
+
         // One invoice line per fee item (mandatory ones, plus any optional ones that were ticked);
         // a structure without items bills its own amount as a single line.
         $lines = collect();
@@ -114,7 +122,7 @@ class InvoiceService
 
         $status = $asDraft ? 'draft' : 'issued';
 
-        return DB::transaction(function () use ($student, $termId, $issueDate, $dueDate, $lines, $subtotal, $discount, $total, $status, $asDraft) {
+        return DB::transaction(function () use ($student, $termId, $issueDate, $dueDate, $lines, $subtotal, $discount, $total, $currency, $status, $asDraft) {
             // Lock the student row so two generation runs cannot both pass the guard below.
             Student::whereKey($student->id)->lockForUpdate()->first();
 
@@ -141,6 +149,7 @@ class InvoiceService
                 'subtotal' => $subtotal,
                 'discount' => $discount,
                 'total' => $total,
+                'currency' => $currency,
                 'amount_paid' => '0.00',
                 'balance' => $total,
                 'status' => $status,

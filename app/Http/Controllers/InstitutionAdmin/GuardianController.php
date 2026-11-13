@@ -5,11 +5,15 @@ namespace App\Http\Controllers\InstitutionAdmin;
 use App\Http\Controllers\Controller;
 use App\Models\Guardian;
 use App\Models\User;
+use App\Rules\ValidInternationalPhone;
+use App\Rules\ValidPersonName;
 use App\Support\AuditLogger;
+use App\Support\InternationalPhoneNumber;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
+use Spatie\Permission\Models\Role;
 
 class GuardianController extends Controller
 {
@@ -31,11 +35,13 @@ class GuardianController extends Controller
 
     public function store(Request $request)
     {
+        InternationalPhoneNumber::normalizeRequest($request);
         $data = $request->validate([
-            'name' => 'required|string|max:100',
+            'name' => ['required', 'string', 'max:100', new ValidPersonName],
             'email' => 'required|email|unique:users,email',
             'password' => ['required', 'string', Password::defaults()],
-            'phone' => 'required|max:20',
+            'phone' => ['required', 'string', 'max:20', Rule::unique('guardians', 'phone'), new ValidInternationalPhone($request->input('phone_region'))],
+            'nationality' => ['nullable', Rule::in(array_column(config('school.demo_nationalities', []), 'label'))],
         ]);
 
         $guardian = DB::transaction(function () use ($data) {
@@ -46,8 +52,15 @@ class GuardianController extends Controller
                 'role' => 'parent',
                 'must_change_password' => true,
             ]);
+            if (Role::where('name', 'Guardian')->exists()) {
+                $user->syncRoles(['Guardian']);
+            }
 
-            return Guardian::create(['user_id' => $user->id, 'phone' => $data['phone']]);
+            return Guardian::create([
+                'user_id' => $user->id,
+                'phone' => $data['phone'],
+                'nationality' => $data['nationality'] ?? null,
+            ]);
         });
         AuditLogger::log('created_guardian', $guardian, null, $guardian->toArray());
 
@@ -61,11 +74,13 @@ class GuardianController extends Controller
 
     public function update(Request $request, Guardian $guardian)
     {
+        InternationalPhoneNumber::normalizeRequest($request);
         $data = $request->validate([
-            'name' => 'required|string|max:100',
+            'name' => ['required', 'string', 'max:100', new ValidPersonName],
             'email' => ['required', 'email', Rule::unique('users', 'email')->ignore($guardian->user_id)],
             'password' => ['nullable', 'string', Password::defaults()],
-            'phone' => 'required|max:20',
+            'phone' => ['required', 'string', 'max:20', Rule::unique('guardians', 'phone')->ignore($guardian), new ValidInternationalPhone($request->input('phone_region'))],
+            'nationality' => ['nullable', Rule::in(array_column(config('school.demo_nationalities', []), 'label'))],
         ]);
 
         $before = $guardian->toArray();
@@ -78,7 +93,10 @@ class GuardianController extends Controller
                 $user->must_change_password = true;
             }
             $user->save();
-            $guardian->update(['phone' => $data['phone']]);
+            $guardian->update([
+                'phone' => $data['phone'],
+                'nationality' => $data['nationality'] ?? null,
+            ]);
         });
         AuditLogger::log('updated_guardian', $guardian, $before, $guardian->toArray());
 

@@ -37,7 +37,7 @@ class FeeCollectionReportController extends Controller
 
         return CsvStreamer::download(
             "fee-collection-{$from}-to-{$to}.csv",
-            ['Receipt No', 'Date', 'Term', 'Program', 'Invoice No', 'Student Details', 'Class', 'Amount (LKR)', 'Method', 'Reference', 'Cashier', 'Status'],
+            ['Receipt No', 'Date', 'Term', 'Program', 'Invoice No', 'Student Details', 'Class', 'Amount', 'Currency', 'Method', 'Reference', 'Cashier', 'Status'],
             $rows,
             function (Payment $p) {
                 return [
@@ -49,6 +49,7 @@ class FeeCollectionReportController extends Controller
                     $p->invoice->student->user->name.' (Adm: '.$p->invoice->student->admission_no.')',
                     $p->invoice->student->class?->full_name ?? '—',
                     $p->amount,
+                    $p->currency,
                     ucwords(str_replace('_', ' ', $p->method)),
                     $p->reference ?: '—',
                     $p->receiver?->name ?: 'System',
@@ -100,20 +101,12 @@ class FeeCollectionReportController extends Controller
 
         $activePayments = $payments->whereNull('reversed_at');
 
-        $totalCollected = '0.00';
-        foreach ($activePayments as $p) {
-            $totalCollected = Money::add($totalCollected, $p->amount);
-        }
+        $totalCollected = Money::sumByCurrency($activePayments, 'amount');
 
         $byMethod = $activePayments->groupBy('method')->map(function ($items) {
-            $sum = '0.00';
-            foreach ($items as $item) {
-                $sum = Money::add($sum, $item->amount);
-            }
-
             return [
                 'count' => $items->count(),
-                'sum' => $sum,
+                'sum' => Money::sumByCurrency($items, 'amount'),
             ];
         });
 

@@ -88,15 +88,18 @@
                     <div class="row g-3">
                         <div class="col-md-6">
                             <label class="form-label">Name <span class="text-danger">*</span></label>
-                            <input type="text" name="name" class="form-control" required value="{{ old('name') }}">
+                            <input type="text" name="name" data-person-name maxlength="100" autocomplete="off" @class(['form-control', 'is-invalid' => $errors->has('name')]) required value="{{ old('name') }}">
+                            @error('name')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Email <span class="text-danger">*</span></label>
-                            <input type="email" name="email" class="form-control" required value="{{ old('email') }}">
+                            <input type="email" name="email" autocomplete="off" data-lpignore="true" data-1p-ignore="true" @class(['form-control', 'is-invalid' => $errors->has('email')]) required value="{{ old('email') }}">
+                            @error('email')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Password <span class="text-danger">*</span></label>
-                            <input type="password" name="password" class="form-control" required minlength="10">
+                            <input type="password" name="password" autocomplete="new-password" @class(['form-control', 'is-invalid' => $errors->has('password')]) required minlength="8" maxlength="32">
+                            @error('password')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Role <span class="text-danger">*</span></label>
@@ -105,6 +108,18 @@
                                     <option value="{{ $role->name }}">{{ $role->name }}</option>
                                 @endforeach
                             </select>
+                            @error('roles')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
+                            @error('roles.0')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Campus</label>
+                            <select name="branch_id" @class(['form-select', 'is-invalid' => $errors->has('branch_id')]) @required($branches->isNotEmpty())>
+                                <option value="">Global / not assigned</option>
+                                @foreach ($branches as $branch)
+                                    <option value="{{ $branch->id }}" @selected((string) old('branch_id') === (string) $branch->id)>{{ $branch->name }}</option>
+                                @endforeach
+                            </select>
+                            @error('branch_id')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
                         </div>
                         <div class="col-md-6">
                             <div class="form-check d-flex align-items-center">

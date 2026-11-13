@@ -14,7 +14,7 @@ class JournalEntry extends Model
         static::addGlobalScope(new BranchOwned);
     }
 
-    protected $fillable = ['entry_no', 'entry_date', 'description', 'reference', 'branch_id', 'source_type', 'source_id', 'status', 'created_by'];
+    protected $fillable = ['entry_no', 'entry_date', 'currency', 'description', 'reference', 'branch_id', 'source_type', 'source_id', 'status', 'created_by'];
 
     protected function casts(): array
     {

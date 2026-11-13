@@ -38,6 +38,7 @@ class JournalEntryController extends Controller
     {
         $data = $request->validate([
             'entry_date' => ['required', 'date'],
+            'currency' => ['required', 'string', 'size:3', \Illuminate\Validation\Rule::in(config('school.currencies', ['LKR']))],
             'description' => ['required', 'string', 'max:255'],
             'reference' => ['nullable', 'string', 'max:80'],
             'branch_id' => ['nullable', 'exists:branches,id'],

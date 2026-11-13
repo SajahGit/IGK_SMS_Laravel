@@ -21,7 +21,7 @@ class RoleLoginVerificationTest extends TestCase
     }
 
     #[Test]
-    public function all_six_sop_roles_exist_in_database(): void
+    public function all_sop_roles_exist_in_database(): void
     {
         $this->seedRolesAndPermissions();
 
@@ -32,6 +32,7 @@ class RoleLoginVerificationTest extends TestCase
             'Teacher',
             'Accountant',
             'Student',
+            'Guardian',
         ];
 
         foreach ($expectedRoles as $roleName) {
@@ -39,7 +40,7 @@ class RoleLoginVerificationTest extends TestCase
             $this->assertTrue(Role::where('name', $roleName)->exists());
         }
 
-        $this->assertCount(6, Role::all());
+        $this->assertCount(7, Role::all());
     }
 
     #[Test]
@@ -73,9 +74,9 @@ class RoleLoginVerificationTest extends TestCase
         $this->assertTrue($instAdmin->hasPermissionTo('reports.financial'));
         $this->assertTrue($instAdmin->hasPermissionTo('reports.read'));
 
-        // Institution Admin must NOT manage roles and permissions
+        // Institution Admin may inspect role definitions but cannot change them.
         $this->assertFalse($instAdmin->hasPermissionTo('roles_and_permissions.create'));
-        $this->assertFalse($instAdmin->hasPermissionTo('roles_and_permissions.read'));
+        $this->assertTrue($instAdmin->hasPermissionTo('roles_and_permissions.read'));
         $this->assertFalse($instAdmin->hasPermissionTo('roles_and_permissions.update'));
         $this->assertFalse($instAdmin->hasPermissionTo('roles_and_permissions.delete'));
     }
@@ -214,6 +215,21 @@ class RoleLoginVerificationTest extends TestCase
         $this->assertFalse($student->hasPermissionTo('students.create'));
         $this->assertFalse($student->hasPermissionTo('attendance.create'));
         $this->assertFalse($student->hasPermissionTo('marks.update'));
+    }
+
+    #[Test]
+    public function guardian_is_read_only_for_linked_student_workflows(): void
+    {
+        $this->seedRolesAndPermissions();
+
+        $guardian = Role::where('name', 'Guardian')->firstOrFail();
+        foreach (['attendance.read', 'results.read', 'report_card.read', 'invoices.read', 'payments.read'] as $permission) {
+            $this->assertTrue($guardian->hasPermissionTo($permission));
+        }
+
+        foreach (['students.create', 'attendance.create', 'results.publish', 'invoices.create', 'payments.create'] as $permission) {
+            $this->assertFalse($guardian->hasPermissionTo($permission));
+        }
     }
 
     #[Test]

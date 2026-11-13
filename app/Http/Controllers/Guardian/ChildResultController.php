@@ -24,7 +24,9 @@ class ChildResultController extends Controller
             ->get()
             ->sortByDesc(fn ($r) => $r->exam->exam_date);
 
-        $termGpa = SchoolHelper::calculateTermGpa($results);
+        $student->load(['program.gradeScale.items', 'class.program.gradeScale.items']);
+        $gradeScale = $student->program?->gradeScale ?? $student->class?->program?->gradeScale;
+        $termGpa = SchoolHelper::calculateTermGpa($results, $gradeScale);
 
         return view('Guardian.GuardianResults', [
             'student' => $student->load(['user', 'class']),

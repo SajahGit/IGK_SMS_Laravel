@@ -22,9 +22,7 @@ class LmsDemoSeeder extends Seeder
             ->whereHas('subject', fn ($query) => $query->where('code', 'BIO'))
             ->whereHas('schoolClass', fn ($query) => $query
                 ->where('name', 'Grade 10')
-                ->whereDoesntHave('students.user', fn ($users) => $users
-                    ->where('email', 'not like', 'demo.student.%@school.test')
-                    ->where('email', '!=', 'student@school.test')))
+            )
             ->whereHas('schoolClass.students.user', fn ($query) => $query->where(function ($emails) {
                 $emails->where('email', 'like', 'demo.student.%@school.test')
                     ->orWhere('email', 'student@school.test');
@@ -57,7 +55,7 @@ class LmsDemoSeeder extends Seeder
             $course = LmsCourse::create([
                 'class_subject_id' => $offering->id,
                 'title' => $courseTitle,
-                'description' => 'Cambridge-aligned learning materials on cell structure, microscopy, and scientific comparison.',
+                'description' => 'International curriculum learning materials on cell structure, microscopy, and scientific comparison.',
             ]);
         }
 
@@ -97,7 +95,7 @@ class LmsDemoSeeder extends Seeder
 
         $student = Student::query()->findOrFail($studentId);
         $teacher = Teacher::query()->findOrFail($offering->teacher_id);
-        LmsSubmission::firstOrCreate(
+        LmsSubmission::updateOrCreate(
             ['assignment_id' => $assignment->id, 'student_id' => $student->id],
             [
                 'body' => 'Plant cells have a cell wall, chloroplasts, and a large permanent vacuole. Animal cells do not have a cell wall or chloroplasts. A labelled microscope drawing with magnification recorded would provide evidence for the observed structures.',

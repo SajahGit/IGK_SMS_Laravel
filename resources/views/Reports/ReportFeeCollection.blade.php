@@ -22,7 +22,7 @@
     <div class="col-sm-6 col-lg-4">
         @include('Layouts.LayoutStat', [
             'icon' => 'cash-coin',
-            'value' => \App\Support\Money::format($totalCollected),
+            'value' => \App\Support\Money::formatTotals($totalCollected),
             'label' => 'Total Collected in Period',
             'tone' => 'success',
         ])
@@ -30,7 +30,7 @@
     <div class="col-sm-6 col-lg-4">
         @include('Layouts.LayoutStat', [
             'icon' => 'wallet2',
-            'value' => \App\Support\Money::format($byMethod['cash']['sum'] ?? '0.00'),
+            'value' => \App\Support\Money::formatTotals($byMethod['cash']['sum'] ?? []),
             'label' => 'Cash Collections (' . ($byMethod['cash']['count'] ?? 0) . ' tx)',
             'tone' => 'primary',
         ])
@@ -38,7 +38,7 @@
     <div class="col-sm-6 col-lg-4">
         @include('Layouts.LayoutStat', [
             'icon' => 'bank',
-            'value' => \App\Support\Money::format($byMethod['bank_transfer']['sum'] ?? '0.00'),
+            'value' => \App\Support\Money::formatTotals($byMethod['bank_transfer']['sum'] ?? []),
             'label' => 'Bank Transfers (' . ($byMethod['bank_transfer']['count'] ?? 0) . ' tx)',
             'tone' => 'info',
         ])
@@ -102,7 +102,7 @@
                     <th>Invoice No</th>
                     <th>Student Details</th>
                     <th>Class</th>
-                    <th>Amount (LKR)</th>
+                    <th>Amount (invoice currency)</th>
                     <th>Method</th>
                     <th>Reference</th>
                     <th>Cashier</th>
@@ -126,7 +126,7 @@
                             <small class="text-muted">Adm: {{ $p->invoice->student->admission_no }}</small>
                         </td>
                         <td>{{ $p->invoice->student->class?->full_name ?? '—' }}</td>
-                        <td class="fw-bold text-success">{{ \App\Support\Money::format($p->amount) }}</td>
+                        <td class="fw-bold text-success">{{ \App\Support\Money::format($p->amount, $p->currency.' ') }}</td>
                         <td>{{ ucwords(str_replace('_', ' ', $p->method)) }}</td>
                         <td>{{ $p->reference ?: '—' }}</td>
                         <td>{{ $p->receiver?->name ?: 'System' }}</td>

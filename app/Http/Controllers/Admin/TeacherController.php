@@ -3,8 +3,12 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Department;
 use App\Models\Teacher;
 use App\Models\User;
+use App\Rules\ValidInternationalPhone;
+use App\Rules\ValidPersonName;
+use App\Support\InternationalPhoneNumber;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
@@ -13,7 +17,13 @@ class TeacherController extends Controller
 {
     public function index(Request $request)
     {
-        $teachers = Teacher::with(['user', 'classSubjects.schoolClass', 'classSubjects.subject'])
+        $teachers = Teacher::with([
+            'user',
+            'department',
+            'classSubjects' => fn ($query) => $query->whereHas('schoolClass')->whereHas('subject'),
+            'classSubjects.schoolClass',
+            'classSubjects.subject',
+        ])
             ->when($request->q, fn ($query, $s) => $query->whereHas('user', fn ($u) => $u->where('name', 'like', "%{$s}%")))
             ->latest()
             ->paginate(10)
@@ -24,16 +34,20 @@ class TeacherController extends Controller
 
     public function create()
     {
-        return view('Admin.AdminTeachersCreate');
+        return view('Admin.AdminTeachersCreate', [
+            'departments' => Department::query()->where('is_active', true)->orderBy('name')->get(),
+        ]);
     }
 
     public function store(Request $request)
     {
+        InternationalPhoneNumber::normalizeRequest($request);
         $data = $request->validate([
-            'name' => 'required|string|max:100',
+            'name' => ['required', 'string', 'max:100', new ValidPersonName],
             'email' => 'required|email|unique:users,email',
-            'password' => 'required|min:8',
-            'phone' => 'nullable|max:20',
+            'password' => 'required|string|min:8|max:32',
+            'phone' => ['nullable', 'string', 'max:20', Rule::unique('teachers', 'phone'), new ValidInternationalPhone($request->input('phone_region'))],
+            'department_id' => ['nullable', 'exists:departments,id'],
         ]);
 
         DB::transaction(function () use ($data) {
@@ -43,7 +57,11 @@ class TeacherController extends Controller
                 'password' => $data['password'],
                 'role' => 'teacher',
             ]);
-            Teacher::create(['user_id' => $user->id, 'phone' => $data['phone'] ?? null]);
+            Teacher::create([
+                'user_id' => $user->id,
+                'phone' => $data['phone'] ?? null,
+                'department_id' => $data['department_id'] ?? null,
+            ]);
         });
 
         return redirect()->route('admin.teachers.index')->with('success', 'Teacher created successfully.');
@@ -51,16 +69,21 @@ class TeacherController extends Controller
 
     public function edit(Teacher $teacher)
     {
-        return view('Admin.AdminTeachersEdit', ['teacher' => $teacher->load('user')]);
+        return view('Admin.AdminTeachersEdit', [
+            'teacher' => $teacher->load('user'),
+            'departments' => Department::query()->where('is_active', true)->orderBy('name')->get(),
+        ]);
     }
 
     public function update(Request $request, Teacher $teacher)
     {
+        InternationalPhoneNumber::normalizeRequest($request);
         $data = $request->validate([
-            'name' => 'required|string|max:100',
+            'name' => ['required', 'string', 'max:100', new ValidPersonName],
             'email' => ['required', 'email', Rule::unique('users', 'email')->ignore($teacher->user_id)],
-            'password' => 'nullable|min:8',
-            'phone' => 'nullable|max:20',
+            'password' => 'nullable|string|min:8|max:32',
+            'phone' => ['nullable', 'string', 'max:20', Rule::unique('teachers', 'phone')->ignore($teacher), new ValidInternationalPhone($request->input('phone_region'))],
+            'department_id' => ['nullable', 'exists:departments,id'],
         ]);
 
         DB::transaction(function () use ($data, $teacher) {
@@ -71,7 +94,10 @@ class TeacherController extends Controller
                 $user->password = $data['password'];
             }
             $user->save();
-            $teacher->update(['phone' => $data['phone'] ?? null]);
+            $teacher->update([
+                'phone' => $data['phone'] ?? null,
+                'department_id' => $data['department_id'] ?? null,
+            ]);
         });
 
         return redirect()->route('admin.teachers.index')->with('success', 'Teacher updated successfully.');

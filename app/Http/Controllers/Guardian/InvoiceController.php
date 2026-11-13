@@ -24,9 +24,9 @@ class InvoiceController extends Controller
 
         // Cancelled invoices are void and are left out of every total.
         $liveInvoices = $invoices->where('status', '!=', 'cancelled');
-        $totalBilled = $liveInvoices->sum('total');
-        $totalPaid = $liveInvoices->sum('amount_paid');
-        $totalDue = $liveInvoices->sum('balance');
+        $totalBilled = \App\Support\Money::sumByCurrency($liveInvoices, 'total');
+        $totalPaid = \App\Support\Money::sumByCurrency($liveInvoices, 'amount_paid');
+        $totalDue = \App\Support\Money::sumByCurrency($liveInvoices, 'balance');
 
         return view('Guardian.GuardianInvoicesIndex', compact('children', 'invoices', 'totalBilled', 'totalPaid', 'totalDue'));
     }

@@ -56,7 +56,7 @@
                 <tr>
                     <th>Fee Name</th>
                     <th>Scope</th>
-                    <th>Amount (LKR)</th>
+                    <th>Amount / Currency</th>
                     <th>Status</th>
                     <th class="text-end">Actions</th>
                 </tr>
@@ -78,7 +78,7 @@
                             @endif
                         </td>
                         <td>
-                            <span class="fw-bold text-primary">{{ \App\Support\Money::format($fee->amount) }}</span>
+                            <span class="fw-bold text-primary">{{ \App\Support\Money::format($fee->amount, $fee->currency.' ') }}</span>
                             @if ($fee->items->isNotEmpty())
                                 <div class="small text-muted">sum of mandatory items</div>
                             @endif
@@ -104,6 +104,7 @@
                                         data-academic-year="{{ $fee->academic_year_id }}"
                                         data-name="{{ $fee->name }}"
                                         data-amount="{{ $fee->amount }}"
+                                        data-currency="{{ $fee->currency }}"
                                         data-has-items="{{ $fee->items->isNotEmpty() ? 1 : 0 }}"
                                         data-active="{{ $fee->is_active ? 1 : 0 }}"
                                         data-action="{{ route($financeRoutePrefix.'.fee-structures.update', $fee) }}">
@@ -127,13 +128,13 @@
                                     @if ($fee->items->isNotEmpty())
                                         <table class="table table-sm mb-3 bg-white">
                                             <thead>
-                                                <tr><th>Item</th><th>Amount (LKR)</th><th>Billing</th><th class="text-end"></th></tr>
+                                                <tr><th>Item</th><th>Amount ({{ $fee->currency }})</th><th>Billing</th><th class="text-end"></th></tr>
                                             </thead>
                                             <tbody>
                                                 @foreach ($fee->items as $item)
                                                     <tr>
                                                         <td>{{ $item->name }}</td>
-                                                        <td>{{ \App\Support\Money::format($item->amount) }}</td>
+                                                        <td>{{ \App\Support\Money::format($item->amount, $fee->currency.' ') }}</td>
                                                         <td>
                                                             @if ($item->is_mandatory)
                                                                 <span class="badge bg-primary">Mandatory</span>
@@ -162,7 +163,7 @@
                                             <input type="text" name="name" class="form-control form-control-sm" placeholder="e.g. Lab fee" required>
                                         </div>
                                         <div class="col-md-3">
-                                            <label class="form-label small mb-1">Amount (LKR)</label>
+                                            <label class="form-label small mb-1">Amount ({{ $fee->currency }})</label>
                                             <input type="number" step="0.01" min="0" name="amount" class="form-control form-control-sm" placeholder="0.00" required>
                                         </div>
                                         <div class="col-md-3">
@@ -259,8 +260,16 @@
                         <input type="text" name="name" id="create_name" class="form-control" placeholder="e.g. Term Tuition Fee, Lab Fee" required value="{{ old('name') }}">
                     </div>
                     <div class="mb-3">
-                        <label for="create_amount" class="form-label">Amount (LKR) <span class="text-danger">*</span></label>
+                        <label for="create_amount" class="form-label">Amount <span class="text-danger">*</span></label>
                         <input type="number" step="0.01" min="0.01" name="amount" id="create_amount" class="form-control" placeholder="0.00" required value="{{ old('amount') }}">
+                    </div>
+                    <div class="mb-3">
+                        <label for="create_currency" class="form-label">Billing currency</label>
+                        <select name="currency" id="create_currency" class="form-select">
+                            @foreach (config('school.currencies', ['LKR']) as $currency)
+                                <option value="{{ $currency }}" @selected(old('currency', config('school.default_currency', 'LKR')) === $currency)>{{ $currency }}</option>
+                            @endforeach
+                        </select>
                     </div>
                     <div class="form-check">
                         <input class="form-check-input" type="checkbox" name="is_active" id="create_active" value="1" checked>
@@ -342,8 +351,16 @@
                         <input type="text" name="name" id="edit_name" class="form-control" required>
                     </div>
                     <div class="mb-3">
-                        <label for="edit_amount" class="form-label">Amount (LKR) <span class="text-danger">*</span></label>
+                        <label for="edit_amount" class="form-label">Amount <span class="text-danger">*</span></label>
                         <input type="number" step="0.01" min="0.01" name="amount" id="edit_amount" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit_currency" class="form-label">Billing currency</label>
+                        <select name="currency" id="edit_currency" class="form-select">
+                            @foreach (config('school.currencies', ['LKR']) as $currency)
+                                <option value="{{ $currency }}">{{ $currency }}</option>
+                            @endforeach
+                        </select>
                     </div>
                     <div class="form-check">
                         <input class="form-check-input" type="checkbox" name="is_active" id="edit_active" value="1">
@@ -406,6 +423,7 @@
         var scopeClassRadio = document.getElementById('edit_scope_class');
         var nameInput = document.getElementById('edit_name');
         var amountInput = document.getElementById('edit_amount');
+        var currencyInput = document.getElementById('edit_currency');
         var activeInput = document.getElementById('edit_active');
 
         document.querySelectorAll('.edit-fee-btn').forEach(function (button) {
@@ -424,6 +442,7 @@
 
                 nameInput.value = this.dataset.name;
                 amountInput.value = this.dataset.amount;
+                currencyInput.value = this.dataset.currency || 'LKR';
                 amountInput.readOnly = this.dataset.hasItems === '1';
                 activeInput.checked = this.dataset.active === '1';
 

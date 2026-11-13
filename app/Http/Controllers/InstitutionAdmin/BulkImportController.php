@@ -7,6 +7,8 @@ use App\Http\Requests\InstitutionAdmin\BulkImportRequest;
 use App\Services\BulkCsvImportService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
+use RuntimeException;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class BulkImportController extends Controller
 {
@@ -15,6 +17,22 @@ class BulkImportController extends Controller
         $this->authorizeImport();
 
         return view('InstitutionAdmin.InstitutionAdminImportsIndex');
+    }
+
+    public function template(string $entity, BulkCsvImportService $importer): StreamedResponse
+    {
+        $this->authorizeImport();
+        $headers = $importer->templateHeaders($entity);
+
+        return response()->streamDownload(function () use ($headers): void {
+            $output = fopen('php://output', 'w');
+            if ($output === false) {
+                throw new RuntimeException('The CSV template could not be generated.');
+            }
+
+            fputcsv($output, $headers, ',', '"', '\\');
+            fclose($output);
+        }, $entity.'-import-template.csv', ['Content-Type' => 'text/csv; charset=UTF-8']);
     }
 
     public function store(BulkImportRequest $request, BulkCsvImportService $importer): View|RedirectResponse

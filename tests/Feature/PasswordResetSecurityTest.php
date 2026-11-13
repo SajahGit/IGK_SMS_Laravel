@@ -7,6 +7,7 @@ use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Contracts\Validation\UncompromisedVerifier;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Password;
 use Tests\TestCase;
 
 class PasswordResetSecurityTest extends TestCase
@@ -145,5 +146,40 @@ class PasswordResetSecurityTest extends TestCase
             'password' => $password,
             'password_confirmation' => $password,
         ])->assertSessionHasErrors('password');
+    }
+
+    public function test_password_reset_enforces_the_shared_eight_to_thirty_two_character_range(): void
+    {
+        $this->app->instance(UncompromisedVerifier::class, new class implements UncompromisedVerifier
+        {
+            public function verify($data)
+            {
+                return true;
+            }
+        });
+        $user = User::create([
+            'name' => 'Password Length User',
+            'email' => 'password-length@example.test',
+            'password' => 'CurrentPassword123!',
+            'role' => 'admin',
+        ]);
+        $token = Password::createToken($user);
+
+        $this->post(route('password.update'), [
+            'email' => $user->email,
+            'token' => $token,
+            'password' => 'Aa1234!x',
+            'password_confirmation' => 'Aa1234!x',
+        ])->assertRedirect(route('login'));
+
+        $tooLong = 'Aa1234!'.str_repeat('x', 26);
+        $this->from(route('password.reset', ['email' => $user->email]))
+            ->post(route('password.update'), [
+                'email' => $user->email,
+                'token' => 'invalid',
+                'password' => $tooLong,
+                'password_confirmation' => $tooLong,
+            ])
+            ->assertSessionHasErrors('password');
     }
 }

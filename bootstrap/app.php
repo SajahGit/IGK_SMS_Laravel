@@ -3,6 +3,7 @@
 use App\Http\Middleware\EnsureRole;
 use App\Http\Middleware\ForcePasswordChange;
 use App\Http\Middleware\RequirePermissionOrAdmin;
+use App\Http\Middleware\ResolveBranchContext;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -20,6 +21,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'permission' => RequirePermissionOrAdmin::class,
         ]);
         $middleware->appendToGroup('web', [
+            ResolveBranchContext::class,
             ForcePasswordChange::class,
         ]);
     })

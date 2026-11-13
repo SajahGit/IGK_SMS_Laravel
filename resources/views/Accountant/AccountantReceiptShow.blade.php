@@ -85,23 +85,23 @@
         <!-- Amount Box -->
         <div class="p-3 mb-4 rounded border bg-success-subtle text-success-emphasis text-center">
             <div class="small text-uppercase fw-semibold mb-1">Amount Received</div>
-            <div class="display-6 fw-bold text-success">{{ \App\Support\Money::format($payment->amount) }}</div>
+            <div class="display-6 fw-bold text-success">{{ \App\Support\Money::format($payment->amount, $payment->currency.' ') }}</div>
         </div>
 
         <!-- Remaining Balance Summary -->
         <div class="row g-2 mb-5 small text-muted">
             <div class="col-4 text-center p-2 rounded bg-body-tertiary">
                 <div>Total Billed</div>
-                <div class="fw-bold text-body">{{ \App\Support\Money::format($payment->invoice->total) }}</div>
+                <div class="fw-bold text-body">{{ \App\Support\Money::format($payment->invoice->total, $payment->invoice->currency.' ') }}</div>
             </div>
             <div class="col-4 text-center p-2 rounded bg-body-tertiary">
                 <div>Total Paid to Date</div>
-                <div class="fw-bold text-success">{{ \App\Support\Money::format($payment->invoice->amount_paid) }}</div>
+                <div class="fw-bold text-success">{{ \App\Support\Money::format($payment->invoice->amount_paid, $payment->invoice->currency.' ') }}</div>
             </div>
             <div class="col-4 text-center p-2 rounded bg-body-tertiary">
                 <div>Remaining Balance</div>
                 <div class="fw-bold {{ $payment->invoice->balance > 0 ? 'text-danger' : 'text-muted' }}">
-                    {{ \App\Support\Money::format($payment->invoice->balance) }}
+                    {{ \App\Support\Money::format($payment->invoice->balance, $payment->invoice->currency.' ') }}
                 </div>
             </div>
         </div>

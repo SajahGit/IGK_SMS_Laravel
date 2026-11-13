@@ -3,7 +3,7 @@
 @section('content')
 <div class="d-flex justify-content-between align-items-center mb-3">
     <div><h3 class="mb-0">{{ $entry->entry_no }}</h3>
-        <small class="text-muted">{{ $entry->entry_date->format('d M Y') }} · {{ $entry->description }} @if ($entry->branch) · {{ $entry->branch->name }} @endif</small></div>
+        <small class="text-muted">{{ $entry->entry_date->format('d M Y') }} · {{ $entry->currency }} · {{ $entry->description }} @if ($entry->branch) · {{ $entry->branch->name }} @endif</small></div>
     <a href="{{ route('admin.journals.index') }}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i>Back</a>
 </div>
 @if (session('success'))<div class="alert alert-success">{{ session('success') }}</div>@endif
@@ -14,13 +14,13 @@
             <tbody>
             @foreach ($entry->lines as $line)
                 <tr><td>{{ $line->account->code }} — {{ $line->account->name }}</td><td>{{ $line->memo }}</td>
-                    <td class="text-end">{{ (float) $line->debit > 0 ? number_format((float) $line->debit, 2) : '' }}</td>
-                    <td class="text-end">{{ (float) $line->credit > 0 ? number_format((float) $line->credit, 2) : '' }}</td></tr>
+                    <td class="text-end">{{ (float) $line->debit > 0 ? \App\Support\Money::format($line->debit, $entry->currency.' ') : '' }}</td>
+                    <td class="text-end">{{ (float) $line->credit > 0 ? \App\Support\Money::format($line->credit, $entry->currency.' ') : '' }}</td></tr>
             @endforeach
             </tbody>
             <tfoot class="table-light fw-semibold"><tr><td colspan="2">Total</td>
-                <td class="text-end">{{ number_format((float) $entry->lines->sum('debit'), 2) }}</td>
-                <td class="text-end">{{ number_format((float) $entry->lines->sum('credit'), 2) }}</td></tr></tfoot>
+                <td class="text-end">{{ \App\Support\Money::format($entry->lines->sum('debit'), $entry->currency.' ') }}</td>
+                <td class="text-end">{{ \App\Support\Money::format($entry->lines->sum('credit'), $entry->currency.' ') }}</td></tr></tfoot>
         </table>
     </div>
 </div>

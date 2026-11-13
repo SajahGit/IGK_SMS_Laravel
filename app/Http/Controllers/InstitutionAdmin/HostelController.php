@@ -43,8 +43,8 @@ class HostelController extends Controller
     public function storeHostel(Request $request): RedirectResponse
     {
         $data = $request->validate([
-            'name' => ['required', 'string', 'max:120', 'unique:hostels,name'],
-            'location' => ['nullable', 'string', 'max:255'],
+            'name' => ['required', 'string', 'max:80', "regex:/^[a-zA-Z0-9\\s\\-']+$/", 'unique:hostels,name'],
+            'location' => ['nullable', 'string', 'max:120', 'regex:/^[a-zA-Z0-9\s,.-]+$/'],
         ]);
         $hostel = Hostel::create($data + ['is_active' => true]);
         AuditLogger::log('created', $hostel, null, $hostel->toArray());
@@ -55,8 +55,8 @@ class HostelController extends Controller
     public function updateHostel(Request $request, Hostel $hostel): RedirectResponse
     {
         $data = $request->validate([
-            'name' => ['required', 'string', 'max:120', Rule::unique('hostels', 'name')->ignore($hostel->id)],
-            'location' => ['nullable', 'string', 'max:255'],
+            'name' => ['required', 'string', 'max:80', "regex:/^[a-zA-Z0-9\\s\\-']+$/", Rule::unique('hostels', 'name')->ignore($hostel->id)],
+            'location' => ['nullable', 'string', 'max:120', 'regex:/^[a-zA-Z0-9\s,.-]+$/'],
             'is_active' => ['required', 'boolean'],
         ]);
 
@@ -87,8 +87,11 @@ class HostelController extends Controller
 
     public function storeRoom(Request $request, Hostel $hostel): RedirectResponse
     {
+        if (is_string($request->input('room_number'))) {
+            $request->merge(['room_number' => strtoupper(trim($request->input('room_number')))]);
+        }
         $data = $request->validate([
-            'room_number' => ['required', 'string', 'max:40', Rule::unique('hostel_rooms')->where('hostel_id', $hostel->id)],
+            'room_number' => ['required', 'string', 'max:15', 'regex:/^[A-Z0-9-]+$/', Rule::unique('hostel_rooms')->where('hostel_id', $hostel->id)],
             'bed_capacity' => ['required', 'integer', 'min:1', 'max:100'],
         ]);
         abort_unless($hostel->is_active, 422, 'Rooms can only be added to an active hostel.');
@@ -100,8 +103,11 @@ class HostelController extends Controller
 
     public function updateRoom(Request $request, HostelRoom $room): RedirectResponse
     {
+        if (is_string($request->input('room_number'))) {
+            $request->merge(['room_number' => strtoupper(trim($request->input('room_number')))]);
+        }
         $data = $request->validate([
-            'room_number' => ['required', 'string', 'max:40', Rule::unique('hostel_rooms')->where('hostel_id', $room->hostel_id)->ignore($room->id)],
+            'room_number' => ['required', 'string', 'max:15', 'regex:/^[A-Z0-9-]+$/', Rule::unique('hostel_rooms')->where('hostel_id', $room->hostel_id)->ignore($room->id)],
             'bed_capacity' => ['required', 'integer', 'min:1', 'max:100'],
             'is_active' => ['required', 'boolean'],
         ]);

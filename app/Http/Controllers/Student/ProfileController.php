@@ -4,9 +4,13 @@ namespace App\Http\Controllers\Student;
 
 use App\Http\Controllers\Controller;
 use App\Models\StudentDocument;
+use App\Rules\ValidInternationalPhone;
+use App\Rules\ValidPersonName;
 use App\Support\AuditLogger;
+use App\Support\InternationalPhoneNumber;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -40,9 +44,10 @@ class ProfileController extends Controller
     {
         $student = $this->student();
 
+        InternationalPhoneNumber::normalizeRequest($request);
         $data = $request->validate([
-            'name' => 'required|string|max:100',
-            'phone' => 'nullable|max:20',
+            'name' => ['required', 'string', 'max:100', new ValidPersonName],
+            'phone' => ['nullable', 'string', 'max:20', Rule::unique('students', 'phone')->ignore($student), new ValidInternationalPhone($request->input('phone_region'))],
             'password' => ['nullable', Password::defaults(), 'confirmed'],
         ]);
 

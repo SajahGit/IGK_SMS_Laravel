@@ -40,13 +40,40 @@ class AdmissionNumberGenerator
     private static function formatPrefix(Program $program, AcademicYear $academicYear): string
     {
         $programCode = strtoupper((string) $program->code);
+        $normalizedCode = self::normalizedProgramCode($programCode);
 
-        if (! preg_match('/^[A-Z]{2,6}$/', $programCode)) {
+        if ($normalizedCode === null) {
             throw ValidationException::withMessages([
-                'program_id' => 'The selected program code must contain 2 to 6 letters for admission numbering.',
+                'program_id' => 'The selected program code must contain at least two letters and use only letters or hyphens.',
             ]);
         }
 
-        return $academicYear->start_date->format('Y')."-{$programCode}-";
+        $hasCollision = Program::query()
+            ->whereKeyNot($program->getKey())
+            ->get(['code'])
+            ->contains(fn (Program $candidate) => self::normalizedProgramCode(strtoupper((string) $candidate->code)) === $normalizedCode);
+
+        if ($hasCollision) {
+            throw ValidationException::withMessages([
+                'program_id' => 'The selected program code conflicts with another program for admission numbering.',
+            ]);
+        }
+
+        return $academicYear->start_date->format('Y')."-{$normalizedCode}-";
+    }
+
+    private static function normalizedProgramCode(string $programCode): ?string
+    {
+        if (! preg_match('/^[A-Z]+(?:-[A-Z]+)*$/', $programCode)) {
+            return null;
+        }
+
+        $letters = str_replace('-', '', $programCode);
+
+        if (strlen($letters) < 2) {
+            return null;
+        }
+
+        return substr($letters, 0, 6);
     }
 }

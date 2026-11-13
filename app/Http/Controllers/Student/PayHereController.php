@@ -5,7 +5,10 @@ namespace App\Http\Controllers\Student;
 use App\Http\Controllers\Controller;
 use App\Models\Invoice;
 use App\Models\PayHereTransaction;
+use App\Rules\ValidInternationalPhone;
+use App\Rules\ValidPersonName;
 use App\Services\PayHereService;
+use App\Support\InternationalPhoneNumber;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -24,12 +27,13 @@ class PayHereController extends Controller
     {
         $student = $request->user()->student;
         abort_unless($student && $invoice->student_id === $student->id, 404);
+        InternationalPhoneNumber::normalizeRequest($request);
 
         $customer = $request->validate([
-            'first_name' => ['required', 'string', 'max:80'],
-            'last_name' => ['required', 'string', 'max:80'],
+            'first_name' => ['required', 'string', 'max:80', new ValidPersonName],
+            'last_name' => ['required', 'string', 'max:80', new ValidPersonName],
             'email' => ['required', 'email', 'max:120'],
-            'phone' => ['required', 'string', 'max:30'],
+            'phone' => ['required', 'string', 'max:16', new ValidInternationalPhone($request->input('phone_region'))],
             'address' => ['required', 'string', 'max:255'],
             'city' => ['required', 'string', 'max:80'],
             'country' => ['required', 'string', 'max:80'],

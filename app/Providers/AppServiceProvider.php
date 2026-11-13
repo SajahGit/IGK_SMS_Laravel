@@ -78,7 +78,7 @@ class AppServiceProvider extends AuthServiceProvider
 
     public function boot(): void
     {
-        Password::defaults(fn () => Password::min(10)->mixedCase()->numbers()->uncompromised());
+        Password::defaults(fn () => Password::min(8)->max(32)->mixedCase()->numbers()->uncompromised());
 
         RateLimiter::for('login', function (Request $request) {
             $email = Str::lower((string) $request->input('email'));

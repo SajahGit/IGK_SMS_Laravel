@@ -23,9 +23,9 @@ class ProductionSeederTest extends TestCase
 
         // Run the seeder directly: going through `db:seed` would ask the production
         // "are you sure?" confirmation, which cannot be answered inside a test.
-        (new ProductionSeeder())->setContainer($this->app)->run();
+        (new ProductionSeeder)->setContainer($this->app)->run();
 
-        $this->assertSame(6, Role::count());
+        $this->assertSame(7, Role::count());
         $this->assertSame(Permission::query()->distinct('name')->count('name'), Permission::count());
         $this->assertSame(1, User::role('Super Admin')->count());
         $this->assertTrue(User::role('Super Admin')->firstOrFail()->must_change_password);

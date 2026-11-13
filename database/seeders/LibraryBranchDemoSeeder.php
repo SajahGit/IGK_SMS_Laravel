@@ -78,7 +78,7 @@ class LibraryBranchDemoSeeder extends Seeder
         LibraryFine::create([
             'loan_id' => $overdueLoan->id,
             'amount' => '150.00',
-            'reason' => 'Demo sample: 3 days overdue',
+            'reason' => 'Fine for a title returned three days after the due date',
         ]);
     }
 }

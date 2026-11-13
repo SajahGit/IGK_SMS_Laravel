@@ -19,6 +19,11 @@ class JournalService
      */
     public static function post(array $data, array $lines, ?string $sourceType = null, ?int $sourceId = null): JournalEntry
     {
+        $currency = strtoupper($data['currency'] ?? config('school.default_currency', 'LKR'));
+        if (! in_array($currency, config('school.currencies', ['LKR']), true)) {
+            throw new InvalidArgumentException('Journal currency must be one of the configured school currencies.');
+        }
+
         $debit = '0.00';
         $credit = '0.00';
         foreach ($lines as $line) {
@@ -30,10 +35,11 @@ class JournalService
             throw new InvalidArgumentException('Journal entry must have at least two lines and total debits must equal total credits.');
         }
 
-        return DB::transaction(function () use ($data, $lines, $sourceType, $sourceId) {
+        return DB::transaction(function () use ($data, $lines, $sourceType, $sourceId, $currency) {
             $entry = JournalEntry::create([
                 'entry_no' => 'TMP'.uniqid(),
                 'entry_date' => $data['entry_date'],
+                'currency' => $currency,
                 'description' => $data['description'],
                 'reference' => $data['reference'] ?? null,
                 'branch_id' => $data['branch_id'] ?? null,
@@ -80,6 +86,7 @@ class JournalService
                 'entry_date' => $invoice->issue_date?->toDateString() ?? now()->toDateString(),
                 'description' => 'Fee invoice '.$invoice->invoice_no,
                 'reference' => $invoice->invoice_no,
+                'currency' => $invoice->currency,
                 'branch_id' => $invoice->branch_id ?? null,
             ], [
                 ['account_id' => $receivable, 'debit' => $invoice->total, 'memo' => 'Student fees receivable'],
@@ -96,6 +103,7 @@ class JournalService
                 'entry_date' => $payment->paid_at?->toDateString() ?? now()->toDateString(),
                 'description' => 'Fee receipt '.$payment->receipt_no,
                 'reference' => $payment->receipt_no,
+                'currency' => $payment->currency,
                 'branch_id' => $payment->invoice?->branch_id ?? null,
             ], [
                 ['account_id' => $payment->method === 'cash' ? $cash : $bank, 'debit' => $payment->amount, 'memo' => ucfirst(str_replace('_', ' ', (string) $payment->method))],

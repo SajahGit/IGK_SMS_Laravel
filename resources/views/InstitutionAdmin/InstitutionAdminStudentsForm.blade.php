@@ -11,7 +11,7 @@
     </div>
 @endif
 @php $isEdit = isset($student); @endphp
-<div class="row g-3">
+<div class="row g-3" data-student-form>
 @unless ($isEdit)
 <div class="col-12">
     <label for="existing_user_id" class="form-label">Existing student login (optional)</label>
@@ -33,15 +33,18 @@
         <div class="row g-3">
     <div class="col-md-6">
         <label class="form-label">Full name <span class="text-danger">*</span></label>
-        <input type="text" name="name" class="form-control" value="{{ old('name', $isEdit ? $student->user->name : '') }}" required>
+        <input type="text" name="name" data-person-name maxlength="100" autocomplete="off" @class(['form-control', 'is-invalid' => $errors->has('name')]) value="{{ old('name', $isEdit ? $student->user->name : '') }}" required>
+        @error('name')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
     </div>
     <div class="col-md-6">
         <label class="form-label">Email (login) <span class="text-danger">*</span></label>
-        <input type="email" name="email" class="form-control" value="{{ old('email', $isEdit ? $student->user->email : '') }}" required>
+        <input type="email" name="email" autocomplete="off" data-lpignore="true" data-1p-ignore="true" @class(['form-control', 'is-invalid' => $errors->has('email')]) value="{{ old('email', $isEdit ? $student->user->email : '') }}" required>
+        @error('email')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
     </div>
     <div class="col-md-6">
         <label class="form-label">Password {{ $isEdit ? '(leave blank to keep current)' : '' }} <span class="{{ $isEdit ? '' : 'text-danger' }}">*</span></label>
-        <input type="password" name="password" class="form-control" {{ $isEdit ? '' : 'required' }} minlength="10" placeholder="10+ characters with upper, lower, and number">
+        <input type="password" name="password" autocomplete="new-password" @class(['form-control', 'is-invalid' => $errors->has('password')]) {{ $isEdit ? '' : 'required' }} minlength="8" maxlength="32" placeholder="8-32 characters with upper, lower, and number">
+        @error('password')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
     </div>
         </div>
     </div>
@@ -52,7 +55,7 @@
     </div>
     <div class="col-md-4">
         <label class="form-label">Class & Section <span class="text-danger">*</span></label>
-        <select name="class_id" class="form-select" required>
+        <select name="class_id" @class(['form-select', 'is-invalid' => $errors->has('class_id')]) data-searchable-select required>
             <option value="">Select class</option>
             @foreach ($classes as $c)
                 @php
@@ -63,6 +66,7 @@
                 </option>
             @endforeach
         </select>
+        @error('class_id')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
     </div>
     <div class="col-md-4">
         <label class="form-label">Program</label>
@@ -84,21 +88,21 @@
     </div>
     <div class="col-md-4">
         <label class="form-label">Guardians <span class="text-danger">*</span></label>
-        <select name="guardian_ids[]" class="form-select" multiple size="3" required>
-            @foreach ($guardians as $g)
-                <option value="{{ $g->id }}" @selected(in_array($g->id, old('guardian_ids', $isEdit ? $student->guardians->pluck('id')->all() : [])))>{{ $g->user->name }} ({{ $g->phone }})</option>
-            @endforeach
-        </select>
-        <div class="form-text">Use Ctrl (Windows) or Command (Mac) to select multiple guardians.</div>
+        <x-guardian-selector
+            name="guardian_ids[]"
+            :guardians="$guardians"
+            :selected="old('guardian_ids', $isEdit ? $student->guardians->pluck('id')->all() : [])"
+            multiple
+        />
     </div>
     <div class="col-md-4">
         <label class="form-label">Primary contact</label>
-        <select name="primary_guardian_id" class="form-select">
-            <option value="">No primary guardian</option>
-            @foreach ($guardians as $g)
-                <option value="{{ $g->id }}" @selected(old('primary_guardian_id', $isEdit ? $student->primaryGuardian->first()?->id : '') == $g->id)>{{ $g->user->name }}</option>
-            @endforeach
-        </select>
+        <x-guardian-selector
+            name="primary_guardian_id"
+            :guardians="$guardians"
+            :selected="old('primary_guardian_id', $isEdit ? $student->primaryGuardian->first()?->id : '')"
+            allow-none
+        />
     </div>
     <div class="col-md-4">
         <label class="form-label">Date of birth</label>
@@ -114,8 +118,31 @@
         </select>
     </div>
     <div class="col-md-4">
-        <label class="form-label">National ID</label>
-        <input type="text" name="national_id" class="form-control" value="{{ old('national_id', $isEdit ? $student->national_id : '') }}" maxlength="30">
+        <label class="form-label">Nationality</label>
+        <x-international-nationality-select :value="old('nationality', $isEdit ? $student->nationality : '')" />
+    </div>
+    <div class="col-md-4">
+        <label class="form-label">Document type <span class="text-danger">*</span></label>
+        <select name="document_type" data-document-type @class(['form-select', 'is-invalid' => $errors->has('document_type')]) required>
+            <option value="">Select document type</option>
+            @foreach (['national_id' => 'National ID', 'passport' => 'Passport'] as $value => $label)
+                <option value="{{ $value }}" @selected(old('document_type', $isEdit ? $student->document_type : '') === $value)>{{ $label }}</option>
+            @endforeach
+        </select>
+        @error('document_type')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
+    </div>
+    <div class="col-md-4">
+        <label class="form-label">Issuing country <span class="text-danger">*</span></label>
+        <x-international-country-select name="issuing_country" :value="old('issuing_country', $isEdit ? $student->issuing_country : '')" required />
+    </div>
+    <div class="col-md-4">
+        <label class="form-label">Document number <span class="text-danger">*</span></label>
+        @php
+            $documentTypeValue = old('document_type', $isEdit ? $student->document_type : '');
+            $issuingCountryValue = old('issuing_country', $isEdit ? $student->issuing_country : '');
+        @endphp
+        <input type="text" name="document_number" data-document-number @class(['form-control', 'is-invalid' => $errors->has('document_number')]) value="{{ old('document_number', $isEdit ? $student->document_number : '') }}" maxlength="20" autocomplete="off" {{ $documentTypeValue && $issuingCountryValue ? '' : 'disabled' }} required>
+        @error('document_number')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
     </div>
     <div class="col-md-4">
         <label class="form-label">Admission date</label>
@@ -123,7 +150,7 @@
     </div>
     <div class="col-md-6">
         <label class="form-label">Phone</label>
-        <input type="text" name="phone" class="form-control" value="{{ old('phone', $isEdit ? $student->phone : '') }}" placeholder="07XXXXXXXX">
+        <x-international-phone-input name="phone" :value="$isEdit ? $student->phone : ''" />
     </div>
     @if ($isEdit)
         <div class="col-md-6">
@@ -147,6 +174,12 @@
         studentLoginFields.querySelectorAll('input').forEach((input) => {
             input.disabled = useExistingAccount;
             input.required = !useExistingAccount;
+        });
+        studentLoginFields.querySelectorAll('[data-document-number]').forEach((input) => {
+            const form = input.form;
+            input.disabled = useExistingAccount
+                || !form.querySelector('[data-document-type]').value
+                || !form.querySelector('[data-country-value]').value;
         });
     }
 

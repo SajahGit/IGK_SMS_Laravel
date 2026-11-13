@@ -7,6 +7,27 @@ use Illuminate\Validation\Validator;
 
 class StoreStaffAttendanceRequest extends FormRequest
 {
+    protected function prepareForValidation(): void
+    {
+        foreach (['check_in', 'check_out'] as $field) {
+            $value = $this->input($field);
+            if (! is_string($value)) {
+                continue;
+            }
+
+            $value = trim($value);
+            foreach (['H:i', 'H:i:s', 'h:i A'] as $format) {
+                $time = \DateTimeImmutable::createFromFormat('!'.$format, $value);
+                $errors = \DateTimeImmutable::getLastErrors();
+                if ($time && ($errors === false || ($errors['warning_count'] === 0 && $errors['error_count'] === 0))
+                    && $time->format($format) === $value) {
+                    $this->merge([$field => $time->format('H:i')]);
+                    break;
+                }
+            }
+        }
+    }
+
     public function authorize(): bool
     {
         return auth()->check() && (auth()->user()->isAdmin() || auth()->user()->can('staff_attendance.create'));

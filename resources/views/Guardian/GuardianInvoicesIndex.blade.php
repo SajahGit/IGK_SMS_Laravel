@@ -13,7 +13,7 @@
     <div class="col-sm-6 col-lg-4">
         @include('Layouts.LayoutStat', [
             'icon' => 'receipt',
-            'value' => \App\Support\Money::format($totalBilled),
+            'value' => \App\Support\Money::formatTotals($totalBilled),
             'label' => 'Total Invoiced',
             'tone' => 'primary',
         ])
@@ -21,7 +21,7 @@
     <div class="col-sm-6 col-lg-4">
         @include('Layouts.LayoutStat', [
             'icon' => 'check-circle-fill',
-            'value' => \App\Support\Money::format($totalPaid),
+            'value' => \App\Support\Money::formatTotals($totalPaid),
             'label' => 'Total Paid',
             'tone' => 'success',
         ])
@@ -29,9 +29,9 @@
     <div class="col-sm-6 col-lg-4">
         @include('Layouts.LayoutStat', [
             'icon' => 'exclamation-circle-fill',
-            'value' => \App\Support\Money::format($totalDue),
+            'value' => \App\Support\Money::formatTotals($totalDue),
             'label' => 'Total Balance Due',
-            'tone' => $totalDue > 0 ? 'warning' : 'secondary',
+            'tone' => \App\Support\Money::hasPositiveTotal($totalDue) ? 'warning' : 'secondary',
         ])
     </div>
 </div>
@@ -67,11 +67,11 @@
                                 {{ $inv->due_date->format('d M Y') }}
                             </span>
                         </td>
-                        <td>{{ \App\Support\Money::format($inv->total) }}</td>
-                        <td class="text-success fw-semibold">{{ \App\Support\Money::format($inv->amount_paid) }}</td>
+                        <td>{{ \App\Support\Money::format($inv->total, $inv->currency.' ') }}</td>
+                        <td class="text-success fw-semibold">{{ \App\Support\Money::format($inv->amount_paid, $inv->currency.' ') }}</td>
                         <td>
                             <span class="fw-bold {{ $inv->balance > 0 ? 'text-danger' : 'text-muted' }}">
-                                {{ \App\Support\Money::format($inv->balance) }}
+                                {{ \App\Support\Money::format($inv->balance, $inv->currency.' ') }}
                             </span>
                         </td>
                         <td>{!! $inv->status_badge !!}</td>

@@ -1,6 +1,6 @@
 # Installation Guide (install.md)
 
-**Project:** IGK School ERP — Laravel 12.70.0  
+**Project:** IGK International School ERP — Laravel 12.71.0
 **SOP Reference:** §29 Handover Artefact #4  
 **Owner:** D6  
 
@@ -69,8 +69,11 @@ DB_USERNAME=root
 DB_PASSWORD=
 
 APP_URL=http://localhost
+APP_TIMEZONE=Asia/Colombo
 APP_DEBUG=true
 ```
+
+Set `APP_TIMEZONE` to the school's single operating timezone when deploying outside Sri Lanka.
 
 Generate the application key:
 
@@ -96,15 +99,18 @@ php artisan migrate --seed
 
 This runs all migrations and the `DatabaseSeeder`, which creates:
 - Roles and permissions (Spatie RBAC)
-- Academic year 2026 and Term 1
-- Grade 10 sections A/B, subjects, teacher assignments, and timetable
-- Two teachers, demo administrator/registrar/accountant accounts, 11 students, and linked guardians
-- Attendance records, exams, and results
-- Fee structures, invoices, and mixed-status payments
-- An announcement and grade scale
+- International academic programs, year groups and sections from Nursery/Reception through Grade 12, including IB, Cambridge, Edexcel and American tracks
+- 12 teaching staff, role accounts, 240 students with linked multinational guardians, admissions and enrollment records
+- Six weeks of attendance, class-subject offerings and timetables, two examinations, marks and published term results
+- Program-specific grade scales, fee structures, multi-currency invoices, mixed-status payments and receipts
+- Targeted announcements and populated demo workflows for the additional modules included by the application
 - Super Admin account (`superadmin@school.test`, password `password` (local/demo; production seeds `ChangeMe123!` and forces a change))
 
-This is the current small local demo dataset, not the SOP's full 240-student `DemoDataSeeder` or 5,000-student performance dataset; those dedicated seeders are not present yet.
+Local and testing environments use the repeatable 240-student demo dataset. The 5,000-student performance dataset is a separate SOP requirement and is not included in the normal seed command. Guardian is a read-only role from the SOP's SHOULD-HAVE scope; the other six roles are the MVP roles.
+
+To re-run the dataset in a local or testing environment, use `php artisan db:seed`. Do not run demo seeders in production; use the documented `ProductionSeeder` procedure instead. The seed data covers application forms and API-backed operations as appropriate; the SOP's legacy data migration is not part of MVP, and its optional CSV importer has a dry-run workflow.
+
+The role/entity/CRUD, education-level and seed-data cross-check is maintained in [international-school-sop-coverage.md](../international-school-sop-coverage.md).
 
 ---
 
@@ -132,7 +138,7 @@ Log in as Super Admin:
 - Email: `superadmin@school.test`
 - Password: `password` (local/demo; production seeds `ChangeMe123!` and forces a change)
 
-You will be forced to change the password on first login.
+Local demo accounts are ready to use after sign-in. Production accounts created with the initial password are required to change it on first login.
 
 ---
 
@@ -141,8 +147,8 @@ You will be forced to change the password on first login.
 After installation, confirm:
 
 - [ ] Home page returns 200
-- [ ] Super Admin can log in and is redirected to password change
-- [ ] After password change, dashboard is accessible
+- [ ] Super Admin can log in and reach the dashboard
+- [ ] Production initial-password accounts are redirected to password change
 - [ ] All roles visible in user management
 - [ ] Reports load without errors
 - [ ] Test suite passes: `php artisan test`

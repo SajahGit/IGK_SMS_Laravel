@@ -56,6 +56,9 @@ class SopRemainingAcceptanceTest extends TestCase
             'academic_year_id' => $year->id,
             'guardian_ids' => [$guardian->id],
             'dob' => '2010-05-15',
+            'document_type' => 'passport',
+            'issuing_country' => 'LK',
+            'document_number' => 'DUPL001',
         ];
 
         $this->actingAs($admin)
@@ -75,7 +78,7 @@ class SopRemainingAcceptanceTest extends TestCase
         $this->assertDatabaseHas('users', ['email' => 'same-new@school.test']);
     }
 
-    public function test_national_id_is_unique_when_present(): void
+    public function test_student_document_number_is_unique(): void
     {
         $admin = $this->seedAdmin();
         [$class, $program, $year, $guardian] = $this->createAcademicContext();
@@ -84,7 +87,9 @@ class SopRemainingAcceptanceTest extends TestCase
             'program_id' => $program->id,
             'academic_year_id' => $year->id,
             'guardian_ids' => [$guardian->id],
-            'national_id' => 'NID-0001',
+            'document_type' => 'passport',
+            'issuing_country' => 'LK',
+            'document_number' => 'DUPL002',
         ];
 
         $this->actingAs($admin)->post(route('admin.students.store'), $base + [
@@ -99,7 +104,7 @@ class SopRemainingAcceptanceTest extends TestCase
             'email' => 'second-national-id@school.test',
             'password' => 'StrongPassword123!',
             'dob' => '2011-06-16',
-        ])->assertSessionHasErrors('national_id');
+        ])->assertSessionHasErrors('document_number');
 
         $this->assertDatabaseMissing('users', ['email' => 'second-national-id@school.test']);
     }

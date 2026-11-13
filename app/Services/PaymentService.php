@@ -86,6 +86,7 @@ class PaymentService
                 'invoice_id' => $invoice->id,
                 'receipt_no' => $receiptNo,
                 'amount' => $amount,
+                'currency' => $invoice->currency,
                 'method' => $method,
                 'reference' => $reference,
                 'paid_at' => $paidAt,

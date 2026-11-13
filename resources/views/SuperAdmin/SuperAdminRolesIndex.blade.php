@@ -17,7 +17,7 @@
 
 <div class="card shadow-sm border-0">
     <div class="table-responsive">
-        <table class="table table-hover mb-0 align-middle">
+        <table class="table table-hover mb-0 align-middle role-permissions-table">
             <thead class="table-light">
                 <tr>
                     <th>Role</th>
@@ -29,18 +29,18 @@
             <tbody>
             @forelse ($roles as $role)
                 <tr>
-                    <td>
+                    <td class="role-name">
                         <div class="fw-semibold">{{ $role->name }}</div>
                     </td>
-                    <td><span class="badge bg-secondary">{{ $role->guard_name }}</span></td>
-                    <td>
+                    <td class="role-guard"><span class="badge bg-secondary">{{ $role->guard_name }}</span></td>
+                    <td class="role-permissions">
                         @forelse ($role->permissions as $perm)
                             <span class="badge bg-info-subtle text-info border border-info-subtle">{{ $perm->name }}</span>
                         @empty
                             <span class="text-muted">—</span>
                         @endforelse
                     </td>
-                    <td class="text-end">
+                    <td class="role-actions text-end">
                         <div class="btn-group btn-group-sm">
                             @can('update', $role)
                             <a href="{{ route('admin.roles.edit', $role) }}" class="btn btn-outline-primary"><i class="bi bi-pencil-square me-1"></i>Edit</a>

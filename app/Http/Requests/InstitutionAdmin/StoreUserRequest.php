@@ -4,6 +4,7 @@ namespace App\Http\Requests\InstitutionAdmin;
 
 use App\Models\Branch;
 use App\Models\User;
+use App\Rules\ValidPersonName;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
@@ -25,7 +26,7 @@ class StoreUserRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => ['required', 'string', 'max:100'],
+            'name' => ['required', 'string', 'max:100', new ValidPersonName],
             'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users', 'email')],
             'password' => ['required', 'string', Password::defaults()],
             'roles' => ['required', 'array', 'min:1'],

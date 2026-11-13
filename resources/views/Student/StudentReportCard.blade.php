@@ -36,7 +36,7 @@
         <div class="report-header text-center pb-4 mb-4 border-bottom">
             <div class="d-flex justify-content-center align-items-center gap-2 mb-2">
                 <span class="brand-mark fs-3 text-primary"><i class="bi bi-mortarboard-fill"></i></span>
-                <h2 class="h2 mb-0 fw-bold tracking-tight">IGK SCHOOL</h2>
+                <h2 class="h2 mb-0 fw-bold tracking-tight">{{ $institution['name'] }}</h2>
             </div>
             <div class="text-uppercase tracking-widest small fw-semibold text-muted mb-1">Official Student Academic Report</div>
             <div class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-1 fs-6">
@@ -119,13 +119,13 @@
 
                                 if ($result->is_absent) {
                                     $percentage = 0.0;
-                                    $grade = \App\Support\SchoolHelper::gradeFor($percentage);
-                                    $gp = \App\Support\SchoolHelper::gradePointFor($percentage);
+                                    $grade = \App\Support\SchoolHelper::gradeFor($percentage, $gradeScale);
+                                    $gp = \App\Support\SchoolHelper::gradePointFor($percentage, $gradeScale);
                                 } else {
                                     $totalObtained += (float) $result->marks;
                                     $percentage = \App\Support\SchoolHelper::resultPercentage($result->marks, $maxMarks);
-                                    $grade = \App\Support\SchoolHelper::gradeFor($percentage);
-                                    $gp = \App\Support\SchoolHelper::gradePointFor($percentage);
+                                    $grade = \App\Support\SchoolHelper::gradeFor($percentage, $gradeScale);
+                                    $gp = \App\Support\SchoolHelper::gradePointFor($percentage, $gradeScale);
                                 }
                             @endphp
                             <tr>
@@ -174,7 +174,7 @@
                         </div>
                         <div class="d-flex justify-content-between py-2 align-items-center">
                             <span class="text-muted fw-semibold">Term Grade Point Average (GPA):</span>
-                            <span class="fs-4 fw-bold text-primary">{{ $gpa !== null ? number_format($gpa, 2) : '—' }} <small class="fs-6 text-muted">/ 4.00</small></span>
+                            <span class="fs-4 fw-bold text-primary">{{ $gpa !== null ? number_format($gpa, 2) : '—' }} <small class="fs-6 text-muted">/ {{ number_format((float) $gradePointMax, 2) }}</small></span>
                         </div>
                     </div>
                 </div>
@@ -222,7 +222,7 @@
             </div>
             <div class="col-4">
                 <div class="signature-line border-bottom pb-4 mb-2"></div>
-                <div class="fw-semibold small">Principal / Administration</div>
+                <div class="fw-semibold small">Institution Administrator</div>
                 <small class="text-muted">School Seal & Stamp</small>
             </div>
             <div class="col-4">

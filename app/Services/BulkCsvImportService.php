@@ -12,7 +12,12 @@ use App\Models\SchoolClass;
 use App\Models\Subject;
 use App\Models\Teacher;
 use App\Models\User;
+use App\Rules\ValidInternationalPhone;
+use App\Rules\ValidPersonName;
+use App\Rules\ValidStudentDocument;
+use App\Rules\UniqueStudentDocumentNumber;
 use App\Support\AuditLogger;
+use App\Support\InternationalPhoneNumber;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -26,13 +31,69 @@ class BulkCsvImportService
     private const MAX_ROWS = 5000;
 
     private const REQUIRED_HEADERS = [
-        'students' => ['name', 'email', 'guardian_id', 'class_id'],
+        'students' => ['name', 'email', 'guardian_id', 'class_id', 'document_type', 'issuing_country', 'document_number'],
         'staff' => ['name', 'email'],
         'subjects' => ['name', 'code'],
         'guardians' => ['name', 'email'],
         'inventory' => ['sku', 'name', 'category', 'unit'],
         'library_books' => ['title', 'author', 'category'],
     ];
+
+    private const OPTIONAL_HEADERS = [
+        'students' => ['program_id', 'academic_year_id', 'admission_no', 'admission_date', 'dob', 'gender', 'phone', 'phone_region', 'status'],
+        'staff' => ['phone', 'phone_region', 'department_id', 'status'],
+        'subjects' => ['credit_hours'],
+        'guardians' => ['phone', 'phone_region'],
+        'inventory' => ['quantity_on_hand', 'reorder_level', 'description'],
+        'library_books' => ['isbn', 'publication_year', 'copies'],
+    ];
+
+    private const HEADER_ALIASES = [
+        'student' => 'name',
+        'student_name' => 'name',
+        'full_name' => 'name',
+        'teacher_name' => 'name',
+        'staff_name' => 'name',
+        'guardian_name' => 'name',
+        'subject_name' => 'name',
+        'item_name' => 'name',
+        'email_address' => 'email',
+        'e_mail' => 'email',
+        'phone_number' => 'phone',
+        'mobile' => 'phone',
+        'mobile_number' => 'phone',
+        'contact_number' => 'phone',
+        'parent_id' => 'guardian_id',
+        'parent_i_d' => 'guardian_id',
+        'guardian_i_d' => 'guardian_id',
+        'school_class_id' => 'class_id',
+        'school_class_i_d' => 'class_id',
+        'classid' => 'class_id',
+        'class_i_d' => 'class_id',
+        'subject_code' => 'code',
+        'stock_keeping_unit' => 'sku',
+        'product_sku' => 'sku',
+        'book_title' => 'title',
+        'book_author' => 'author',
+        'book_category' => 'category',
+        'year_published' => 'publication_year',
+        'no_of_copies' => 'copies',
+        'id_type' => 'document_type',
+        'i_d_type' => 'document_type',
+        'country_code' => 'issuing_country',
+        'document_country' => 'issuing_country',
+        'id_number' => 'document_number',
+        'i_d_number' => 'document_number',
+    ];
+
+    public function templateHeaders(string $entity): array
+    {
+        if (! isset(self::REQUIRED_HEADERS[$entity])) {
+            throw new \InvalidArgumentException('Unsupported CSV import type.');
+        }
+
+        return array_merge(self::REQUIRED_HEADERS[$entity], self::OPTIONAL_HEADERS[$entity]);
+    }
 
     public function inspect(string $entity, UploadedFile $file): array
     {
@@ -132,8 +193,12 @@ class BulkCsvImportService
                         'admission_date' => ($data['admission_date'] ?? '') ?: null,
                         'dob' => ($data['dob'] ?? '') ?: null,
                         'gender' => ($data['gender'] ?? '') ?: null,
-                        'national_id' => ($data['national_id'] ?? '') ?: null,
-                        'phone' => ($data['phone'] ?? '') ?: null,
+                        'document_type' => $data['document_type'],
+                        'issuing_country' => Str::upper($data['issuing_country']),
+                        'document_number' => Str::upper(trim($data['document_number'])),
+                        'phone' => ($data['phone'] ?? '') !== ''
+                            ? InternationalPhoneNumber::normalize($data['phone'], $data['phone_region'] ?? null)
+                            : null,
                         'status' => ($data['status'] ?? '') ?: 'active',
                     ]);
 
@@ -150,7 +215,9 @@ class BulkCsvImportService
                     ]);
                     $guardian = Guardian::create([
                         'user_id' => $guardianUser->id,
-                        'phone' => ($data['phone'] ?? '') ?: null,
+                        'phone' => ($data['phone'] ?? '') !== ''
+                            ? InternationalPhoneNumber::normalize($data['phone'], $data['phone_region'] ?? null)
+                            : null,
                     ]);
                     AuditLogger::log('imported_guardian', $guardian, null, $guardian->toArray());
 
@@ -212,7 +279,9 @@ class BulkCsvImportService
 
                 $teacher = Teacher::create([
                     'user_id' => $user->id,
-                    'phone' => ($data['phone'] ?? '') ?: null,
+                    'phone' => ($data['phone'] ?? '') !== ''
+                        ? InternationalPhoneNumber::normalize($data['phone'], $data['phone_region'] ?? null)
+                        : null,
                     'department_id' => ($data['department_id'] ?? '') ?: null,
                     'status' => ($data['status'] ?? '') ?: 'active',
                 ]);
@@ -227,7 +296,7 @@ class BulkCsvImportService
     {
         $seen = [];
         $seenAdmissionNumbers = [];
-        $seenNationalIds = [];
+        $seenDocumentNumbers = [];
         $classCounts = [];
         $validRows = [];
         foreach ($rows as $row) {
@@ -244,7 +313,9 @@ class BulkCsvImportService
                     'admission_date' => ['nullable', 'date', 'before_or_equal:today'],
                     'dob' => ['nullable', 'date', 'before:today'],
                     'gender' => ['nullable', 'string', 'max:20'],
-                    'national_id' => ['nullable', 'string', 'max:30', 'unique:students,national_id'],
+                    'document_type' => ['required', Rule::in(['national_id', 'passport'])],
+                    'issuing_country' => ['required', 'string', 'size:2'],
+                    'document_number' => ['required', 'string', 'max:30'],
                     'phone' => ['nullable', 'string', 'max:20'],
                     'status' => ['nullable', Rule::in(['active', 'suspended', 'graduated', 'withdrawn'])],
                 ],
@@ -283,6 +354,27 @@ class BulkCsvImportService
                     'credit_hours' => ['nullable', 'integer', 'between:1,60'],
                 ],
             };
+            if ($entity === 'students') {
+                $data['document_type'] = Str::lower(trim((string) ($data['document_type'] ?? '')));
+                $data['issuing_country'] = Str::upper(trim((string) ($data['issuing_country'] ?? '')));
+                $data['document_number'] = Str::upper(trim((string) ($data['document_number'] ?? '')));
+                $rules['document_number'][] = new ValidStudentDocument($data['document_type'], $data['issuing_country']);
+                $rules['document_number'][] = new UniqueStudentDocumentNumber;
+            }
+            if (in_array($entity, ['students', 'staff', 'guardians'], true)) {
+                $rules['name'][] = new ValidPersonName;
+                if (isset($data['phone']) && preg_match('/\A[0-9][0-9\s().-]*\z/', $data['phone']) === 1) {
+                    $data['phone'] = preg_replace('/[\s().-]+/', '', $data['phone']);
+                }
+                $rules['phone'] = [
+                    'nullable',
+                    'string',
+                    'max:30',
+                    new ValidInternationalPhone(
+                        is_string($data['phone_region'] ?? null) ? $data['phone_region'] : null
+                    ),
+                ];
+            }
 
             $validator = Validator::make($data, $rules);
             $identity = match ($entity) {
@@ -310,11 +402,11 @@ class BulkCsvImportService
                     $seenAdmissionNumbers[$admissionNumber] = true;
                 }
 
-                $nationalId = Str::upper(trim((string) ($data['national_id'] ?? '')));
-                if ($nationalId !== '' && isset($seenNationalIds[$nationalId])) {
-                    $validator->errors()->add('national_id', 'This value is duplicated in the uploaded file.');
-                } elseif ($nationalId !== '') {
-                    $seenNationalIds[$nationalId] = true;
+                $documentNumber = $data['document_number'];
+                if ($documentNumber !== '' && isset($seenDocumentNumbers[$documentNumber])) {
+                    $validator->errors()->add('document_number', 'This value is duplicated in the uploaded file.');
+                } elseif ($documentNumber !== '') {
+                    $seenDocumentNumbers[$documentNumber] = true;
                 }
             }
 
@@ -342,7 +434,14 @@ class BulkCsvImportService
                 }
             }
 
-            $row['errors'] = $validator->errors()->all();
+            $row['errors'] = collect($validator->errors()->messages())
+                ->flatMap(fn (array $messages, string $field) => array_map(
+                    fn (string $message) => "{$field}: {$message}",
+                    $messages
+                ))
+                ->values()
+                ->all();
+            $row['data'] = $data;
             if ($row['errors'] === []) {
                 $validRows[] = $row;
             }
@@ -369,7 +468,9 @@ class BulkCsvImportService
 
     private function normalizeHeader(string $header): string
     {
-        return Str::snake(trim(preg_replace('/^\xEF\xBB\xBF/', '', $header) ?? ''));
+        $normalized = Str::snake(trim(preg_replace('/^\xEF\xBB\xBF/', '', $header) ?? ''));
+
+        return self::HEADER_ALIASES[$normalized] ?? $normalized;
     }
 
     private function isBlankRow(array $values): bool

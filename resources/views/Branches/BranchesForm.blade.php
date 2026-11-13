@@ -15,9 +15,11 @@
             @if ($branch->exists) @method('PUT') @endif
             <div class="row g-3">
                 <div class="col-md-6"><label class="form-label">Branch Name <span class="text-danger">*</span></label>
-                    <input type="text" name="name" class="form-control" required value="{{ old('name', $branch->name) }}"></div>
+                    <input type="text" name="name" @class(['form-control', 'is-invalid' => $errors->has('name')]) required value="{{ old('name', $branch->name) }}">
+                    @error('name')<div class="invalid-feedback">{{ $message }}</div>@enderror</div>
                 <div class="col-md-3"><label class="form-label">Code <span class="text-danger">*</span></label>
-                    <input type="text" name="code" class="form-control" required maxlength="20" value="{{ old('code', $branch->code) }}"></div>
+                    <input type="text" name="code" @class(['form-control', 'is-invalid' => $errors->has('code')]) required maxlength="20" value="{{ old('code', $branch->code) }}">
+                    @error('code')<div class="invalid-feedback">{{ $message }}</div>@enderror</div>
                 <div class="col-md-3"><label class="form-label">City</label>
                     <input type="text" name="city" class="form-control" value="{{ old('city', $branch->city) }}"></div>
                 <div class="col-md-12"><label class="form-label">Address</label>
@@ -25,9 +27,10 @@
                 <div class="col-md-4"><label class="form-label">Principal</label>
                     <input type="text" name="principal_name" class="form-control" value="{{ old('principal_name', $branch->principal_name) }}"></div>
                 <div class="col-md-4"><label class="form-label">Phone</label>
-                    <input type="text" name="phone" class="form-control" value="{{ old('phone', $branch->phone) }}"></div>
+                    <x-international-phone-input name="phone" :value="$branch->phone" /></div>
                 <div class="col-md-4"><label class="form-label">Email</label>
-                    <input type="email" name="email" class="form-control" value="{{ old('email', $branch->email) }}"></div>
+                    <input type="email" name="email" @class(['form-control', 'is-invalid' => $errors->has('email')]) value="{{ old('email', $branch->email) }}">
+                    @error('email')<div class="invalid-feedback">{{ $message }}</div>@enderror</div>
                 <div class="col-md-3"><div class="form-check">
                     <input class="form-check-input" type="checkbox" name="is_main" value="1" @checked(old('is_main', $branch->is_main))>
                     <label class="form-check-label">Main campus</label></div></div>

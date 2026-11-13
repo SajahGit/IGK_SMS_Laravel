@@ -91,8 +91,8 @@
                         $credits = $subject->credit_hours ?? 3;
                         $maximum = $result->exam->max_marks;
                         $percentage = $result->is_absent ? 0 : \App\Support\SchoolHelper::resultPercentage($result->marks, $maximum);
-                        $grade = \App\Support\SchoolHelper::gradeFor($percentage);
-                        $gradePoint = \App\Support\SchoolHelper::gradePointFor($percentage);
+                        $grade = \App\Support\SchoolHelper::gradeFor($percentage, $gradeScale);
+                        $gradePoint = \App\Support\SchoolHelper::gradePointFor($percentage, $gradeScale);
                         $totalMaximum += $maximum;
                         if (! $result->is_absent) {
                             $totalObtained += (float) $result->marks;
@@ -117,7 +117,7 @@
     <table class="summary">
         <tr>
             <td><span class="label">{{ $termResult ? 'Final Result' : 'Aggregate Marks' }}</span><br><strong>{{ $termResult ? ucfirst($termResult->result_status) : $totalObtained.' / '.$totalMaximum }}</strong></td>
-            <td><span class="label">Term GPA</span><br><strong>{{ $gpa !== null ? number_format($gpa, 2).' / 4.00' : '—' }}</strong></td>
+            <td><span class="label">Term GPA</span><br><strong>{{ $gpa !== null ? number_format($gpa, 2).' / '.number_format((float) $gradePointMax, 2) : '—' }}</strong></td>
             <td><span class="label">Attendance</span><br><strong>{{ $attendance['present'] }} present, {{ $attendance['late'] }} late / {{ $attendance['total'] }} days ({{ $attendance['percentage'] }}%)</strong></td>
         </tr>
     </table>
@@ -125,7 +125,7 @@
     <table class="signatures">
         <tr>
             <td><div class="line">Class Teacher</div></td>
-            <td><div class="line">Principal / Administration</div></td>
+            <td><div class="line">Institution Administrator</div></td>
             <td><div class="line">Guardian</div></td>
         </tr>
     </table>

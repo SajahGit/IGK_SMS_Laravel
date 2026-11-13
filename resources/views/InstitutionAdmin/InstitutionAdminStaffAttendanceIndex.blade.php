@@ -11,23 +11,41 @@
 @include('Layouts.LayoutErrors')
 <div class="card shadow-sm border-0">
     <div class="table-responsive">
-        <table class="table table-hover mb-0 align-middle">
-            <thead class="table-light"><tr><th>Staff member</th><th>Check-in</th><th>Check-out</th><th>Notes</th><th></th></tr></thead>
+        <table class="table table-hover mb-0 align-middle staff-attendance-table">
+            <thead class="table-light">
+                <tr>
+                    <th class="staff-attendance-col-staff">Staff member</th>
+                    <th class="staff-attendance-col-time">Check-in</th>
+                    <th class="staff-attendance-col-time">Check-out</th>
+                    <th class="staff-attendance-col-notes">Notes</th>
+                    <th class="staff-attendance-col-action">Action</th>
+                </tr>
+            </thead>
             <tbody>
             @forelse ($teachers as $teacher)
                 @php($record = $attendance->get($teacher->id))
+                @php($formId = 'staff-attendance-'.$teacher->id)
                 <tr>
-                    <td>{{ $teacher->user->name }}<div class="small text-muted">{{ $teacher->department?->name ?? 'Staff' }}</div></td>
-                    <td colspan="4">
-                        <form method="POST" action="{{ route('admin.staff-attendance.store') }}" class="row g-2 align-items-center">
+                    <td class="staff-attendance-col-staff">
+                        {{ $teacher->user->name }}
+                        <div class="small text-muted">{{ $teacher->department?->name ?? 'Staff' }}</div>
+                        <form id="{{ $formId }}" method="POST" action="{{ route('admin.staff-attendance.store') }}">
                             @csrf
                             <input type="hidden" name="teacher_id" value="{{ $teacher->id }}">
                             <input type="hidden" name="attendance_date" value="{{ $date }}">
-                            <div class="col-6 col-md-2"><input aria-label="Check-in time for {{ $teacher->user->name }}" type="time" name="check_in" value="{{ old('check_in', $record?->check_in) }}" class="form-control form-control-sm" required></div>
-                            <div class="col-6 col-md-2"><input aria-label="Check-out time for {{ $teacher->user->name }}" type="time" name="check_out" value="{{ old('check_out', $record?->check_out) }}" class="form-control form-control-sm"></div>
-                            <div class="col-8 col-md-5"><input aria-label="Notes for {{ $teacher->user->name }}" type="text" name="notes" value="{{ old('notes', $record?->notes) }}" maxlength="255" class="form-control form-control-sm" placeholder="Notes (optional)"></div>
-                            <div class="col-4 col-md-3"><button class="btn btn-sm btn-outline-primary">{{ $record ? 'Update' : 'Save' }}</button></div>
                         </form>
+                    </td>
+                    <td class="staff-attendance-col-time">
+                        <input form="{{ $formId }}" aria-label="Check-in time for {{ $teacher->user->name }}" type="time" name="check_in" value="{{ old('check_in', $record?->check_in ? substr($record->check_in, 0, 5) : '') }}" class="form-control form-control-sm" required>
+                    </td>
+                    <td class="staff-attendance-col-time">
+                        <input form="{{ $formId }}" aria-label="Check-out time for {{ $teacher->user->name }}" type="time" name="check_out" value="{{ old('check_out', $record?->check_out ? substr($record->check_out, 0, 5) : '') }}" class="form-control form-control-sm">
+                    </td>
+                    <td class="staff-attendance-col-notes">
+                        <input form="{{ $formId }}" aria-label="Notes for {{ $teacher->user->name }}" type="text" name="notes" value="{{ old('notes', $record?->notes) }}" maxlength="255" class="form-control form-control-sm" placeholder="Notes (optional)">
+                    </td>
+                    <td class="staff-attendance-col-action">
+                        <button form="{{ $formId }}" class="btn btn-sm btn-outline-primary">{{ $record ? 'Update' : 'Save' }}</button>
                     </td>
                 </tr>
             @empty

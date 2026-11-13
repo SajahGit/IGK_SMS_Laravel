@@ -38,7 +38,7 @@ class DefaultersReportController extends Controller
 
         return CsvStreamer::download(
             'fee-defaulters-report.csv',
-            ['Invoice No', 'Term', 'Program', 'Student Name', 'Class', 'Parent / Contact', 'Due Date', 'Total Billed', 'Amount Paid', 'Balance Due', 'Days Overdue'],
+            ['Invoice No', 'Term', 'Program', 'Student Name', 'Class', 'Parent / Contact', 'Due Date', 'Total Billed', 'Amount Paid', 'Balance Due', 'Currency', 'Days Overdue'],
             $rows,
             function (Invoice $invoice) {
                 $guardian = $this->primaryGuardian($invoice->student);
@@ -58,6 +58,7 @@ class DefaultersReportController extends Controller
                     $invoice->total,
                     $invoice->amount_paid,
                     $invoice->balance,
+                    $invoice->currency,
                     $this->daysOverdue($invoice),
                 ];
             }
@@ -107,10 +108,7 @@ class DefaultersReportController extends Controller
         $filters = $this->validatedFilters($request);
 
         $invoices = $this->query($filters)->get();
-        $totalBalance = '0.00';
-        foreach ($invoices as $invoice) {
-            $totalBalance = Money::add($totalBalance, $invoice->balance);
-        }
+        $totalBalance = Money::sumByCurrency($invoices, 'balance');
 
         return [
             $filters,

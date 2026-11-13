@@ -15,6 +15,7 @@ class Payment extends Model
         'invoice_id',
         'receipt_no',
         'amount',
+        'currency',
         'method',
         'reference',
         'paid_at',

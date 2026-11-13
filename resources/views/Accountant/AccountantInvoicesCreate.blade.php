@@ -70,13 +70,13 @@
                                     <div class="list-group-item">
                                         <label class="d-flex justify-content-between align-items-center mb-0">
                                             <div>
-                                                <input class="form-check-input me-2 fee-checkbox" type="checkbox" name="fee_structure_ids[]" value="{{ $fee->id }}" data-amount="{{ $fee->amount }}" checked>
+                                                <input class="form-check-input me-2 fee-checkbox" type="checkbox" name="fee_structure_ids[]" value="{{ $fee->id }}" data-amount="{{ $fee->amount }}" data-currency="{{ $fee->currency }}" checked>
                                                 <span class="fw-semibold">{{ $fee->name }}</span>
                                                 @if ($fee->term)
                                                     <small class="text-muted">({{ $fee->term->name }})</small>
                                                 @endif
                                             </div>
-                                            <span class="fw-bold text-primary">{{ \App\Support\Money::format($fee->amount) }}</span>
+                                            <span class="fw-bold text-primary">{{ \App\Support\Money::format($fee->amount, $fee->currency.' ') }}</span>
                                         </label>
                                         @foreach ($fee->items as $item)
                                             <div class="ms-4 mt-1 small d-flex justify-content-between">
@@ -84,12 +84,12 @@
                                                     @if ($item->is_mandatory)
                                                         <span class="badge bg-primary me-1">Mandatory</span>
                                                     @else
-                                                        <input class="form-check-input me-1 optional-item-checkbox" type="checkbox" name="fee_item_ids[]" value="{{ $item->id }}" data-amount="{{ $item->amount }}" id="opt-{{ $item->id }}">
+                                                        <input class="form-check-input me-1 optional-item-checkbox" type="checkbox" name="fee_item_ids[]" value="{{ $item->id }}" data-amount="{{ $item->amount }}" data-currency="{{ $fee->currency }}" id="opt-{{ $item->id }}">
                                                         <span class="badge bg-secondary me-1">Optional</span>
                                                     @endif
                                                     <label for="opt-{{ $item->id }}" class="mb-0">{{ $item->name }}</label>
                                                 </span>
-                                                <span class="text-muted">{{ \App\Support\Money::format($item->amount) }}</span>
+                                                <span class="text-muted">{{ \App\Support\Money::format($item->amount, $fee->currency.' ') }}</span>
                                             </div>
                                         @endforeach
                                     </div>
@@ -114,7 +114,7 @@
                                 <span class="text-muted">Total Invoice Amount Per Student:</span>
                                 <div class="fs-4 fw-bold text-primary" id="totalPreview">LKR 0.00</div>
                             </div>
-                            <button type="submit" class="btn btn-primary px-4 py-2">
+                            <button type="submit" id="issueInvoices" class="btn btn-primary px-4 py-2">
                                 <i class="bi bi-receipt-cutoff me-1"></i> Issue Invoices
                             </button>
                         </div>
@@ -145,15 +145,28 @@
     document.addEventListener('DOMContentLoaded', function () {
         function updateTotal() {
             var total = 0.0;
+            var currencies = new Set();
             document.querySelectorAll('.fee-checkbox:checked').forEach(function (c) {
                 total += parseFloat(c.dataset.amount || 0);
+                currencies.add(c.dataset.currency || 'LKR');
             });
             document.querySelectorAll('.optional-item-checkbox:checked').forEach(function (c) {
                 total += parseFloat(c.dataset.amount || 0);
+                currencies.add(c.dataset.currency || 'LKR');
             });
             var el = document.getElementById('totalPreview');
             if (el) {
-                el.innerText = 'LKR ' + total.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,');
+                var button = document.getElementById('issueInvoices');
+                if (currencies.size > 1) {
+                    el.innerText = 'Choose fees in one currency';
+                    el.classList.add('text-danger');
+                    if (button) button.disabled = true;
+                    return;
+                }
+                el.classList.remove('text-danger');
+                var currency = currencies.size ? Array.from(currencies)[0] : 'LKR';
+                el.innerText = currency + ' ' + total.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,');
+                if (button) button.disabled = false;
             }
         }
         document.querySelectorAll('.fee-checkbox, .optional-item-checkbox').forEach(function (c) {

@@ -17,13 +17,13 @@
         @include('Layouts.LayoutStat', ['icon' => 'receipt', 'value' => $invoiceCount, 'label' => 'Active Invoices', 'tone' => 'primary'])
     </div>
     <div class="col-sm-6 col-xl-3">
-        @include('Layouts.LayoutStat', ['icon' => 'cash-stack', 'value' => \App\Support\Money::format($totalBilled), 'label' => 'Total Billed', 'tone' => 'info'])
+        @include('Layouts.LayoutStat', ['icon' => 'cash-stack', 'value' => \App\Support\Money::formatTotals($totalBilled), 'label' => 'Total Billed', 'tone' => 'info'])
     </div>
     <div class="col-sm-6 col-xl-3">
-        @include('Layouts.LayoutStat', ['icon' => 'check2-circle', 'value' => \App\Support\Money::format($totalCollected), 'label' => 'Total Collected', 'tone' => 'success'])
+        @include('Layouts.LayoutStat', ['icon' => 'check2-circle', 'value' => \App\Support\Money::formatTotals($totalCollected), 'label' => 'Total Collected', 'tone' => 'success'])
     </div>
     <div class="col-sm-6 col-xl-3">
-        @include('Layouts.LayoutStat', ['icon' => 'exclamation-circle', 'value' => \App\Support\Money::format($totalOutstanding), 'label' => 'Outstanding', 'tone' => 'warning'])
+        @include('Layouts.LayoutStat', ['icon' => 'exclamation-circle', 'value' => \App\Support\Money::formatTotals($totalOutstanding), 'label' => 'Outstanding', 'tone' => 'warning'])
     </div>
 </div>
 
@@ -44,7 +44,7 @@
                         <td>{{ $payment->invoice->student->user->name }}</td>
                         <td>{{ $payment->invoice->invoice_no }}</td>
                         <td>{{ $payment->paid_at->format('d M Y') }}</td>
-                        <td class="text-end">{{ \App\Support\Money::format($payment->amount) }}</td>
+                        <td class="text-end">{{ \App\Support\Money::format($payment->amount, $payment->currency.' ') }}</td>
                         <td class="text-end"><a href="{{ route('accountant.receipt.show', $payment) }}" class="btn btn-sm btn-outline-secondary">Receipt</a></td>
                     </tr>
                 @empty

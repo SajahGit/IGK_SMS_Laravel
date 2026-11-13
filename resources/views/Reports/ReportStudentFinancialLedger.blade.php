@@ -48,19 +48,20 @@
 <div class="card shadow-sm border-0">
     <div class="table-responsive">
         <table class="table table-hover mb-0 align-middle">
-            <thead><tr><th>Date</th><th>Description</th><th>Type</th><th>Charge</th><th>Payment</th><th>Running Balance</th></tr></thead>
+            <thead><tr><th>Date</th><th>Description</th><th>Type</th><th>Charge</th><th>Payment</th><th>Currency</th><th>Running Balance</th></tr></thead>
             <tbody>
             @forelse ($ledger as $row)
                 <tr>
                     <td>{{ $row['date'] }}</td>
                     <td>{{ $row['description'] }}</td>
                     <td>{{ ucfirst($row['type']) }}</td>
-                    <td>{{ $row['type'] === 'charge' ? $row['amount'] : '—' }}</td>
-                    <td>{{ $row['type'] === 'payment' ? $row['amount'] : '—' }}</td>
-                    <td>{{ $row['running_balance'] }}</td>
+                    <td>{{ $row['type'] === 'charge' ? \App\Support\Money::format($row['amount'], $row['currency'].' ') : '—' }}</td>
+                    <td>{{ $row['type'] === 'payment' ? \App\Support\Money::format($row['amount'], $row['currency'].' ') : '—' }}</td>
+                    <td>{{ $row['currency'] }}</td>
+                    <td>{{ \App\Support\Money::format($row['running_balance'], $row['currency'].' ') }}</td>
                 </tr>
             @empty
-                <tr><td colspan="6" class="text-center text-muted py-4">No ledger entries found for the selected filters.</td></tr>
+                <tr><td colspan="7" class="text-center text-muted py-4">No ledger entries found for the selected filters.</td></tr>
             @endforelse
             </tbody>
         </table>

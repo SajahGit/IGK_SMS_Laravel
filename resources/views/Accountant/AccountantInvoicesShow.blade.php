@@ -44,7 +44,7 @@
     <div class="col-sm-6 col-lg-4">
         @include('Layouts.LayoutStat', [
             'icon' => 'receipt',
-            'value' => \App\Support\Money::format($invoice->total),
+            'value' => \App\Support\Money::format($invoice->total, $invoice->currency.' '),
             'label' => 'Total Amount Billed',
             'tone' => 'primary',
         ])
@@ -52,7 +52,7 @@
     <div class="col-sm-6 col-lg-4">
         @include('Layouts.LayoutStat', [
             'icon' => 'check-circle-fill',
-            'value' => \App\Support\Money::format($invoice->amount_paid),
+            'value' => \App\Support\Money::format($invoice->amount_paid, $invoice->currency.' '),
             'label' => 'Total Amount Paid',
             'tone' => 'success',
         ])
@@ -60,7 +60,7 @@
     <div class="col-sm-6 col-lg-4">
         @include('Layouts.LayoutStat', [
             'icon' => 'exclamation-circle-fill',
-            'value' => \App\Support\Money::format($invoice->balance),
+            'value' => \App\Support\Money::format($invoice->balance, $invoice->currency.' '),
             'label' => 'Outstanding Balance',
             'tone' => $invoice->balance > 0 ? 'warning' : 'secondary',
         ])
@@ -141,18 +141,18 @@
                 @forelse ($invoice->items as $item)
                     <tr>
                         <td>{{ $item->description }}</td>
-                        <td class="text-end {{ \App\Support\Money::comp($item->amount, '0.00') < 0 ? 'text-success' : '' }}">{{ \App\Support\Money::format($item->amount) }}</td>
+                        <td class="text-end {{ \App\Support\Money::comp($item->amount, '0.00') < 0 ? 'text-success' : '' }}">{{ \App\Support\Money::format($item->amount, $invoice->currency.' ') }}</td>
                     </tr>
                 @empty
                     <tr><td colspan="2" class="text-center text-muted py-3">No line items recorded.</td></tr>
                 @endforelse
             </tbody>
             <tfoot>
-                <tr><th>Subtotal</th><th class="text-end">{{ \App\Support\Money::format($invoice->subtotal) }}</th></tr>
+                <tr><th>Subtotal</th><th class="text-end">{{ \App\Support\Money::format($invoice->subtotal, $invoice->currency.' ') }}</th></tr>
                 @if (\App\Support\Money::comp($invoice->discount, '0.00') > 0)
-                    <tr><th>Discount</th><th class="text-end text-success">- {{ \App\Support\Money::format($invoice->discount) }}</th></tr>
+                    <tr><th>Discount</th><th class="text-end text-success">- {{ \App\Support\Money::format($invoice->discount, $invoice->currency.' ') }}</th></tr>
                 @endif
-                <tr><th>Total</th><th class="text-end">{{ \App\Support\Money::format($invoice->total) }}</th></tr>
+                <tr><th>Total</th><th class="text-end">{{ \App\Support\Money::format($invoice->total, $invoice->currency.' ') }}</th></tr>
             </tfoot>
         </table>
     </div>
@@ -192,7 +192,7 @@
                     <tr class="{{ $payment->isReversed() ? 'opacity-50 text-decoration-line-through' : '' }}">
                         <td><code>{{ $payment->receipt_no }}</code></td>
                         <td>{{ $payment->paid_at->format('d M Y') }}</td>
-                        <td class="fw-bold">{{ \App\Support\Money::format($payment->amount) }}</td>
+                        <td class="fw-bold">{{ \App\Support\Money::format($payment->amount, $invoice->currency.' ') }}</td>
                         <td>{{ ucwords(str_replace('_', ' ', $payment->method)) }}</td>
                         <td>{{ $payment->reference ?: '—' }}</td>
                         <td>{{ $payment->receiver?->name ?: 'System' }}</td>

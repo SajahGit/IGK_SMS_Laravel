@@ -23,6 +23,7 @@ class Invoice extends Model
         'subtotal',
         'discount',
         'total',
+        'currency',
         'amount_paid',
         'balance',
         'status',

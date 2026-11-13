@@ -32,7 +32,7 @@
 <div class="card shadow-sm border-0">
     <div class="table-responsive">
         <table class="table table-hover mb-0 align-middle">
-            <thead class="table-light"><tr><th>Entry No</th><th>Date</th><th>Description</th><th>Branch</th><th class="text-end">Amount</th><th>Status</th><th class="text-end">Actions</th></tr></thead>
+            <thead class="table-light"><tr><th>Entry No</th><th>Date</th><th>Description</th><th>Branch</th><th>Currency</th><th class="text-end">Amount</th><th>Status</th><th class="text-end">Actions</th></tr></thead>
             <tbody>
             @forelse ($entries as $e)
                 <tr>
@@ -48,7 +48,8 @@
                         @endif
                     </td>
                     <td>{{ $e->branch?->name ?? '—' }}</td>
-                    <td class="text-end">{{ number_format((float) $e->total_debit, 2) }}</td>
+                    <td>{{ $e->currency }}</td>
+                    <td class="text-end">{{ \App\Support\Money::format($e->total_debit, $e->currency.' ') }}</td>
                     <td>@if ($e->status === 'posted')<span class="badge bg-success">Posted</span>@else<span class="badge bg-danger">Void</span>@endif</td>
                     <td class="text-end">
                         <div class="btn-group btn-group-sm">
@@ -63,7 +64,7 @@
                     </td>
                 </tr>
             @empty
-                <tr><td colspan="7" class="text-center text-muted py-4">No journal entries.</td></tr>
+                <tr><td colspan="8" class="text-center text-muted py-4">No journal entries.</td></tr>
             @endforelse
             </tbody>
         </table>

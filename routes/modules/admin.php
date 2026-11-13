@@ -58,6 +58,7 @@ Route::middleware('role:admin')->group(function () {
 
 Route::middleware('permission:imports.create')->group(function () {
     Route::get('imports', [BulkImportController::class, 'index'])->name('imports.index');
+    Route::get('imports/template/{entity}', [BulkImportController::class, 'template'])->name('imports.template');
     Route::post('imports', [BulkImportController::class, 'store'])->name('imports.store');
 });
 

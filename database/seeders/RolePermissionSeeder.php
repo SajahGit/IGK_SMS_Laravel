@@ -53,7 +53,7 @@ class RolePermissionSeeder extends Seeder
             'exams.create', 'exams.read', 'exams.update', 'exams.delete',
             'exam_subjects.create', 'exam_subjects.read', 'exam_subjects.update', 'exam_subjects.delete',
             // Marks
-            'marks.read', 'marks.update',
+            'marks.create', 'marks.read', 'marks.update',
             // Results
             'results.read', 'results.approve', 'results.publish',
             // Grade scale configuration
@@ -102,32 +102,31 @@ class RolePermissionSeeder extends Seeder
         $teacher = Role::firstOrCreate(['name' => 'Teacher', 'guard_name' => 'web']);
         $accountant = Role::firstOrCreate(['name' => 'Accountant', 'guard_name' => 'web']);
         $student = Role::firstOrCreate(['name' => 'Student', 'guard_name' => 'web']);
-        $librarian = Role::firstOrCreate(['name' => 'Librarian', 'guard_name' => 'web']);
+        $guardian = Role::firstOrCreate(['name' => 'Guardian', 'guard_name' => 'web']);
 
         // ---- Permission assignments per Section 7.2 matrix ----
-        $superAdmin->givePermissionTo($permissions);
+        $superAdmin->syncPermissions($permissions);
 
-        $institutionAdmin->givePermissionTo(array_filter($permissions, function ($p) {
-            return ! str_starts_with($p, 'roles_and_permissions.');
+        $institutionAdminPermissions = array_values(array_filter($permissions, function ($permission) {
+            return (! str_starts_with($permission, 'roles_and_permissions.')
+                    || $permission === 'roles_and_permissions.read')
+                && ! in_array($permission, ['invoices.delete', 'payments.create'], true);
         }));
+        $institutionAdmin->syncPermissions($institutionAdminPermissions);
 
-        $registrar->givePermissionTo([
+        $registrar->syncPermissions([
             'users.read',
             'imports.create',
-            'academic_years.create', 'academic_years.read', 'academic_years.update', 'academic_years.delete',
-            'terms.create', 'terms.read', 'terms.update', 'terms.delete',
-            'departments.create', 'departments.read', 'departments.update', 'departments.delete',
-            'programs.create', 'programs.read', 'programs.update', 'programs.delete',
-            'subjects.create', 'subjects.read', 'subjects.update', 'subjects.delete',
-            'curriculum.create', 'curriculum.read', 'curriculum.update', 'curriculum.delete',
+            'academic_years.read', 'terms.read',
+            'departments.read', 'programs.read', 'subjects.read', 'curriculum.read',
             'classes.create', 'classes.read', 'classes.update',
             'staff.read',
             'students.create', 'students.read', 'students.update', 'students.delete',
             'guardians.create', 'guardians.read', 'guardians.update', 'guardians.delete',
             'student_documents.create', 'student_documents.read', 'student_documents.update', 'student_documents.delete',
-            'class_subjects.create', 'class_subjects.read', 'class_subjects.update', 'class_subjects.delete',
+            'class_subjects.create', 'class_subjects.read', 'class_subjects.update',
             'enrollments.create', 'enrollments.read', 'enrollments.update', 'enrollments.delete',
-            'timetable.create', 'timetable.read', 'timetable.update', 'timetable.delete',
+            'timetable.create', 'timetable.read', 'timetable.update',
             'attendance.read', 'attendance.update',
             'exams.create', 'exams.read', 'exams.update', 'exams.delete',
             'exam_subjects.create', 'exam_subjects.read', 'exam_subjects.update', 'exam_subjects.delete',
@@ -135,55 +134,59 @@ class RolePermissionSeeder extends Seeder
             'results.read', 'results.approve', 'results.publish',
             'grades.read', 'grades.update',
             'report_card.read',
+            'fee_structures.read',
             'invoices.read',
             'payments.read',
-            'announcements.create', 'announcements.read', 'announcements.update', 'announcements.delete', 'announcements.publish',
-            'reports.read', 'reports.academic', 'reports.financial',
+            'announcements.create', 'announcements.read', 'announcements.update', 'announcements.publish',
+            'reports.read', 'reports.academic',
         ]);
 
-        $teacher->givePermissionTo([
+        $teacher->syncPermissions([
             'academic_years.read', 'terms.read',
-            'departments.read', 'programs.read', 'subjects.read',
-            'classes.read',
-            'students.read',
-            'class_subjects.read',
-            'enrollments.read',
-            'timetable.read',
+            'departments.read', 'programs.read', 'subjects.read', 'curriculum.read',
+            'classes.read', 'staff.read', 'students.read', 'guardians.read',
+            'class_subjects.read', 'enrollments.read', 'timetable.read',
             'attendance.create', 'attendance.read', 'attendance.update',
-            'exams.read',
-            'marks.read',
+            'exams.read', 'marks.create', 'marks.read', 'marks.update',
             'results.read',
             'report_card.read',
             'announcements.read',
             'reports.read', 'reports.academic', 'reports.attendance',
         ]);
 
-        $accountant->givePermissionTo([
+        $accountant->syncPermissions([
             'settings.read',
             'academic_years.read', 'terms.read',
-            'departments.read', 'programs.read', 'subjects.read',
-            'classes.read',
-            'students.read',
+            'departments.read', 'programs.read', 'subjects.read', 'curriculum.read',
+            'classes.read', 'staff.read', 'students.read', 'guardians.read', 'enrollments.read',
             'fee_structures.create', 'fee_structures.read', 'fee_structures.update', 'fee_structures.delete',
-            'invoices.create', 'invoices.read', 'invoices.update', 'invoices.delete',
+            'invoices.create', 'invoices.read', 'invoices.update',
             'payments.create', 'payments.read',
-            'suppliers.create', 'suppliers.read', 'suppliers.update', 'suppliers.delete',
-            'procurement.create', 'procurement.read', 'procurement.update', 'procurement.delete',
             'announcements.read',
             'reports.read', 'reports.financial',
-            'payroll.read',
         ]);
 
-        $student->givePermissionTo([
+        $student->syncPermissions([
             'students.read',
+            'departments.read', 'programs.read', 'subjects.read', 'curriculum.read',
             'classes.read',
+            'guardians.read', 'class_subjects.read', 'enrollments.read', 'timetable.read',
+            'attendance.read', 'exams.read', 'results.read',
             'report_card.read',
+            'invoices.read', 'payments.read',
             'announcements.read',
         ]);
 
-        $librarian->givePermissionTo([
-            'library.create', 'library.read', 'library.update', 'library.delete',
+        $guardian->syncPermissions([
             'students.read',
+            'guardians.read',
+            'student_documents.read',
+            'attendance.read',
+            'results.read',
+            'report_card.read',
+            'invoices.read',
+            'payments.read',
+            'announcements.read',
         ]);
 
         // ---- Create Super Admin user (password rules live in SuperAdminSeeder) ----

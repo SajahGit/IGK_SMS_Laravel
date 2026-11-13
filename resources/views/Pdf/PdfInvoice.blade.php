@@ -46,13 +46,13 @@
     <table class="totals">
         <tr><th>Description</th><th class="right">Amount</th></tr>
         @forelse ($invoice->items as $item)
-            <tr><td>{{ $item->description }}</td><td class="right">{{ \App\Support\Money::format($item->amount) }}</td></tr>
+            <tr><td>{{ $item->description }}</td><td class="right">{{ \App\Support\Money::format($item->amount, $invoice->currency.' ') }}</td></tr>
         @empty
-            <tr><td>Fees billed for this term</td><td class="right">{{ \App\Support\Money::format($invoice->total) }}</td></tr>
+            <tr><td>Fees billed for this term</td><td class="right">{{ \App\Support\Money::format($invoice->total, $invoice->currency.' ') }}</td></tr>
         @endforelse
-        <tr><td><strong>Total</strong></td><td class="right"><strong>{{ \App\Support\Money::format($invoice->total) }}</strong></td></tr>
-        <tr><td>Amount paid</td><td class="right">{{ \App\Support\Money::format($invoice->amount_paid) }}</td></tr>
-        <tr><td><strong>Outstanding balance</strong></td><td class="right"><strong>{{ \App\Support\Money::format($invoice->balance) }}</strong></td></tr>
+        <tr><td><strong>Total</strong></td><td class="right"><strong>{{ \App\Support\Money::format($invoice->total, $invoice->currency.' ') }}</strong></td></tr>
+        <tr><td>Amount paid</td><td class="right">{{ \App\Support\Money::format($invoice->amount_paid, $invoice->currency.' ') }}</td></tr>
+        <tr><td><strong>Outstanding balance</strong></td><td class="right"><strong>{{ \App\Support\Money::format($invoice->balance, $invoice->currency.' ') }}</strong></td></tr>
     </table>
 
     <h2>Payment History</h2>
@@ -64,7 +64,7 @@
                     <td>{{ $payment->receipt_no }}</td>
                     <td>{{ $payment->paid_at->format('d M Y') }}</td>
                     <td>{{ ucwords(str_replace('_', ' ', $payment->method)) }}</td>
-                    <td>{{ \App\Support\Money::format($payment->amount) }}</td>
+                    <td>{{ \App\Support\Money::format($payment->amount, $payment->currency.' ') }}</td>
                     <td>{{ $payment->isReversed() ? 'Reversed' : 'Received' }}</td>
                 </tr>
             @empty

@@ -134,7 +134,7 @@ class Phase1RbacAndModuleTest extends TestCase
         $admin = $this->createSuperAdmin();
 
         $this->actingAs($admin)->post(route('admin.users.store'), [
-            'name' => 'Multi-role User',
+            'name' => 'Multi Role User',
             'email' => 'multi-role@school.test',
             'password' => 'Password123!',
             'roles' => ['Teacher', 'Accountant'],

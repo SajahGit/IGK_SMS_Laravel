@@ -19,6 +19,13 @@ class PayHereService
             throw ValidationException::withMessages(['payment' => 'PayHere is not configured. Contact the school office.']);
         }
 
+        $currency = strtoupper((string) config('services.payhere.currency', 'LKR'));
+        if (strtoupper($invoice->currency) !== $currency) {
+            throw ValidationException::withMessages([
+                'payment' => "PayHere is configured for {$currency} only. Contact the school office to arrange payment for this invoice currency.",
+            ]);
+        }
+
         return DB::transaction(function () use ($invoice): PayHereTransaction {
             $lockedInvoice = Invoice::query()->lockForUpdate()->findOrFail($invoice->id);
             if (! in_array($lockedInvoice->status, ['issued', 'partially_paid'], true)

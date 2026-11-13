@@ -23,7 +23,7 @@
     <div class="col-sm-6 col-lg-4">
         @include('Layouts.LayoutStat', [
             'icon' => 'receipt',
-            'value' => \App\Support\Money::format($totalBilled),
+            'value' => \App\Support\Money::formatTotals($totalBilled),
             'label' => 'Total Billed',
             'tone' => 'primary',
         ])
@@ -31,7 +31,7 @@
     <div class="col-sm-6 col-lg-4">
         @include('Layouts.LayoutStat', [
             'icon' => 'check2-circle',
-            'value' => \App\Support\Money::format($totalCollected),
+            'value' => \App\Support\Money::formatTotals($totalCollected),
             'label' => 'Total Collected',
             'tone' => 'success',
         ])
@@ -39,7 +39,7 @@
     <div class="col-sm-6 col-lg-4">
         @include('Layouts.LayoutStat', [
             'icon' => 'exclamation-circle-fill',
-            'value' => \App\Support\Money::format($totalOutstanding),
+            'value' => \App\Support\Money::formatTotals($totalOutstanding),
             'label' => 'Total Outstanding',
             'tone' => 'warning',
         ])
@@ -141,11 +141,11 @@
                                 {{ $inv->due_date->format('d M Y') }}
                             </span>
                         </td>
-                        <td>{{ \App\Support\Money::format($inv->total) }}</td>
-                        <td class="text-success">{{ \App\Support\Money::format($inv->amount_paid) }}</td>
+                        <td>{{ \App\Support\Money::format($inv->total, $inv->currency.' ') }}</td>
+                        <td class="text-success">{{ \App\Support\Money::format($inv->amount_paid, $inv->currency.' ') }}</td>
                         <td>
                             <span class="fw-bold {{ $inv->balance > 0 ? 'text-danger' : 'text-muted' }}">
-                                {{ \App\Support\Money::format($inv->balance) }}
+                                {{ \App\Support\Money::format($inv->balance, $inv->currency.' ') }}
                             </span>
                         </td>
                         <td>{!! $inv->status_badge !!}</td>

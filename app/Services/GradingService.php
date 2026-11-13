@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Result;
+use App\Models\GradeScale;
 use Illuminate\Support\Collection;
 
 /**
@@ -30,20 +31,20 @@ class GradingService
     }
 
     /** Letter grade for a percentage. */
-    public static function grade(float $percentage): string
+    public static function grade(float $percentage, ?GradeScale $scale = null): string
     {
-        return GradeScaleService::grade($percentage);
+        return GradeScaleService::grade($percentage, $scale);
     }
 
     /** Grade points for a percentage. */
-    public static function gradePoint(float $percentage): float
+    public static function gradePoint(float $percentage, ?GradeScale $scale = null): float
     {
-        return GradeScaleService::gradePoint($percentage);
+        return GradeScaleService::gradePoint($percentage, $scale);
     }
 
-    public static function isPassing(float $percentage): bool
+    public static function isPassing(float $percentage, ?GradeScale $scale = null): bool
     {
-        return GradeScaleService::isPassing($percentage);
+        return GradeScaleService::isPassing($percentage, $scale);
     }
 
     /**
@@ -89,7 +90,7 @@ class GradingService
      *
      * @param  Collection<int, Result>  $results
      */
-    public static function calculateTermGpa(Collection $results): ?float
+    public static function calculateTermGpa(Collection $results, ?GradeScale $scale = null): ?float
     {
         $totalQualityPoints = 0.0;
         $totalCreditHours = 0;
@@ -101,7 +102,7 @@ class GradingService
             }
 
             $creditHours = (int) ($subjectResults->first()->exam->subject->credit_hours ?? 3);
-            $gradePoint = self::gradePoint($percentage);
+            $gradePoint = self::gradePoint($percentage, $scale);
 
             $totalQualityPoints += ($gradePoint * $creditHours);
             $totalCreditHours += $creditHours;

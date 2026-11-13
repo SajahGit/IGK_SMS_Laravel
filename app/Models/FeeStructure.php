@@ -20,6 +20,7 @@ class FeeStructure extends Model
         'academic_year_id',
         'name',
         'amount',
+        'currency',
         'is_active',
     ];
 
@@ -45,6 +46,8 @@ class FeeStructure extends Model
     protected static function booted(): void
     {
         static::saving(function (FeeStructure $fee) {
+            $fee->currency = strtoupper($fee->currency ?: config('school.default_currency', 'LKR'));
+
             if (! $fee->program_id && $fee->class_id) {
                 $fee->program_id = SchoolClass::whereKey($fee->class_id)->value('program_id');
             }

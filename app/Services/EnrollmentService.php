@@ -110,7 +110,10 @@ class EnrollmentService
                 'admission_date' => $data['admission_date'] ?? today()->toDateString(),
                 'dob' => $data['dob'] ?? null,
                 'gender' => $data['gender'] ?? null,
-                'national_id' => $data['national_id'] ?? null,
+                'nationality' => $data['nationality'] ?? null,
+                'document_type' => $data['document_type'] ?? null,
+                'issuing_country' => isset($data['issuing_country']) ? strtoupper($data['issuing_country']) : null,
+                'document_number' => isset($data['document_number']) ? strtoupper(trim($data['document_number'])) : null,
                 'phone' => $data['phone'] ?? null,
                 'status' => $data['status'] ?? 'active',
             ]);

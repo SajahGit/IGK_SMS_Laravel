@@ -38,6 +38,7 @@ class TermResultService
     public function generate(Term $term, ?int $classId = null): array
     {
         $classes = SchoolClass::query()
+            ->with('program.gradeScale.items')
             ->when($classId, fn ($query) => $query->whereKey($classId))
             ->whereHas('classSubjects', fn ($query) => $query
                 ->where(function ($offerings) use ($term) {
@@ -68,6 +69,7 @@ class TermResultService
 
         DB::transaction(function () use ($classes, $term, $now, &$missingPairs, &$generatedCount) {
             foreach ($classes as $class) {
+                $gradeScale = $class->program?->gradeScale;
                 $offerings = ClassSubject::query()
                     ->with([
                         'subject',
@@ -128,8 +130,8 @@ class TermResultService
                                 $status = 'excused';
                             } else {
                                 $status = 'graded';
-                                $grade = GradingService::grade($percentage);
-                                $gradePoint = GradingService::gradePoint($percentage);
+                                $grade = GradingService::grade($percentage, $gradeScale);
+                                $gradePoint = GradingService::gradePoint($percentage, $gradeScale);
                             }
                         } else {
                             $missingPairs[] = [
@@ -187,7 +189,7 @@ class TermResultService
                         ? 'incomplete'
                         : ($graded->isEmpty()
                             ? 'excused'
-                            : ($graded->every(fn (SubjectResult $subject) => GradingService::isPassing((float) $subject->percentage) && $subject->result_status === 'graded')
+                            : ($graded->every(fn (SubjectResult $subject) => GradingService::isPassing((float) $subject->percentage, $gradeScale) && $subject->result_status === 'graded')
                                 ? 'pass'
                                 : 'fail'));
 

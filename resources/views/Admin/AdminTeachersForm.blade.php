@@ -3,19 +3,31 @@
 <div class="row g-3">
     <div class="col-md-6">
         <label class="form-label">Full name</label>
-        <input type="text" name="name" class="form-control" value="{{ old('name', $isEdit ? $teacher->user->name : '') }}" required>
+        <input type="text" name="name" data-person-name maxlength="100" autocomplete="off" @class(['form-control', 'is-invalid' => $errors->has('name')]) value="{{ old('name', $isEdit ? $teacher->user->name : '') }}" required>
+        @error('name')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
     </div>
     <div class="col-md-6">
         <label class="form-label">Email (login)</label>
-        <input type="email" name="email" class="form-control" value="{{ old('email', $isEdit ? $teacher->user->email : '') }}" required>
+        <input type="email" name="email" autocomplete="off" data-lpignore="true" data-1p-ignore="true" @class(['form-control', 'is-invalid' => $errors->has('email')]) value="{{ old('email', $isEdit ? $teacher->user->email : '') }}" required>
+        @error('email')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
     </div>
     <div class="col-md-6">
         <label class="form-label">Password {{ $isEdit ? '(leave blank to keep)' : '' }}</label>
-        <input type="password" name="password" class="form-control" {{ $isEdit ? '' : 'required' }} minlength="8">
+        <input type="password" name="password" autocomplete="new-password" @class(['form-control', 'is-invalid' => $errors->has('password')]) {{ $isEdit ? '' : 'required' }} minlength="8" maxlength="32">
+        @error('password')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
     </div>
     <div class="col-md-6">
         <label class="form-label">Phone</label>
-        <input type="text" name="phone" class="form-control" value="{{ old('phone', $isEdit ? $teacher->phone : '') }}">
+        <x-international-phone-input name="phone" :value="$isEdit ? $teacher->phone : ''" />
+    </div>
+    <div class="col-md-6">
+        <label class="form-label">Department</label>
+        <select name="department_id" class="form-select" data-searchable-select>
+            <option value="">Not assigned</option>
+            @foreach ($departments as $department)
+                <option value="{{ $department->id }}" @selected(old('department_id', $isEdit ? $teacher->department_id : '') == $department->id)>{{ $department->name }}</option>
+            @endforeach
+        </select>
     </div>
 </div>
 <div class="mt-4">

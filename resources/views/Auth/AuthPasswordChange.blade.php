@@ -53,12 +53,12 @@
                             <i class="bi bi-shield-lock"></i>
                             <input type="password" id="password" name="password"
                                    class="form-control @error('password') is-invalid @enderror"
-                                   placeholder="Use 10+ characters with uppercase, lowercase, and a number" required minlength="10" autocomplete="new-password">
+                                   placeholder="Use 8-32 characters with uppercase, lowercase, and a number" required minlength="8" maxlength="32" autocomplete="new-password">
                             <button type="button" class="pw-toggle" data-target="password" aria-label="Toggle password visibility">
                                 <i class="bi bi-eye"></i>
                             </button>
                         </div>
-                        <div class="form-text small text-muted">Use at least 10 characters with uppercase, lowercase, and a number. It must differ from your current password.</div>
+                        <div class="form-text small text-muted">Use 8 to 32 characters with uppercase, lowercase, and a number. It must differ from your current password.</div>
                         @error('password')
                             <div class="text-danger small mt-1"><i class="bi bi-exclamation-circle me-1"></i>{{ $message }}</div>
                         @enderror
@@ -69,7 +69,7 @@
                         <div class="input-icon">
                             <i class="bi bi-shield-check"></i>
                             <input type="password" id="password_confirmation" name="password_confirmation"
-                                   class="form-control" placeholder="Re-enter new password" required autocomplete="new-password">
+                                   class="form-control" placeholder="Re-enter new password" required minlength="8" maxlength="32" autocomplete="new-password">
                             <button type="button" class="pw-toggle" data-target="password_confirmation" aria-label="Toggle password visibility">
                                 <i class="bi bi-eye"></i>
                             </button>

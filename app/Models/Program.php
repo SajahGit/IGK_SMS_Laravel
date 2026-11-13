@@ -15,6 +15,7 @@ class Program extends Model
 
     protected $fillable = [
         'department_id',
+        'grade_scale_id',
         'name',
         'code',
         'duration_terms',
@@ -33,6 +34,11 @@ class Program extends Model
     public function department(): BelongsTo
     {
         return $this->belongsTo(Department::class);
+    }
+
+    public function gradeScale(): BelongsTo
+    {
+        return $this->belongsTo(GradeScale::class);
     }
 
     public function subjects(): BelongsToMany

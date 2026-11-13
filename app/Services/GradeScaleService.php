@@ -20,19 +20,19 @@ class GradeScaleService
         ['min_percent' => 0, 'max_percent' => 49.99, 'grade' => 'F', 'grade_point' => 0, 'is_pass' => false],
     ];
 
-    public static function grade(float $percentage): string
+    public static function grade(float $percentage, ?GradeScale $scale = null): string
     {
-        return (string) self::itemFor($percentage)->grade;
+        return (string) self::itemFor($percentage, $scale)->grade;
     }
 
-    public static function gradePoint(float $percentage): float
+    public static function gradePoint(float $percentage, ?GradeScale $scale = null): float
     {
-        return (float) self::itemFor($percentage)->grade_point;
+        return (float) self::itemFor($percentage, $scale)->grade_point;
     }
 
-    public static function isPassing(float $percentage): bool
+    public static function isPassing(float $percentage, ?GradeScale $scale = null): bool
     {
-        return (bool) self::itemFor($percentage)->is_pass;
+        return (bool) self::itemFor($percentage, $scale)->is_pass;
     }
 
     public static function defaultItems(): Collection
@@ -47,6 +47,17 @@ class GradeScaleService
         }
 
         return self::$defaultItems[$application];
+    }
+
+    public static function items(?GradeScale $scale = null): Collection
+    {
+        if (! $scale) {
+            return self::defaultItems();
+        }
+
+        return ($scale->relationLoaded('items') ? $scale->items : $scale->items()->get())
+            ->sortByDesc('min_percent')
+            ->values();
     }
 
     public static function clearCache(): void
@@ -108,9 +119,9 @@ class GradeScaleService
         });
     }
 
-    private static function itemFor(float $percentage): GradeScaleItem
+    private static function itemFor(float $percentage, ?GradeScale $scale = null): GradeScaleItem
     {
-        $item = self::defaultItems()->first(
+        $item = self::items($scale)->first(
             fn (GradeScaleItem $item) => $percentage >= (float) $item->min_percent
                 && $percentage <= (float) $item->max_percent
         );

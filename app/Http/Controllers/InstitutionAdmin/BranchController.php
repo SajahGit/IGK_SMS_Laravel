@@ -4,7 +4,10 @@ namespace App\Http\Controllers\InstitutionAdmin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Branch;
+use App\Rules\ValidInternationalPhone;
+use App\Rules\ValidPersonName;
 use App\Support\AuditLogger;
+use App\Support\InternationalPhoneNumber;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -23,11 +26,20 @@ class BranchController extends Controller
     {
         abort_unless($request->user()->isSuperAdmin() || $request->user()->isInstitutionAdmin(), 403);
 
+        if ($request->input('branch_id') === 'all') {
+            abort_unless($request->user()->isSuperAdmin(), 403);
+            $request->session()->put('active_branch_id', 'all');
+            $request->session()->put('branch_context_initialized', true);
+
+            return back()->with('success', 'All campuses are now in view.');
+        }
+
         $data = $request->validate([
             'branch_id' => ['required', 'integer', Rule::exists('branches', 'id')->where('is_active', true)->whereNull('deleted_at')],
         ]);
 
         $request->session()->put('active_branch_id', (int) $data['branch_id']);
+        $request->session()->put('branch_context_initialized', true);
 
         return back()->with('success', 'Active campus changed successfully.');
     }
@@ -76,14 +88,15 @@ class BranchController extends Controller
 
     private function validated(Request $request, ?Branch $branch = null): array
     {
+        InternationalPhoneNumber::normalizeRequest($request);
         $data = $request->validate([
             'code' => ['required', 'string', 'max:20', Rule::unique('branches', 'code')->ignore($branch?->id)],
             'name' => ['required', 'string', 'max:120'],
             'address' => ['nullable', 'string', 'max:255'],
             'city' => ['nullable', 'string', 'max:80'],
-            'phone' => ['nullable', 'string', 'max:30'],
-            'email' => ['nullable', 'email', 'max:120'],
-            'principal_name' => ['nullable', 'string', 'max:120'],
+            'phone' => ['nullable', 'string', 'max:16', Rule::unique('branches', 'phone')->ignore($branch?->id), new ValidInternationalPhone($request->input('phone_region'))],
+            'email' => ['nullable', 'email', 'max:120', Rule::unique('branches', 'email')->ignore($branch?->id)],
+            'principal_name' => ['nullable', 'string', 'max:120', new ValidPersonName],
         ]);
         $data['is_main'] = $request->boolean('is_main');
         $data['is_active'] = $request->boolean('is_active');

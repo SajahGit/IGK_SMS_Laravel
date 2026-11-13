@@ -75,7 +75,6 @@
                     <span class="demo-chip" data-email="registrar@school.test" data-password="password"><i class="bi bi-person-badge"></i>Registrar</span>
                     <span class="demo-chip" data-email="teacher@school.test" data-password="password"><i class="bi bi-person-workspace"></i>Teacher</span>
                     <span class="demo-chip" data-email="accountant@school.test" data-password="password"><i class="bi bi-currency-dollar"></i>Accountant</span>
-                    <span class="demo-chip" data-email="librarian@school.test" data-password="password"><i class="bi bi-book"></i>Librarian</span>
                     <span class="demo-chip" data-email="student@school.test" data-password="password"><i class="bi bi-person-badge"></i>Student</span>
                     <span class="demo-chip" data-email="guardian@school.test" data-password="password"><i class="bi bi-people"></i>Guardian</span>
                 </div>

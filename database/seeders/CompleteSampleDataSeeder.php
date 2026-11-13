@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\AcademicYear;
+use App\Models\Announcement;
 use App\Models\FeeItem;
 use App\Models\FeeStructure;
 use App\Models\LibraryAuthor;
@@ -14,17 +15,18 @@ use App\Models\LibraryLoan;
 use App\Models\Payment;
 use App\Models\PaymentReversal;
 use App\Models\Program;
+use App\Models\SchoolClass;
 use App\Models\Student;
 use App\Models\StudentDocument;
 use App\Models\Subject;
 use App\Models\Term;
 use App\Models\User;
 use App\Services\PaymentService;
+use App\Support\Money;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use RuntimeException;
-use Throwable;
 
 /**
  * Fills every table the other demo seeders leave empty: library, fee items, curriculum,
@@ -45,15 +47,72 @@ class CompleteSampleDataSeeder extends Seeder
 
         $this->seedLibrary($admin);
         $this->seedFeePackages();
-        $this->seedCurriculum();
+        $this->call(AcademicStructureSeeder::class);
+        $this->seedAnnouncements();
         $this->seedPaymentReversal($admin);
         $this->seedMessages($admin);
         $this->seedStudentDocuments($admin);
     }
 
+    private function seedAnnouncements(): void
+    {
+        $ibMiddleYears = Program::query()->where('code', 'IBMYP')->firstOrFail();
+        $gradeTen = SchoolClass::query()
+            ->where('name', 'Grade 10')
+            ->where('section', 'A')
+            ->firstOrFail();
+
+        foreach ([
+            [
+                'title' => '2026-2027 International School Academic Calendar',
+                'body' => 'Term 1 concludes on 15 January 2027. Families can review the published term dates in the academic calendar.',
+                'target_role' => 'all',
+                'program_id' => null,
+                'class_id' => null,
+            ],
+            [
+                'title' => 'IB MYP Grade 10 Assessment Schedule',
+                'body' => 'Grade 10A students should review the Term 1 assessment schedule with their subject teachers.',
+                'target_role' => 'student',
+                'program_id' => $ibMiddleYears->id,
+                'class_id' => $gradeTen->id,
+            ],
+            [
+                'title' => 'IB MYP Grade 10 Mark Submission',
+                'body' => 'Teachers assigned to Grade 10A should submit and verify Term 1 marks before the registrar review.',
+                'target_role' => 'teacher',
+                'program_id' => $ibMiddleYears->id,
+                'class_id' => $gradeTen->id,
+            ],
+            [
+                'title' => 'Grade 10 Family-Teacher Conference',
+                'body' => 'Parents and guardians of Grade 10A students may book a conference with the teaching team through the school office.',
+                'target_role' => 'parent',
+                'program_id' => $ibMiddleYears->id,
+                'class_id' => $gradeTen->id,
+            ],
+            [
+                'title' => 'Registrar Term 1 Admissions Review',
+                'body' => 'Please complete the international admissions-file review before the Term 1 results publication meeting.',
+                'target_role' => 'registrar',
+                'program_id' => null,
+                'class_id' => null,
+            ],
+        ] as $announcement) {
+            Announcement::firstOrCreate(
+                ['title' => $announcement['title']],
+                $announcement + [
+                    'published_at' => now()->subDays(2),
+                    'expires_at' => now()->addMonths(3),
+                    'created_by' => User::query()->whereIn('role', ['admin', 'super-admin'])->orderBy('id')->value('id'),
+                ]
+            );
+        }
+    }
+
     private function seedLibrary(User $admin): void
     {
-        $authors = ['Chinua Achebe', 'Jane Austen', 'George Orwell', 'Marie Curie', 'Stephen Hawking', 'R. K. Narayan', 'Khaled Hosseini', 'A. P. J. Abdul Kalam'];
+        $authors = ['Chinua Achebe', 'Jane Austen', 'George Orwell', 'Marie Curie', 'Stephen Hawking', 'R. K. Narayan', 'Khaled Hosseini', 'A. P. J. Abdul Kalam', 'I. M. Gelfand'];
         $categories = ['Fiction', 'Science', 'Mathematics', 'History', 'Biography', 'Reference', 'Technology'];
         foreach ($authors as $name) {
             LibraryAuthor::firstOrCreate(['name' => $name]);
@@ -76,7 +135,7 @@ class CompleteSampleDataSeeder extends Seeder
             ['The Kite Runner', 'Khaled Hosseini', 'Fiction', '9781594631931', 2003],
             ['Wings of Fire', 'A. P. J. Abdul Kalam', 'Biography', '9788173711466', 1999],
             ['Ignited Minds', 'A. P. J. Abdul Kalam', 'Biography', '9780143033110', 2002],
-            ['Introduction to Algebra', 'Marie Curie', 'Mathematics', '9780000000028', 1999],
+            ['Algebra', 'I. M. Gelfand', 'Mathematics', '9780817636777', 1961],
         ];
         foreach ($books as [$title, $author, $category, $isbn, $year]) {
             $book = LibraryBook::firstOrCreate(['isbn' => $isbn], [
@@ -144,42 +203,42 @@ class CompleteSampleDataSeeder extends Seeder
             ['sequence' => 2, 'start_date' => '2027-01-10', 'end_date' => '2027-04-30', 'is_current' => false]
         );
 
-        $items = [
-            ['Student Registration Fee', '5000.00', true],
-            ['Books Fee', '8000.00', true],
-            ['Course Fee', '30000.00', true],
-            ['Exam Fee', '4500.00', true],
-            ['Laboratory Fee', '6000.00', true],
-            ['Additional Draft Papers Fee', '1500.00', false],
-        ];
-        $mandatory = collect($items)->where(2, true)->sum(fn ($i) => (float) $i[1]);
-
         foreach (Program::query()->get() as $program) {
+            $currency = config('school.program_currencies.'.$program->code, config('school.default_currency', 'LKR'));
+            $currencyFees = [
+                'LKR' => ['5000.00', '8000.00', '30000.00', '4500.00', '6000.00', '1500.00'],
+                'USD' => ['50.00', '80.00', '300.00', '45.00', '60.00', '15.00'],
+                'GBP' => ['40.00', '65.00', '240.00', '35.00', '48.00', '12.00'],
+                'EUR' => ['45.00', '75.00', '275.00', '40.00', '55.00', '14.00'],
+                'AED' => ['185.00', '295.00', '1100.00', '165.00', '220.00', '55.00'],
+            ];
+            [$registration, $books, $tuition, $examination, $laboratory, $optionalDrafts] = $currencyFees[$currency];
+            $items = [
+                ['Student Registration Fee', $registration, true],
+                ['Course Materials and Books', $books, true],
+                ['Term Tuition', $tuition, true],
+                ['Assessment and Examination Fee', $examination, true],
+                ['Science Laboratory Fee', $laboratory, true],
+                ['Optional Additional Practice Papers', $optionalDrafts, false],
+            ];
+            $mandatory = '0.00';
+            foreach ($items as [, $amount, $isMandatory]) {
+                if ($isMandatory) {
+                    $mandatory = Money::add($mandatory, $amount);
+                }
+            }
+
             $structure = FeeStructure::firstOrCreate(
                 ['name' => 'Term 2 Fee Package', 'program_id' => $program->id, 'academic_year_id' => $year->id, 'class_id' => null, 'term_id' => $term->id],
-                ['amount' => number_format($mandatory, 2, '.', ''), 'is_active' => true]
+                ['amount' => $mandatory, 'currency' => $currency, 'is_active' => true]
             );
+            if (! $structure->isReferencedByInvoices()) {
+                $structure->update(['amount' => $mandatory, 'currency' => $currency]);
+            }
             if ($structure->wasRecentlyCreated || ! FeeItem::where('fee_structure_id', $structure->id)->exists()) {
                 foreach ($items as [$name, $amount, $isMandatory]) {
                     FeeItem::firstOrCreate(['fee_structure_id' => $structure->id, 'name' => $name], ['amount' => $amount, 'is_mandatory' => $isMandatory]);
                 }
-            }
-        }
-    }
-
-    private function seedCurriculum(): void
-    {
-        $subjects = Subject::query()->orderBy('id')->take(8)->pluck('id');
-        foreach (Program::query()->get() as $program) {
-            foreach ($subjects as $index => $subjectId) {
-                DB::table('curricula')->insertOrIgnore([
-                    'program_id' => $program->id,
-                    'subject_id' => $subjectId,
-                    'term_number' => $index < 4 ? 1 : 2,
-                    'is_elective' => $index >= 6,
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ]);
             }
         }
     }
@@ -193,16 +252,12 @@ class CompleteSampleDataSeeder extends Seeder
         if (! $payment) {
             return;
         }
-        try {
-            PaymentService::reversePayment($payment, 'Sample reversal: duplicate receipt entered by mistake', $admin->id);
-        } catch (Throwable) {
-            // sample data only - never block seeding
-        }
+        PaymentService::reversePayment($payment, 'Duplicate tuition receipt entered during reconciliation', $admin->id);
     }
 
     private function seedMessages(User $admin): void
     {
-        $others = collect(['registrar', 'accountant', 'teacher', 'librarian'])
+        $others = collect(['registrar', 'accountant', 'teacher'])
             ->map(fn ($role) => User::query()->where('role', $role)->where('is_active', true)->orderBy('id')->first())
             ->merge(User::query()->whereIn('email', [
                 'guardian@school.test',
@@ -258,9 +313,19 @@ class CompleteSampleDataSeeder extends Seeder
             return;
         }
         foreach (Student::query()->orderBy('id')->take(10)->get() as $student) {
-            foreach ([['birth_cert', 'birth-certificate-sample.txt'], ['id_card', 'id-card-sample.txt']] as [$type, $name]) {
+            foreach ([
+                ['birth_cert', 'birth-registration-record.txt', 'Birth registration record received and verified for the admissions file.'],
+                ['id_card', 'student-identity-record.txt', 'Student identity details checked by the registrar during enrolment.'],
+            ] as [$type, $name, $description]) {
                 $path = 'student-documents/sample/'.$student->id.'-'.$name;
-                Storage::disk('local')->put($path, "Sample {$type} placeholder for student #{$student->id}.\n");
+                $contents = "IGK International School - Admissions File\n"
+                    ."Student: {$student->user->name}\n"
+                    ."Admission number: {$student->admission_no}\n"
+                    ."Record: {$description}\n"
+                    ."No government identity numbers or personal document images are included in this training dataset.\n";
+                if (! Storage::disk('local')->put($path, $contents)) {
+                    throw new \RuntimeException("Unable to create the student admissions record at {$path}.");
+                }
                 StudentDocument::create([
                     'student_id' => $student->id, 'type' => $type, 'original_name' => $name, 'path' => $path,
                     'mime' => 'text/plain', 'size' => Storage::disk('local')->size($path), 'uploaded_by' => $admin->id,

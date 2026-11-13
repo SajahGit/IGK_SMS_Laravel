@@ -109,7 +109,7 @@ class HrPayrollController extends Controller
             'leave_type' => ['required', 'string', 'max:40'],
             'start_date' => ['required', 'date'],
             'end_date' => ['required', 'date', 'after_or_equal:start_date'],
-            'reason' => ['required', 'string', 'max:2000'],
+            'reason' => ['required', 'string', 'max:500'],
         ]);
         HrPayrollService::requestLeave($data, (int) $request->user()->id);
 
@@ -201,13 +201,13 @@ class HrPayrollController extends Controller
         $users = User::query()->whereIn('role', ['teacher', 'registrar', 'accountant', 'librarian', 'staff'])
             ->where(function ($query) use ($employeesWithUsers, $employee) {
                 $query->whereNotIn('id', $employeesWithUsers)
-                    ->when($employee?->user_id, fn ($nested, $id) => $nested->orWhereKey($id));
+                    ->when($employee?->user_id, fn ($nested, $id) => $nested->orWhere('users.id', $id));
             })
             ->orderBy('name')->get();
         $teachers = Teacher::query()->with('user')
             ->where(function ($query) use ($teachersWithIds, $employee) {
                 $query->whereNotIn('id', $teachersWithIds)
-                    ->when($employee?->teacher_id, fn ($nested, $id) => $nested->orWhereKey($id));
+                    ->when($employee?->teacher_id, fn ($nested, $id) => $nested->orWhere('teachers.id', $id));
             })
             ->orderBy('id')->get();
         $departments = Department::query()->where('is_active', true)->orderBy('name')->get();
@@ -218,8 +218,12 @@ class HrPayrollController extends Controller
 
     private function validateEmployee(Request $request, ?Employee $employee = null): array
     {
+        if (is_string($request->input('employee_no'))) {
+            $request->merge(['employee_no' => strtoupper(preg_replace('/\s+/', '', $request->input('employee_no')))]);
+        }
+
         $data = $request->validate([
-            'employee_no' => ['required', 'string', 'max:40', 'alpha_dash', Rule::unique('employees', 'employee_no')->ignore($employee)],
+            'employee_no' => ['required', 'string', 'max:25', 'regex:/^[A-Z0-9-]+$/', Rule::unique('employees', 'employee_no')->ignore($employee)],
             'user_id' => [
                 'nullable',
                 'integer',
@@ -228,7 +232,7 @@ class HrPayrollController extends Controller
             ],
             'teacher_id' => ['nullable', 'integer', Rule::unique('employees', 'teacher_id')->ignore($employee), 'exists:teachers,id'],
             'department_id' => ['nullable', 'integer', 'exists:departments,id'],
-            'job_title' => ['required', 'string', 'max:120'],
+            'job_title' => ['required', 'string', 'max:60', 'regex:/^[a-zA-Z\s-]+$/'],
             'hire_date' => ['required', 'date'],
             'employment_status' => ['required', Rule::in(['active', 'on_leave', 'terminated'])],
             'base_salary' => ['required', 'numeric', 'min:0', 'max:9999999999.99', 'regex:/^\d+(\.\d{1,2})?$/'],

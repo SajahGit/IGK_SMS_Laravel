@@ -131,7 +131,10 @@ class StudentController extends Controller
                 'admission_date' => $data['admission_date'] ?? $student->admission_date,
                 'dob' => $data['dob'] ?? null,
                 'gender' => $data['gender'] ?? null,
-                'national_id' => $data['national_id'] ?? null,
+                'nationality' => $data['nationality'] ?? null,
+                'document_type' => $data['document_type'],
+                'issuing_country' => $data['issuing_country'],
+                'document_number' => $data['document_number'],
                 'phone' => $data['phone'] ?? null,
                 'status' => $data['status'],
             ]);
@@ -234,7 +237,9 @@ class StudentController extends Controller
     private function formData(): array
     {
         return [
-            'classes' => SchoolClass::withCount('students')->orderBy('name')->orderBy('section')->get(),
+            'classes' => SchoolClass::withCount('students')->orderBy('name')->orderBy('section')->get()
+                ->sortBy(fn (SchoolClass $schoolClass) => $schoolClass->students_count >= $schoolClass->capacity ? 1 : 0)
+                ->values(),
             'guardians' => Guardian::with('user')->get()->sortBy(fn ($g) => $g->user->name),
             'programs' => Program::orderBy('name')->get(),
             'academicYears' => AcademicYear::orderByDesc('start_date')->get(),

@@ -10,6 +10,7 @@ use App\Models\Department;
 use App\Models\Guardian;
 use App\Models\Program;
 use App\Models\SchoolClass;
+use App\Models\StaffAttendance;
 use App\Models\Student;
 use App\Models\StudentDocument;
 use App\Models\Subject;
@@ -63,6 +64,26 @@ class Phase2DocumentsCapacityTimetableAttendanceTest extends TestCase
         $this->assertEquals('2027-CS-0001', AdmissionNumberGenerator::next($program->id, $nextYear->id));
     }
 
+    public function test_international_program_code_is_normalized_for_admission_numbers(): void
+    {
+        $department = Department::create(['name' => 'International Programmes', 'code' => 'INTL']);
+        $program = Program::create([
+            'department_id' => $department->id,
+            'name' => 'Cambridge International IGCSE',
+            'code' => 'CA-IGCSE',
+        ]);
+        $academicYear = AcademicYear::create([
+            'name' => '2026-2027',
+            'start_date' => '2026-09-01',
+            'end_date' => '2027-06-30',
+        ]);
+
+        $this->assertSame(
+            '2026-CAIGCS-',
+            AdmissionNumberGenerator::prefix($program->id, $academicYear->id)
+        );
+    }
+
     public function test_student_admission_requires_at_least_one_guardian(): void
     {
         $admin = User::create(['name' => 'Admin', 'email' => 'guardian-check-admin@s.t', 'password' => 'password', 'role' => 'admin']);
@@ -85,6 +106,9 @@ class Phase2DocumentsCapacityTimetableAttendanceTest extends TestCase
             'email' => 'no-guardian@s.t',
             'password' => 'Password123!',
             'class_id' => $class->id,
+            'document_type' => 'passport',
+            'issuing_country' => 'LK',
+            'document_number' => 'NOGUARD1',
         ])->assertSessionHasErrors('guardian_ids');
 
         $this->assertDatabaseMissing('users', ['email' => 'no-guardian@s.t']);
@@ -117,6 +141,48 @@ class Phase2DocumentsCapacityTimetableAttendanceTest extends TestCase
         }
     }
 
+    public function test_staff_attendance_accepts_and_normalizes_browser_time_formats(): void
+    {
+        $admin = User::create([
+            'name' => 'Attendance Admin',
+            'email' => 'staff-attendance-admin@s.t',
+            'password' => 'password',
+            'role' => 'admin',
+        ]);
+        $teacherUser = User::create([
+            'name' => 'Attendance Teacher',
+            'email' => 'staff-attendance-teacher@s.t',
+            'password' => 'password',
+            'role' => 'teacher',
+        ]);
+        $teacher = Teacher::create(['user_id' => $teacherUser->id, 'status' => 'active']);
+
+        foreach ([
+            ['08:00', '16:00'],
+            ['08:00:00', '16:00:00'],
+            ['08:00 AM', '04:00 PM'],
+        ] as [$checkIn, $checkOut]) {
+            $this->actingAs($admin)
+                ->post(route('admin.staff-attendance.store'), [
+                    'teacher_id' => $teacher->id,
+                    'attendance_date' => today()->toDateString(),
+                    'check_in' => $checkIn,
+                    'check_out' => $checkOut,
+                ])
+                ->assertRedirect();
+
+            $record = StaffAttendance::query()->where('teacher_id', $teacher->id)->firstOrFail();
+            $this->assertSame('08:00', substr((string) $record->check_in, 0, 5));
+            $this->assertSame('16:00', substr((string) $record->check_out, 0, 5));
+        }
+
+        $this->actingAs($admin)
+            ->get(route('admin.staff-attendance.index'))
+            ->assertOk()
+            ->assertSee('staff-attendance-table')
+            ->assertSee('form="staff-attendance-'.$teacher->id.'"', false);
+    }
+
     public function test_section_capacity_limit_enforced_on_enrollment(): void
     {
         $admin = User::create(['name' => 'Admin', 'email' => 'admin@s.t', 'password' => 'password', 'role' => 'admin']);
@@ -140,22 +206,28 @@ class Phase2DocumentsCapacityTimetableAttendanceTest extends TestCase
 
         // Enroll 1st student successfully
         $res1 = $this->actingAs($admin)->post(route('admin.students.store'), [
-            'name' => 'Student 1',
+            'name' => 'Student One',
             'email' => 'student1@s.t',
             'password' => 'Password123!',
             'class_id' => $class->id,
             'guardian_ids' => [$guardian->id],
+            'document_type' => 'passport',
+            'issuing_country' => 'LK',
+            'document_number' => 'CAPACITY1',
         ]);
         $res1->assertRedirect(route('admin.students.index'));
         $this->assertEquals(1, Student::where('class_id', $class->id)->count());
 
         // Attempt enrolling 2nd student into full class throws validation error
         $res2 = $this->actingAs($admin)->post(route('admin.students.store'), [
-            'name' => 'Student 2',
+            'name' => 'Student Two',
             'email' => 'student2@s.t',
             'password' => 'Password123!',
             'class_id' => $class->id,
             'guardian_ids' => [$guardian->id],
+            'document_type' => 'passport',
+            'issuing_country' => 'LK',
+            'document_number' => 'CAPACITY2',
         ]);
         $res2->assertSessionHasErrors('class_id');
         $this->assertEquals(1, Student::where('class_id', $class->id)->count());

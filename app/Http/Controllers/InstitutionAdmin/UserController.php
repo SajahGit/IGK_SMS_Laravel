@@ -33,8 +33,9 @@ class UserController extends Controller
             ->when(! request()->user()->isSuperAdmin(), fn ($query) => $query->where('name', '!=', 'Super Admin'))
             ->orderBy('name')
             ->get();
+        $branches = Branch::where('is_active', true)->orderBy('name')->get();
 
-        return view('InstitutionAdmin.InstitutionAdminUsersIndex', compact('users', 'roles'));
+        return view('InstitutionAdmin.InstitutionAdminUsersIndex', compact('users', 'roles', 'branches'));
     }
 
     public function create(): View

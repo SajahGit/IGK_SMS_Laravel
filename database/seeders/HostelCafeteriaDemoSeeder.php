@@ -44,12 +44,12 @@ class HostelCafeteriaDemoSeeder extends Seeder
     private function seedHostelAssignments(AcademicYear $academicYear, $students): void
     {
         $northHostel = Hostel::firstOrCreate(
-            ['name' => 'Demo North Residence'],
-            ['location' => 'North grounds', 'is_active' => true]
+            ['name' => 'Sapphire House Boarding Residence'],
+            ['location' => 'Colombo campus north garden', 'is_active' => true]
         );
         $southHostel = Hostel::firstOrCreate(
-            ['name' => 'Demo South Residence'],
-            ['location' => 'South grounds', 'is_active' => true]
+            ['name' => 'Orchid House Boarding Residence'],
+            ['location' => 'Colombo campus south garden', 'is_active' => true]
         );
 
         $rooms = collect([
@@ -125,7 +125,7 @@ class HostelCafeteriaDemoSeeder extends Seeder
                     'quantity_on_hand' => 0,
                     'reorder_level' => 10,
                     'is_active' => true,
-                    'description' => 'Synthetic cafeteria demo stock',
+                    'description' => 'Freshly stocked school cafeteria item for students and staff.',
                 ]
             );
             if ($inventory->movements()->doesntExist() && $inventory->quantity_on_hand === 0) {
@@ -142,7 +142,7 @@ class HostelCafeteriaDemoSeeder extends Seeder
                 ['inventory_item_id' => $inventory->id],
                 [
                     'name' => $row['name'],
-                    'description' => 'Sample menu item. Demo price only.',
+                    'description' => 'Prepared and served during the school day at the Colombo main campus.',
                     'price' => $row['price'],
                     'is_available' => true,
                 ]

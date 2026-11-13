@@ -46,15 +46,17 @@ class StudentFinancialLedgerReportController extends Controller
             }
             $events = $this->ledgerEvents($selectedStudent, $academicYearId);
 
-            $balance = '0.00';
-            $ledger = $events->map(function ($event) use (&$balance) {
+            $balances = [];
+            $ledger = $events->map(function ($event) use (&$balances) {
+                $currency = $event['currency'];
+                $balances[$currency] ??= '0.00';
                 if ($event['type'] === 'charge') {
-                    $balance = Money::add($balance, $event['amount']);
+                    $balances[$currency] = Money::add($balances[$currency], $event['amount']);
                 } else {
-                    $balance = Money::sub($balance, $event['amount']);
+                    $balances[$currency] = Money::sub($balances[$currency], $event['amount']);
                 }
 
-                return array_merge($event, ['running_balance' => $balance]);
+                return array_merge($event, ['running_balance' => $balances[$currency]]);
             });
         }
 
@@ -86,15 +88,17 @@ class StudentFinancialLedgerReportController extends Controller
 
         return response()->streamDownload(function () use ($events) {
             $out = fopen('php://output', 'w');
-            fputcsv($out, ['Date', 'Description', 'Type', 'Charge', 'Payment', 'Running Balance']);
-            $balance = '0.00';
+            fputcsv($out, ['Date', 'Description', 'Type', 'Charge', 'Payment', 'Currency', 'Running Balance']);
+            $balances = [];
             foreach ($events as $event) {
+                $currency = $event['currency'];
+                $balances[$currency] ??= '0.00';
                 if ($event['type'] === 'charge') {
-                    $balance = Money::add($balance, $event['amount']);
+                    $balances[$currency] = Money::add($balances[$currency], $event['amount']);
                     $charge = $event['amount'];
                     $payment = '—';
                 } else {
-                    $balance = Money::sub($balance, $event['amount']);
+                    $balances[$currency] = Money::sub($balances[$currency], $event['amount']);
                     $charge = '—';
                     $payment = $event['amount'];
                 }
@@ -105,7 +109,8 @@ class StudentFinancialLedgerReportController extends Controller
                     ucfirst($event['type']),
                     $charge,
                     $payment,
-                    $balance,
+                    $currency,
+                    $balances[$currency],
                 ]);
             }
             fclose($out);
@@ -130,6 +135,7 @@ class StudentFinancialLedgerReportController extends Controller
                 'description' => 'Invoice '.$inv->invoice_no,
                 'type' => 'charge',
                 'amount' => $inv->total,
+                'currency' => $inv->currency,
             ];
         });
 
@@ -142,6 +148,7 @@ class StudentFinancialLedgerReportController extends Controller
                     'description' => 'Receipt '.$p->receipt_no,
                     'type' => 'payment',
                     'amount' => $p->amount,
+                    'currency' => $p->currency,
                 ];
             });
 

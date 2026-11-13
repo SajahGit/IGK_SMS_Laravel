@@ -57,6 +57,43 @@ class Money
         return $currency.number_format($val, 2);
     }
 
+    public static function sumByCurrency(iterable $records, string $amountColumn): array
+    {
+        $totals = [];
+        foreach ($records as $record) {
+            $currency = strtoupper(data_get($record, 'currency') ?: config('school.default_currency', 'LKR'));
+            $totals[$currency] = self::add($totals[$currency] ?? '0.00', data_get($record, $amountColumn));
+        }
+        ksort($totals);
+
+        return $totals;
+    }
+
+    public static function formatTotals(array $totals): string
+    {
+        if ($totals === []) {
+            return self::format('0.00', config('school.default_currency', 'LKR').' ');
+        }
+
+        $formatted = [];
+        foreach ($totals as $currency => $amount) {
+            $formatted[] = self::format($amount, $currency.' ');
+        }
+
+        return implode(' / ', $formatted);
+    }
+
+    public static function hasPositiveTotal(array $totals): bool
+    {
+        foreach ($totals as $amount) {
+            if (self::comp($amount, '0.00') > 0) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     private static function toBcmathString(string|float|int|null $value): string
     {
         if ($value === null || $value === '') {

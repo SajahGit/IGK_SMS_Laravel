@@ -55,6 +55,7 @@ class FeeStructureRequest extends FormRequest
                     ->ignore($this->currentFeeStructureId()),
             ],
             'amount' => ['required', 'numeric', 'min:0.01', 'max:9999999999.99', 'decimal:0,2'],
+            'currency' => ['nullable', 'string', 'size:3', Rule::in(config('school.currencies', ['LKR']))],
             'is_active' => ['nullable', 'boolean'],
         ];
     }
