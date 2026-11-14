@@ -139,7 +139,7 @@
                 <div class="modal-body">
                     <div class="mb-3">
                         <label for="create_name" class="form-label">Name / Title <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" id="create_name" name="name" placeholder="e.g. 2026/2027 or 2026" required value="{{ old('name') }}">
+                        <input type="text" class="form-control" id="create_name" name="name" placeholder="e.g. 2026 or 2026-2027" maxlength="9" pattern="[0-9]{4}(-[0-9]{4})?" data-live-filter="academic-year" required value="{{ old('name') }}">
                     </div>
                     <div class="row g-2 mb-3">
                         <div class="col-6">
@@ -148,7 +148,7 @@
                         </div>
                         <div class="col-6">
                             <label for="create_end_date" class="form-label">End Date <span class="text-danger">*</span></label>
-                            <input type="date" class="form-control" id="create_end_date" name="end_date" required value="{{ old('end_date') }}">
+                            <input type="date" class="form-control" id="create_end_date" name="end_date" data-date-after="create_start_date" required value="{{ old('end_date') }}">
                         </div>
                     </div>
                     <div class="form-check">
@@ -182,7 +182,7 @@
                 <div class="modal-body">
                     <div class="mb-3">
                         <label for="edit_name" class="form-label">Name / Title <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" id="edit_name" name="name" required>
+                        <input type="text" class="form-control" id="edit_name" name="name" maxlength="9" pattern="[0-9]{4}(-[0-9]{4})?" data-live-filter="academic-year" required>
                     </div>
                     <div class="row g-2 mb-3">
                         <div class="col-6">
@@ -191,7 +191,7 @@
                         </div>
                         <div class="col-6">
                             <label for="edit_end_date" class="form-label">End Date <span class="text-danger">*</span></label>
-                            <input type="date" class="form-control" id="edit_end_date" name="end_date" required>
+                            <input type="date" class="form-control" id="edit_end_date" name="end_date" data-date-after="edit_start_date" required>
                         </div>
                     </div>
                     <div class="form-check">
@@ -228,6 +228,8 @@
                 nameInput.value = this.dataset.name;
                 startInput.value = this.dataset.start;
                 endInput.value = this.dataset.end;
+                endInput.min = startInput.value;
+                startInput.dispatchEvent(new Event('input'));
                 currentInput.checked = this.dataset.current === '1';
                 editModal.show();
             });

@@ -13,6 +13,7 @@
         'admin' => [
             'Overview' => [['Dashboard', 'admin.dashboard', 'admin.dashboard', 'grid-1x2-fill']],
             'Manage' => [
+                ['Users', 'admin.users.index', 'admin.users.*', 'people'],
                 ['Students', 'admin.students.index', 'admin.students.*', 'people-fill'],
                 ['Teachers', 'admin.teachers.index', 'admin.teachers.*', 'person-workspace'],
                 ['Staff Attendance', 'admin.staff-attendance.index', 'admin.staff-attendance.*', 'person-check-fill'],
@@ -27,6 +28,9 @@
                 ['Guardians', 'admin.guardians.index', 'admin.guardians.*', 'person-hearts'],
                 ['Classes', 'admin.classes.index', 'admin.classes.*', 'building'],
                 ['Subjects', 'admin.subjects.index', 'admin.subjects.*', 'book-fill'],
+                ['Departments', 'admin.departments.index', 'admin.departments.*', 'diagram-3'],
+                ['Programs', 'admin.programs.index', 'admin.programs.*', 'mortarboard'],
+                ['Curriculum', 'admin.curricula.index', 'admin.curricula.*', 'journal-bookmark'],
                 ['Class Subjects', 'admin.class-subjects.index', 'admin.class-subjects.*', 'diagram-3-fill'],
                 ['Academic Years', 'admin.academic-years.index', 'admin.academic-years.*', 'calendar-range'],
                 ['Terms', 'admin.terms.index', 'admin.terms.*', 'calendar2-week'],
@@ -55,18 +59,23 @@
                 ['General Ledger', 'admin.accounting.ledger', 'admin.accounting.ledger', 'journal-text'],
             ],
             'System' => [
+                ['Settings', 'admin.settings.index', 'admin.settings.*', 'gear-fill'],
                 ['Announcements', 'admin.announcements.index', 'admin.announcements.*', 'megaphone-fill'],
                 ['Branches', 'admin.branches.index', 'admin.branches.*', 'buildings'],
                 ['Audit Trail', 'admin.audit-logs.index', 'admin.audit-logs.*', 'clock-history'],
             ],
             'Reports' => [
                 ['Student Report', 'reports.students', 'reports.students*', 'file-earmark-person'],
+                ['Enrollment Register', 'reports.enrollment', 'reports.enrollment*', 'people-fill'],
                 ['Attendance Report', 'reports.attendance', 'reports.attendance*', 'calendar2-check'],
+                ['Attendance Summary', 'reports.attendance-summary', 'reports.attendance-summary*', 'calendar2-range'],
                 ['Class Attendance Summary', 'reports.class-attendance', 'reports.class-attendance*', 'bar-chart-line'],
                 ['Result Report', 'reports.results', 'reports.results*', 'trophy'],
+                ['Class Result Summary', 'reports.class-result', 'reports.class-result*', 'award'],
                 ['Subject Performance', 'reports.subject-performance', 'reports.subject-performance*', 'graph-up'],
                 ['Fee Collection', 'reports.fee-collection', 'reports.fee-collection*', 'cash-coin'],
                 ['Defaulters List', 'reports.defaulters', 'reports.defaulters*', 'exclamation-octagon'],
+                ['Student Ledger', 'reports.student-ledger', 'reports.student-ledger*', 'journal-text'],
             ],
         ],
         'teacher' => [
@@ -201,8 +210,12 @@
                             str_starts_with($route, 'admin.imports.') => 'imports.create',
                             str_starts_with($route, 'admin.staff-attendance.') => 'staff_attendance.read',
                             str_starts_with($route, 'admin.inventory.') => 'inventory.read',
+                            str_starts_with($route, 'admin.hr.employees.') || str_starts_with($route, 'admin.hr.leaves.') => 'hr.read',
+                            str_starts_with($route, 'admin.hr.payroll.') => 'payroll.read',
+                            str_starts_with($route, 'admin.transport.') => 'transport.read',
                             str_starts_with($route, 'library.') => 'library.read',
                             str_starts_with($route, 'procurement.') => 'procurement.read',
+                            $route === 'admin.users.index' => 'users.read',
                             $route === 'admin.students.index' => 'students.read',
                             $route === 'admin.students.create' => 'students.create',
                             $route === 'admin.guardians.index' => 'guardians.read',
@@ -222,14 +235,18 @@
                             $route === 'admin.term-results.index' => 'results.read',
                             $route === 'admin.grade-scale.edit' => 'grades.read',
                             $route === 'admin.announcements.index' => 'announcements.read',
+                            $route === 'admin.settings.index' => 'settings.read',
+                            $route === 'admin.fee-structures.index' => 'fee_structures.read',
+                            $route === 'admin.invoices.index' => 'invoices.read',
+                            $route === 'admin.payments.create' => 'payments.create',
                             str_starts_with($route, 'admin.') && str_ends_with($route, '.dashboard') => null,
                             default => null,
                         };
                         $roleRoutePrefix = $menuRole === 'parent' ? 'guardian.' : $menuRole.'.';
                         $canSeeRoute = str_starts_with($route, 'messages.')
-                            || $user->isAdmin()
+                            || $user->isSuperAdmin()
                             || ($permission && $user->can($permission))
-                            || (! $permission && str_starts_with($route, $roleRoutePrefix));
+                            || (! $permission && ($user->isAdmin() || str_starts_with($route, $roleRoutePrefix)));
                     @endphp
                     @if (\Illuminate\Support\Facades\Route::has($route) && $canSeeRoute)
                         <a class="nav-glass {{ request()->routeIs($pattern) ? 'active' : '' }}" href="{{ route($route) }}">
@@ -266,7 +283,7 @@
                     @csrf
                     <label class="visually-hidden" for="active-branch">Active campus</label>
                     <select class="form-select form-select-sm" id="active-branch" name="branch_id">
-                        @if ($user->isSuperAdmin())
+                        @if (\App\Support\BranchContext::isGlobalAdmin($user))
                             <option value="all" @selected($allCampusesSelected ?? false)>All campuses</option>
                         @endif
                         @foreach ($branchContextOptions as $branchOption)
@@ -284,7 +301,7 @@
                         <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">{{ $user->unreadNotifications()->count() }}</span>
                     @endif
                 </button>
-                <div class="dropdown-menu dropdown-menu-end p-2" style="min-width: 320px">
+                <div class="dropdown-menu dropdown-menu-end p-2 notification-dropdown-menu" style="min-width: 320px">
                     <div class="d-flex justify-content-between align-items-center px-2 py-1">
                         <strong>Notifications</strong>
                         <form method="POST" action="{{ route('notifications.read-all') }}">

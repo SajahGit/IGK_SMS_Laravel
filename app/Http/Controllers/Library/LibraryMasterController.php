@@ -27,7 +27,7 @@ class LibraryMasterController extends Controller
 
     public function authorStore(Request $request): RedirectResponse
     {
-        $data = $request->validate(['name' => ['required', 'string', 'max:120', 'unique:library_authors,name']]);
+        $data = $request->validate(['name' => ['required', 'string', 'max:80', 'regex:/\A[A-Za-z\s.\'-]+\z/', 'unique:library_authors,name']]);
         $model = LibraryAuthor::create($data);
         AuditLogger::log('created_library_author', $model, null, $model->toArray());
 
@@ -36,7 +36,7 @@ class LibraryMasterController extends Controller
 
     public function authorUpdate(Request $request, LibraryAuthor $author): RedirectResponse
     {
-        $data = $request->validate(['name' => ['required', 'string', 'max:120', Rule::unique('library_authors', 'name')->ignore($author->id)]]);
+        $data = $request->validate(['name' => ['required', 'string', 'max:80', 'regex:/\A[A-Za-z\s.\'-]+\z/', Rule::unique('library_authors', 'name')->ignore($author->id)]]);
         $before = $author->toArray();
         $author->update($data);
         AuditLogger::log('updated_library_author', $author, $before, $author->toArray());
@@ -67,7 +67,7 @@ class LibraryMasterController extends Controller
 
     public function categoryStore(Request $request): RedirectResponse
     {
-        $data = $request->validate(['name' => ['required', 'string', 'max:80', 'unique:library_categories,name']]);
+        $data = $request->validate(['name' => ['required', 'string', 'max:120', 'regex:/\A[A-Za-z][A-Za-z0-9\s\-:()\'&]*\z/', 'unique:library_categories,name']]);
         $model = LibraryCategory::create($data);
         AuditLogger::log('created_library_category', $model, null, $model->toArray());
 
@@ -76,7 +76,7 @@ class LibraryMasterController extends Controller
 
     public function categoryUpdate(Request $request, LibraryCategory $category): RedirectResponse
     {
-        $data = $request->validate(['name' => ['required', 'string', 'max:80', Rule::unique('library_categories', 'name')->ignore($category->id)]]);
+        $data = $request->validate(['name' => ['required', 'string', 'max:120', 'regex:/\A[A-Za-z][A-Za-z0-9\s\-:()\'&]*\z/', Rule::unique('library_categories', 'name')->ignore($category->id)]]);
         $before = $category->toArray();
         $category->update($data);
         AuditLogger::log('updated_library_category', $category, $before, $category->toArray());

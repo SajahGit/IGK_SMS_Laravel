@@ -1,6 +1,6 @@
 # IGK School ERP — Historical Completion Report (Superseded)
 
-> This is a historical report and is not current SOP acceptance evidence. The current status, known gaps, and latest test results are in [IGK_ERP_FINAL_SOP_COMPLIANCE_AUDIT.md](../IGK_ERP_FINAL_SOP_COMPLIANCE_AUDIT.md).
+> This is a historical report and is not current SOP acceptance evidence. Maintained requirements and known gaps are in [docs/sop.md](../../docs/sop.md) and [docs/known-issues.md](../../docs/known-issues.md).
 
 **Date:** 2026-11-02  
 **Project:** E:\Laravel-Projects\Architectured Final S  
@@ -123,6 +123,6 @@ All 7 services from SOP §10.1 exist as named classes:
 
 ## Updated Reports
 
-- `IGK_ERP_FINAL_SOP_COMPLIANCE_AUDIT.md` — Current audit; refer there for the latest test results, implementation status, and remaining UAT/sign-off requirements.
+- Current requirements and gaps — see [docs/sop.md](../../docs/sop.md) and [docs/known-issues.md](../../docs/known-issues.md).
 - `IGK_SCHOOL_ERP_PROGRESS_REPORT.md` — Task status summary with evidence
 - `IGK_SCHOOL_ERP_COMPLETION_REPORT.md` — This document

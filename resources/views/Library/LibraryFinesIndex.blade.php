@@ -10,7 +10,7 @@
 <div class="card shadow-sm border-0">
     <div class="table-responsive">
         <table class="table table-hover mb-0 align-middle">
-            <thead class="table-light"><tr><th>Student</th><th>Book</th><th>Amount</th><th>Reason</th><th>Status</th><th class="text-end">Actions</th></tr></thead>
+            <thead class="table-light"><tr><th>Student</th><th>Book</th><th>Amount</th><th>Reason</th><th>Status</th><th class="text-start text-nowrap">Actions</th></tr></thead>
             <tbody>
             @forelse ($fines as $fine)
                 <tr>
@@ -23,7 +23,7 @@
                         <td style="width:130px"><input type="number" step="0.01" min="0.01" name="amount" form="fine-{{ $fine->id }}" value="{{ $fine->amount }}" class="form-control form-control-sm"></td>
                         <td><input type="text" name="reason" form="fine-{{ $fine->id }}" value="{{ $fine->reason }}" class="form-control form-control-sm" maxlength="160"></td>
                         <td><span class="badge bg-warning text-dark">Unpaid</span></td>
-                        <td class="text-end">
+                        <td class="text-start text-nowrap">
                             <button form="fine-{{ $fine->id }}" class="btn btn-sm btn-outline-primary"><i class="bi bi-check-lg me-1"></i>Save</button>
                             <form method="POST" action="{{ route('library.fines.pay', $fine) }}" class="d-inline">@csrf
                                 <button class="btn btn-sm btn-outline-success"><i class="bi bi-cash me-1"></i>Collect</button></form>

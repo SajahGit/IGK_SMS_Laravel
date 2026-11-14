@@ -30,11 +30,16 @@ class CashflowEntryController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
+        $request->merge([
+            'reference' => $request->filled('reference')
+                ? strtoupper((string) $request->input('reference'))
+                : null,
+        ]);
         $data = $request->validate([
             'type' => ['required', 'in:income,expense'],
             'entry_date' => ['required', 'date', 'before_or_equal:today'],
-            'description' => ['required', 'string', 'max:255'],
-            'reference' => ['nullable', 'string', 'max:80'],
+            'description' => ['required', 'string', 'max:255', 'regex:/\A[A-Za-z][A-Za-z0-9\s.&\'():!-]*\z/'],
+            'reference' => ['nullable', 'string', 'max:40', 'regex:/\A[A-Z0-9\/-]*\z/'],
             'amount' => ['required', 'numeric', 'min:0.01', 'max:999999999999.99', 'decimal:0,2'],
             'category_account_id' => ['required', 'exists:accounts,id'],
             'cash_account_id' => ['required', 'exists:accounts,id'],

@@ -103,6 +103,7 @@ class RolePermissionSeeder extends Seeder
         $accountant = Role::firstOrCreate(['name' => 'Accountant', 'guard_name' => 'web']);
         $student = Role::firstOrCreate(['name' => 'Student', 'guard_name' => 'web']);
         $guardian = Role::firstOrCreate(['name' => 'Guardian', 'guard_name' => 'web']);
+        $librarian = Role::firstOrCreate(['name' => 'Librarian', 'guard_name' => 'web']);
 
         // ---- Permission assignments per Section 7.2 matrix ----
         $superAdmin->syncPermissions($permissions);
@@ -186,6 +187,12 @@ class RolePermissionSeeder extends Seeder
             'report_card.read',
             'invoices.read',
             'payments.read',
+            'announcements.read',
+        ]);
+
+        $librarian->syncPermissions([
+            'students.read',
+            'library.create', 'library.read', 'library.update', 'library.delete',
             'announcements.read',
         ]);
 

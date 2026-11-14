@@ -1,46 +1,58 @@
-﻿# IGK SCHOOL ERP - MANUAL TESTING ENVIRONMENT PREPARATION GUIDE
+# IGK School ERP — Manual Test Environment Preparation
 
-**Generated:** 2026-11-02  
-**Project Path:** E:\Laravel-Projects\Architectured Final S  
-**Purpose:** Safe setup of separate manual testing database without affecting production/development archi DB  
+**Updated:** 2026-11-14
+**Purpose:** Set up an isolated local MySQL demo environment without altering the existing workspace database.
 
-## 1. CURRENT CONFIGURATION (VERIFIED)
-- .env: DB_CONNECTION=mysql, DB_HOST=127.0.0.1, DB_PORT=3306, DB_DATABASE=archi, DB_USERNAME=root
-- Application uses MySQL database archi. Confirmed.
-- Tests use SQLite in-memory via phpunit.xml (isolated).
+## Active workspace snapshot
 
-## 2. SAFETY PRINCIPLES
-- Never modify .env, config, migrations, code, tests
-- Never run migrate, migrate:fresh, db:seed, or destructive commands
-- Never insert/update/delete in archi
-- Create separate database archi_manual_test
-- Keep archi completely protected
+Read-only inspection on 2026-11-14 found the current workspace `.env` configured for `mysql` at `127.0.0.1:3306`, database `school_management_new`. That schema had 10,017 rows in `users`, 64 applied migrations, and two pending migrations. The requested `school_management_system_testing_db` schema was not listed on the local server then. Configuration can change; re-check before commands.
 
-## 3. CREATE SEPARATE DATABASE
-**MySQL Workbench:** Create schema archi_manual_test (utf8mb4_unicode_ci). Leave empty. Do not copy data.
-**MySQL CLI:** CREATE DATABASE IF NOT EXISTS archi_manual_test CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+This is a snapshot, not permission to migrate, seed, reset, or delete `school_management_new`. No database rows were changed by preparing these docs.
 
-## 4. SAFE CONFIGURATION APPROACH
-Do NOT edit .env. Options: use temporary env override for CLI only (and clear), or separate .env file not used by app. Never point running app to new DB without explicit need and ensuring no migrations run against archi.
+## Safe local manual-test setup
 
-## 5. SEEDERS (INSPECTION ONLY)
-database/seeders/: DatabaseSeeder.php, RolePermissionSeeder.php, SuperAdminSeeder.php, SettingSeeder.php, GradeScaleSeeder.php - appear suitable for test data but DO NOT execute. Only run against archi_manual_test if needed with extreme caution.
+1. Ensure local MySQL 8 and PHP `pdo_mysql` are available.
+2. Create your own `.env` from `.env.example`; generate a unique key and set your own local MySQL credentials.
+3. Use `DB_DATABASE=school_management_system_testing_db`.
+4. In phpMyAdmin on your own local server create the UTF-8 schema if it does not exist:
 
-## 6. CHECKLIST
-- [ ] Verify MySQL running
-- [ ] Confirm .env points to archi (unchanged)
-- [ ] Create archi_manual_test (empty, separate)
-- [ ] Verify isolation
-- [ ] Never run migrate/seed against archi
+   ```sql
+   CREATE DATABASE school_management_system_testing_db
+     CHARACTER SET utf8mb4
+     COLLATE utf8mb4_unicode_ci;
+   ```
 
-## 7. POTENTIAL ISSUES
-| Issue | Risk | Resolution |
-|---|---|---|
-| Running migrate/seed against default | High | Never run; check DB_DATABASE always |
-| App pointing to wrong DB | High | Keep .env unchanged |
-| Tests affecting archi | None | Tests isolated by phpunit.xml |
+5. Verify connection/database:
 
-## QUICK VERIFICATION (READ-ONLY)
-SHOW DATABASES; USE archi; SHOW TABLES; USE archi_manual_test; SHOW TABLES;
+   ```powershell
+   php artisan config:clear
+   php artisan config:show database.default
+   php artisan config:show database.connections.mysql.database
+   ```
 
-**Guide Created:** No changes made to system. Ready for safe manual testing setup.
+6. Only if the verified target is the test DB, create its schema and synthetic demo rows:
+
+   ```powershell
+   php artisan migrate --seed
+   php artisan storage:link
+   ```
+
+7. Start the app using `php artisan serve`; follow `sample dataset.md`.
+
+## Team data behavior
+
+Same seeders on separate local MySQL installations create equivalent starting demo datasets. They do **not** make teammates' subsequent changes synchronize. Do not point all teammates at one shared DB unless the team intentionally wants one coordinated shared environment and has agreed access, backup and reset policies.
+
+Automated `php artisan test` uses in-memory SQLite from `phpunit.xml`; it is separate from the local MySQL demo DB.
+
+## phpMyAdmin deletion safety
+
+Do not delete schemas just because their names are unfamiliar. First identify their owner/purpose and export a backup. Keep `school_management_new` and all unknown schemas until the new test DB is migrated, seeded and verified, and you have explicitly decided what can be removed.
+
+For a confirmed unused schema only, select it in phpMyAdmin → **Operations** → **Drop the database**. Or run a single explicit statement after replacing the name with one you have verified:
+
+```sql
+DROP DATABASE `replace_with_confirmed_unused_database_name`;
+```
+
+Never bulk-drop databases. Never drop `information_schema`, `mysql`, `performance_schema`, or `sys`; do not drop `phpmyadmin` unless you understand the consequences. If uncertain, do not delete it. No schema has been deleted by this work.

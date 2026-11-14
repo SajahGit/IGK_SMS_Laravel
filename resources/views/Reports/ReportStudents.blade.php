@@ -57,18 +57,18 @@
 
 <div class="card shadow-sm"><div class="table-responsive">
     <table class="table table-hover mb-0">
-        <thead><tr><th>#</th><th>Admission No</th><th>Name</th><th>Program</th><th>Section</th><th>Status</th><th>Admission Date</th><th>Guardian Phone</th></tr></thead>
+        <thead><tr><th>#</th><th class="print-nowrap">Admission No</th><th>Name</th><th>Program</th><th class="print-nowrap">Section</th><th>Status</th><th class="print-nowrap">Admission Date</th><th class="print-nowrap">Guardian Phone</th></tr></thead>
         <tbody>
         @forelse ($students as $s)
             <tr>
                 <td>{{ $loop->iteration }}</td>
-                <td>{{ $s->admission_no }}</td>
+                <td class="print-nowrap">{{ $s->admission_no }}</td>
                 <td>{{ $s->user->name }}</td>
                 <td>{{ $s->program?->name ?? $s->class->program?->name ?? '—' }}</td>
-                <td>{{ $s->class?->full_name ?? 'Unassigned' }}</td>
+                <td class="print-nowrap">{{ $s->class?->full_name ?? 'Unassigned' }}</td>
                 <td>{{ ucfirst($s->status) }}</td>
-                <td>{{ $s->admission_date?->format('d M Y') ?? '—' }}</td>
-                <td>{{ $s->primaryGuardian->first()?->phone ?? '—' }}</td>
+                <td class="print-nowrap">{{ $s->admission_date?->format('d M Y') ?? '—' }}</td>
+                <td class="print-nowrap">{{ $s->primaryGuardian->first()?->phone ?? '—' }}</td>
             </tr>
         @empty
             <tr><td colspan="8" class="text-center text-muted">No students found.</td></tr>

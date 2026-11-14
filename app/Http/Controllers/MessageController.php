@@ -54,8 +54,8 @@ class MessageController extends Controller
                 Rule::exists('users', 'id')->where('is_active', true),
                 Rule::notIn([Auth::id()]),
             ],
-            'subject' => ['nullable', 'string', 'max:150'],
-            'body' => ['required', 'string', 'max:10000'],
+            'subject' => ['nullable', 'string', 'max:120', 'regex:/[A-Za-z]/'],
+            'body' => ['required', 'string', 'min:5', 'max:2000', 'regex:/[A-Za-z]/'],
         ]);
 
         $senderId = Auth::id();

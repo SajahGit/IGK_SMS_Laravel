@@ -17,11 +17,11 @@
     <div class="card-body row g-3">
         <div class="col-md-6">
             <label for="name" class="form-label">Exam name</label>
-            <input id="name" name="name" class="form-control" value="{{ old('name', $exam?->name) }}" maxlength="100" required>
+            <input id="name" name="name" class="form-control" value="{{ old('name', $exam?->name) }}" maxlength="80" pattern="[A-Za-z][A-Za-z0-9\s\x28\x29\x2d]*" data-live-filter="letter-start-name" required>
         </div>
         <div class="col-md-3">
             <label for="type" class="form-label">Type</label>
-            <input id="type" name="type" class="form-control" value="{{ old('type', $exam?->type ?? 'final') }}" maxlength="30" required>
+            <input id="type" name="type" class="form-control" value="{{ old('type', $exam?->type ?? 'Final') }}" maxlength="30" pattern="[A-Za-z\s\-]+" data-live-filter="letters-spaces-hyphens" required>
         </div>
         <div class="col-md-3">
             <label for="exam_date" class="form-label">Exam date</label>
@@ -29,7 +29,7 @@
         </div>
         <div class="col-md-4">
             <label for="class_id" class="form-label">Class/Section</label>
-            <select id="class_id" name="class_id" class="form-select" required>
+            <select id="class_id" name="class_id" class="form-select" data-searchable-select required>
                 <option value="">Select section</option>
                 @foreach ($classes as $class)
                     <option value="{{ $class->id }}" @selected(old('class_id', $exam?->class_id) == $class->id)>{{ $class->full_name }}</option>
@@ -38,7 +38,7 @@
         </div>
         <div class="col-md-4">
             <label for="subject_id" class="form-label">Subject</label>
-            <select id="subject_id" name="subject_id" class="form-select" required>
+            <select id="subject_id" name="subject_id" class="form-select" data-searchable-select required>
                 <option value="">Select subject</option>
                 @foreach ($subjects as $subject)
                     <option value="{{ $subject->id }}" @selected(old('subject_id', $exam?->subject_id) == $subject->id)>{{ $subject->name }}</option>
@@ -47,7 +47,7 @@
         </div>
         <div class="col-md-4">
             <label for="term_id" class="form-label">Term</label>
-            <select id="term_id" name="term_id" class="form-select" required>
+            <select id="term_id" name="term_id" class="form-select" data-searchable-select required>
                 <option value="">Select term</option>
                 @foreach ($terms as $term)
                     <option value="{{ $term->id }}" @selected(old('term_id', $exam?->term_id) == $term->id)>{{ $term->name }} — {{ $term->academicYear?->name }}</option>

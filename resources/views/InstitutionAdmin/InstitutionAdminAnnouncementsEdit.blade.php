@@ -10,7 +10,7 @@
             @method('PUT')
             <div class="mb-3">
                 <label for="title" class="form-label">Title</label>
-                <input id="title" name="title" class="form-control" maxlength="150" required value="{{ old('title', $announcement->title) }}">
+                <input id="title" name="title" class="form-control" maxlength="120" pattern="[A-Za-z][A-Za-z0-9\s\x2d:\x28\x29!]*" data-live-filter="announcement-title" required value="{{ old('title', $announcement->title) }}">
             </div>
             <div class="mb-3">
                 <label for="body" class="form-label">Announcement</label>

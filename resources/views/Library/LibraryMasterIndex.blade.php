@@ -12,7 +12,7 @@
     <div class="card-body">
         <form method="POST" action="{{ route('library.'.$slug.'.store') }}" class="row g-2">
             @csrf
-            <div class="col-md-8"><input type="text" name="name" class="form-control" placeholder="New {{ strtolower($singular) }} name" required maxlength="120"></div>
+            <div class="col-md-8"><input type="text" name="name" class="form-control" placeholder="New {{ strtolower($singular) }} name" required maxlength="{{ $slug === 'authors' ? 80 : 120 }}" @if ($slug === 'authors') pattern="[A-Za-z\s.\x27\x2d]+" data-live-filter="author-name" @else pattern="[A-Za-z][A-Za-z0-9\s:\x28\x29\x27\x26\x2d]*" data-live-filter="letter-start-book" @endif></div>
             <div class="col-md-4"><button class="btn btn-primary w-100"><i class="bi bi-plus-lg me-1"></i>Add {{ $singular }}</button></div>
         </form>
     </div>
@@ -28,8 +28,8 @@
                     <td>
                         <form method="POST" action="{{ route('library.'.$slug.'.update', $row) }}" class="d-flex gap-2">
                             @csrf @method('PUT')
-                            <input type="text" name="name" value="{{ $row->name }}" class="form-control form-control-sm" required maxlength="120">
-                            <button class="btn btn-sm btn-outline-primary"><i class="bi bi-check-lg me-1"></i>Save</button>
+                            <input type="text" name="name" value="{{ $row->name }}" class="form-control form-control-sm" required maxlength="{{ $slug === 'authors' ? 80 : 120 }}" @if ($slug === 'authors') pattern="[A-Za-z\s.\x27\x2d]+" data-live-filter="author-name" @else pattern="[A-Za-z][A-Za-z0-9\s:\x28\x29\x27\x26\x2d]*" data-live-filter="letter-start-book" @endif>
+                            <button class="btn btn-sm btn-outline-primary text-nowrap whitespace-nowrap"><i class="bi bi-check-lg me-1"></i>Save</button>
                         </form>
                     </td>
                     <td>{{ $row->books_count }}</td>

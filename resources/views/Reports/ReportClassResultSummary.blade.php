@@ -59,7 +59,7 @@
 <div class="card shadow-sm border-0">
     <div class="table-responsive">
         <table class="table table-hover mb-0 align-middle">
-            <thead><tr><th>Rank in section</th><th>Class/Section</th><th>Admission No</th><th>Student</th>
+            <thead><tr><th>Rank in section</th><th class="print-nowrap">Class/Section</th><th class="print-nowrap">Admission No</th><th>Student</th>
                 @foreach ($subjects as $subject)<th>{{ $subject->name }}</th>@endforeach
                 <th>GPA</th><th>Pass/Fail</th>
             </tr></thead>
@@ -67,8 +67,8 @@
             @forelse ($rows as $row)
                 <tr>
                     <td>{{ $row['rank'] ?? '—' }}</td>
-                    <td>{{ $row['student']->class?->full_name ?? 'Unassigned' }}</td>
-                    <td>{{ $row['student']->admission_no }}</td>
+                    <td class="print-nowrap">{{ $row['student']->class?->full_name ?? 'Unassigned' }}</td>
+                    <td class="print-nowrap">{{ $row['student']->admission_no }}</td>
                     <td>{{ $row['student']->user->name }}</td>
                     @foreach ($subjects as $subject)
                         <td>{{ $row['subjects'][$subject->id]['grade'] ?? '—' }}

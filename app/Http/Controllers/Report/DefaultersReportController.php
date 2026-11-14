@@ -16,7 +16,11 @@ class DefaultersReportController extends Controller
 {
     public function index(Request $request)
     {
-        [$filters, $classes, $terms, $programs, $invoices, $totalDefaulters, $totalBalance] = $this->data($request);
+        $pdfLimit = $request->attributes->get('pdf_export_limit');
+        [$filters, $classes, $terms, $programs, $invoices, $totalDefaulters, $totalBalance] = $this->data(
+            $request,
+            is_int($pdfLimit) ? $pdfLimit : null
+        );
 
         return view('Reports.ReportDefaulters', compact(
             'filters', 'classes', 'terms', 'programs', 'invoices', 'totalDefaulters', 'totalBalance'
@@ -77,18 +81,23 @@ class DefaultersReportController extends Controller
         ]);
     }
 
-    private function query(array $filters)
+    private function query(array $filters, ?int $limit = null)
     {
         $overdueDays = (int) ($filters['overdue_days'] ?? 0);
         $minimumBalance = $filters['min_balance'] ?? 0;
 
-        return Invoice::with([
-            'term',
-            'student.user',
-            'student.class.program',
-            'student.program',
-            'student.guardians.user',
-        ])
+        return Invoice::query()
+            ->select(['id', 'student_id', 'term_id', 'invoice_no', 'due_date', 'total', 'amount_paid', 'balance', 'currency'])
+            ->with([
+                'term:id,name',
+                'student:id,user_id,class_id,program_id,admission_no',
+                'student.user:id,name',
+                'student.class:id,name,section,program_id',
+                'student.class.program:id,name',
+                'student.program:id,name',
+                'student.guardians:id,user_id,phone',
+                'student.guardians.user:id,name',
+            ])
             ->where('balance', '>', 0)
             ->when((float) $minimumBalance > 0, fn ($query) => $query->where('balance', '>=', $minimumBalance))
             ->whereNotIn('status', ['cancelled', 'draft'])
@@ -99,15 +108,16 @@ class DefaultersReportController extends Controller
                 ->orWhereHas('class', fn ($class) => $class->where('program_id', $filters['program_id']))))
             ->when(! empty($filters['overdue_only']), fn ($query) => $query->whereDate('due_date', '<', today()))
             ->when($overdueDays > 0, fn ($query) => $query->whereDate('due_date', '<=', today()->subDays($overdueDays)))
-            ->orderBy('due_date');
+            ->orderBy('due_date')
+            ->when($limit !== null, fn ($query) => $query->limit($limit));
     }
 
-    private function data(Request $request): array
+    private function data(Request $request, ?int $pdfLimit = null): array
     {
         abort_unless($request->user()->isAdmin() || $request->user()->can('reports.financial'), 403);
         $filters = $this->validatedFilters($request);
 
-        $invoices = $this->query($filters)->get();
+        $invoices = $this->query($filters, $pdfLimit)->get();
         $totalBalance = Money::sumByCurrency($invoices, 'balance');
 
         return [

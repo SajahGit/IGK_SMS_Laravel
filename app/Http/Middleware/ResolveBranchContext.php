@@ -27,17 +27,17 @@ class ResolveBranchContext
             ->orderBy('name')
             ->get();
 
-        if ($user->isSuperAdmin() && ! $request->session()->get('branch_context_initialized')) {
+        if (BranchContext::isGlobalAdmin($user) && ! $request->session()->get('branch_context_initialized')) {
             $request->session()->put('active_branch_id', 'all');
             $request->session()->put('branch_context_initialized', true);
         }
 
         $selectedBranchId = $request->session()->get('active_branch_id');
-        $activeBranch = $selectedBranchId === 'all' && $user->isSuperAdmin()
+        $activeBranch = $selectedBranchId === 'all'
             ? null
             : $branches->firstWhere('id', (int) $selectedBranchId);
         if (! $activeBranch) {
-            if (! ($selectedBranchId === 'all' && $user->isSuperAdmin())) {
+            if ($selectedBranchId !== 'all') {
                 $activeBranch = $branches->first();
                 if ($activeBranch) {
                     $request->session()->put('active_branch_id', $activeBranch->id);
@@ -49,7 +49,7 @@ class ResolveBranchContext
 
         View::share('branchContextOptions', $branches);
         View::share('activeBranch', $activeBranch);
-        View::share('allCampusesSelected', $selectedBranchId === 'all' && $user->isSuperAdmin());
+        View::share('allCampusesSelected', $selectedBranchId === 'all');
 
         return $next($request);
     }

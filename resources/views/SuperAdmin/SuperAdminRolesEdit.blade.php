@@ -15,7 +15,7 @@
             <div class="row g-3 mb-4">
                 <div class="col-md-6">
                     <label class="form-label">Role Name <span class="text-danger">*</span></label>
-                    <input type="text" name="name" class="form-control" required value="{{ old('name', $role->name) }}">
+                    <input type="text" name="name" class="form-control" required maxlength="50" pattern="[A-Za-z][A-Za-z0-9\s_\x2d]*" data-live-filter="role-name" value="{{ old('name', $role->name) }}">
                 </div>
                 <div class="col-md-6">
                     <label class="form-label">Guard Name</label>

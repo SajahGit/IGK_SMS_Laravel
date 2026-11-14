@@ -23,7 +23,7 @@
                     <th>Role</th>
                     <th>Guard</th>
                     <th>Permissions</th>
-                    <th class="text-end">Actions</th>
+                    <th class="text-start">Actions</th>
                 </tr>
             </thead>
             <tbody>
@@ -40,7 +40,7 @@
                             <span class="text-muted">—</span>
                         @endforelse
                     </td>
-                    <td class="role-actions text-end">
+                    <td class="role-actions text-start">
                         <div class="btn-group btn-group-sm">
                             @can('update', $role)
                             <a href="{{ route('admin.roles.edit', $role) }}" class="btn btn-outline-primary"><i class="bi bi-pencil-square me-1"></i>Edit</a>
@@ -75,7 +75,7 @@
                 <div class="modal-body">
                     <div class="mb-3">
                         <label class="form-label">Role Name <span class="text-danger">*</span></label>
-                        <input type="text" name="name" class="form-control" required placeholder="e.g. Registrar" value="{{ old('name') }}">
+                        <input type="text" name="name" class="form-control" required maxlength="50" pattern="[A-Za-z][A-Za-z0-9\s_\x2d]*" data-live-filter="role-name" placeholder="e.g. Registrar" value="{{ old('name') }}">
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Guard Name</label>

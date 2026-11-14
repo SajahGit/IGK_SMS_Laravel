@@ -20,7 +20,7 @@ class PaymentController extends Controller
 {
     public function create(Request $request): View
     {
-        abort_unless($request->user()->isAdmin() || $request->user()->can('payments.create'), 403);
+        abort_unless($request->user()->isSuperAdmin() || $request->user()->can('payments.create'), 403);
 
         $invoiceId = $request->query('invoice_id');
         $selectedInvoice = null;

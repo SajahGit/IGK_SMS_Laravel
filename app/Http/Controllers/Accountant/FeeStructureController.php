@@ -112,10 +112,11 @@ class FeeStructureController extends Controller
             'name' => [
                 'required',
                 'string',
-                'max:100',
+                'max:80',
+                'regex:/\A[A-Za-z][A-Za-z0-9\s\-()&]*\z/',
                 Rule::unique('fee_items', 'name')->where('fee_structure_id', $feeStructure->id),
             ],
-            'amount' => ['required', 'numeric', 'min:0', 'max:9999999999.99', 'decimal:0,2'],
+            'amount' => ['required', 'numeric', 'min:0.01', 'max:9999999999.99', 'decimal:0,2'],
             'is_mandatory' => ['nullable', 'boolean'],
         ]);
 

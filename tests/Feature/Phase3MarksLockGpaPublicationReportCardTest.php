@@ -14,6 +14,7 @@ use App\Models\Teacher;
 use App\Models\Term;
 use App\Models\User;
 use App\Support\SchoolHelper;
+use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -23,7 +24,9 @@ class Phase3MarksLockGpaPublicationReportCardTest extends TestCase
 
     public function test_marks_lock_when_exam_is_published(): void
     {
+        $this->artisan('db:seed', ['--class' => RolePermissionSeeder::class])->assertExitCode(0);
         $admin = User::create(['name' => 'Admin', 'email' => 'admin@s.t', 'password' => 'password', 'role' => 'admin']);
+        $admin->syncRoles(['Institution Admin']);
         $tUser = User::create(['name' => 'Teacher', 'email' => 't@s.t', 'password' => 'password', 'role' => 'teacher']);
         $teacher = Teacher::create(['user_id' => $tUser->id, 'phone' => '111']);
 

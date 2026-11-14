@@ -12,11 +12,11 @@
     <div class="card-body">
         <form method="POST" action="{{ route('library.books.update', $book) }}" class="row g-3">
             @csrf @method('PUT')
-            <div class="col-md-6"><label class="form-label" for="title">Title</label><input id="title" name="title" value="{{ old('title', $book->title) }}" class="form-control" maxlength="200" required></div>
-            <div class="col-md-6"><label class="form-label" for="author">Author</label><input id="author" name="author" value="{{ old('author', $book->author->name) }}" class="form-control" maxlength="120" required></div>
-            <div class="col-md-6"><label class="form-label" for="category">Category</label><input id="category" name="category" value="{{ old('category', $book->category->name) }}" class="form-control" maxlength="80" required></div>
-            <div class="col-md-6"><label class="form-label" for="isbn">ISBN</label><input id="isbn" name="isbn" value="{{ old('isbn', $book->isbn) }}" class="form-control" maxlength="20"></div>
-            <div class="col-md-6"><label class="form-label" for="publication_year">Publication year</label><input id="publication_year" name="publication_year" value="{{ old('publication_year', $book->publication_year) }}" type="number" class="form-control" min="1000" max="{{ now()->year + 1 }}"></div>
+            <div class="col-md-6"><label class="form-label" for="title">Title</label><input id="title" name="title" value="{{ old('title', $book->title) }}" class="form-control" maxlength="120" pattern="[A-Za-z][A-Za-z0-9\s:\x28\x29\x27\x26\x2d]*" data-live-filter="letter-start-book" required></div>
+            <div class="col-md-6"><label class="form-label" for="author">Author</label><input id="author" name="author" value="{{ old('author', $book->author->name) }}" class="form-control" maxlength="80" pattern="[A-Za-z\s.\x27\x2d]+" data-live-filter="author-name" required></div>
+            <div class="col-md-6"><label class="form-label" for="category">Category</label><input id="category" name="category" value="{{ old('category', $book->category->name) }}" class="form-control" maxlength="120" pattern="[A-Za-z][A-Za-z0-9\s:\x28\x29\x27\x26\x2d]*" data-live-filter="letter-start-book" required></div>
+            <div class="col-md-6"><label class="form-label" for="isbn">ISBN</label><input id="isbn" name="isbn" value="{{ old('isbn', $book->isbn) }}" class="form-control" minlength="10" maxlength="17" pattern="[0-9X\x2d]+" data-live-filter="isbn"></div>
+            <div class="col-md-6"><label class="form-label" for="publication_year">Publication year</label><input id="publication_year" name="publication_year" value="{{ old('publication_year', $book->publication_year) }}" type="number" class="form-control" min="1800" max="2026" step="1"></div>
             <div class="col-12"><button class="btn btn-primary">Save changes</button></div>
         </form>
     </div>

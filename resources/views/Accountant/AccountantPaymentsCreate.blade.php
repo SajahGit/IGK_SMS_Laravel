@@ -70,7 +70,8 @@
                         <div class="col-md-6">
                             <label for="reference" class="form-label">Reference / Bank Slip No</label>
                             <input type="text" name="reference" id="reference" class="form-control"
-                                   value="{{ old('reference') }}" placeholder="e.g. Slip #98234, Transfer Ref">
+                                   value="{{ old('reference') }}" placeholder="e.g. SLIP-98234/TRANSFER" maxlength="40"
+                                   pattern="[A-Z0-9\x2f\x2d]*" data-live-filter="uppercase-payment-reference">
                         </div>
                     </div>
 

@@ -16,7 +16,7 @@ class StoreRoleRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => ['required', 'string', 'max:50', Rule::unique('roles', 'name')],
+            'name' => ['required', 'string', 'max:50', 'regex:/\A[A-Za-z][A-Za-z0-9\s_-]*\z/', Rule::unique('roles', 'name')],
             'guard_name' => ['required', 'string', 'max:20', 'in:web,api'],
         ];
     }

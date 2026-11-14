@@ -20,6 +20,7 @@ use App\Models\User;
 use App\Services\AttendanceSessionService;
 use App\Support\AdmissionNumberGenerator;
 use App\Support\TimetableClashDetector;
+use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -31,6 +32,21 @@ use Tests\TestCase;
 class Phase2DocumentsCapacityTimetableAttendanceTest extends TestCase
 {
     use RefreshDatabase;
+
+    private function institutionAdmin(string $name, string $email): User
+    {
+        $this->artisan('db:seed', ['--class' => RolePermissionSeeder::class])->assertExitCode(0);
+
+        $user = User::create([
+            'name' => $name,
+            'email' => $email,
+            'password' => 'password',
+            'role' => 'admin',
+        ]);
+        $user->syncRoles(['Institution Admin']);
+
+        return $user;
+    }
 
     public function test_sequential_admission_number_generation(): void
     {
@@ -86,7 +102,7 @@ class Phase2DocumentsCapacityTimetableAttendanceTest extends TestCase
 
     public function test_student_admission_requires_at_least_one_guardian(): void
     {
-        $admin = User::create(['name' => 'Admin', 'email' => 'guardian-check-admin@s.t', 'password' => 'password', 'role' => 'admin']);
+        $admin = $this->institutionAdmin('Admin', 'guardian-check-admin@s.t');
         $department = Department::create(['name' => 'Science', 'code' => 'SCI']);
         $program = Program::create(['department_id' => $department->id, 'name' => 'Computer Science', 'code' => 'CS']);
         $academicYear = AcademicYear::create([
@@ -143,12 +159,7 @@ class Phase2DocumentsCapacityTimetableAttendanceTest extends TestCase
 
     public function test_staff_attendance_accepts_and_normalizes_browser_time_formats(): void
     {
-        $admin = User::create([
-            'name' => 'Attendance Admin',
-            'email' => 'staff-attendance-admin@s.t',
-            'password' => 'password',
-            'role' => 'admin',
-        ]);
+        $admin = $this->institutionAdmin('Attendance Admin', 'staff-attendance-admin@s.t');
         $teacherUser = User::create([
             'name' => 'Attendance Teacher',
             'email' => 'staff-attendance-teacher@s.t',
@@ -185,7 +196,7 @@ class Phase2DocumentsCapacityTimetableAttendanceTest extends TestCase
 
     public function test_section_capacity_limit_enforced_on_enrollment(): void
     {
-        $admin = User::create(['name' => 'Admin', 'email' => 'admin@s.t', 'password' => 'password', 'role' => 'admin']);
+        $admin = $this->institutionAdmin('Admin', 'admin@s.t');
 
         $department = Department::create(['name' => 'Science', 'code' => 'SCI']);
         $program = Program::create(['department_id' => $department->id, 'name' => 'Computer Science', 'code' => 'CS']);
@@ -237,7 +248,7 @@ class Phase2DocumentsCapacityTimetableAttendanceTest extends TestCase
     {
         Storage::fake('local');
 
-        $admin = User::create(['name' => 'Admin', 'email' => 'admin@s.t', 'password' => 'password', 'role' => 'admin']);
+        $admin = $this->institutionAdmin('Admin', 'admin@s.t');
         $schoolClass = SchoolClass::create(['name' => 'Grade 10', 'section' => 'A']);
         $studentUser = User::create(['name' => 'Student', 'email' => 's@s.t', 'password' => 'password', 'role' => 'student']);
         $student = Student::create(['user_id' => $studentUser->id, 'class_id' => $schoolClass->id, 'admission_no' => 'ADM001']);
@@ -386,7 +397,7 @@ class Phase2DocumentsCapacityTimetableAttendanceTest extends TestCase
 
     public function test_admin_timetable_index_and_store_slot(): void
     {
-        $admin = User::create(['name' => 'Admin', 'email' => 'adm_tt@s.t', 'password' => 'password', 'role' => 'admin']);
+        $admin = $this->institutionAdmin('Admin', 'adm_tt@s.t');
         $class = SchoolClass::create(['name' => 'Grade 11', 'section' => 'A']);
         $sub = Subject::create(['name' => 'History', 'code' => 'HIS']);
         $tUser = User::create(['name' => 'Teacher H', 'email' => 'th@s.t', 'password' => 'password', 'role' => 'teacher']);

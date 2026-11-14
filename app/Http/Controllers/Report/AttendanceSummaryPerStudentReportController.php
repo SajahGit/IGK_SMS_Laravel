@@ -60,6 +60,7 @@ class AttendanceSummaryPerStudentReportController extends Controller
         $studentId = $validated['student_id'] ?? null;
         $termId = isset($validated['term_id']) ? (int) $validated['term_id'] : null;
         $subjectId = isset($validated['subject_id']) ? (int) $validated['subject_id'] : null;
+        $pdfLimit = $request->attributes->get('pdf_export_limit');
         $students = collect();
         $rows = collect();
         $subjects = collect();
@@ -74,11 +75,17 @@ class AttendanceSummaryPerStudentReportController extends Controller
                 ->unique('id')
                 ->sortBy('name')
                 ->values();
-            $studentQuery = Student::with('user')->where('class_id', $classId);
+            $studentQuery = Student::query()
+                ->select(['id', 'user_id', 'class_id', 'admission_no'])
+                ->with('user:id,name')
+                ->where('class_id', $classId);
             if ($studentId) {
                 $studentQuery->whereKey($studentId);
             }
-            $students = $studentQuery->orderBy('admission_no')->get();
+            $students = $studentQuery
+                ->orderBy('admission_no')
+                ->when(is_int($pdfLimit), fn ($query) => $query->limit($pdfLimit))
+                ->get();
             $rows = $students->map(function ($student) use ($from, $to, $termId, $subjectId) {
                 $summary = SchoolHelper::attendanceSummary($student->id, $from, $to, $termId, $subjectId);
 

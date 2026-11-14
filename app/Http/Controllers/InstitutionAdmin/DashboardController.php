@@ -10,12 +10,14 @@ use App\Models\SchoolClass;
 use App\Models\Student;
 use App\Models\Subject;
 use App\Models\Teacher;
+use App\Support\BranchContext;
 use Carbon\CarbonImmutable;
 
 class DashboardController extends Controller
 {
     public function index()
     {
+        $branchId = BranchContext::activeBranchId();
         $attendanceDays = collect(range(6, 0))
             ->map(fn (int $daysAgo) => today()->subDays($daysAgo));
         $attendanceByDay = Attendance::query()
@@ -33,10 +35,15 @@ class DashboardController extends Controller
 
         return view('InstitutionAdmin.InstitutionAdminDashboard', [
             'studentCount' => Student::count(),
-            'teacherCount' => Teacher::count(),
+            'teacherCount' => Teacher::query()
+                ->when($branchId !== null, fn ($query) => $query->whereHas(
+                    'user',
+                    fn ($userQuery) => $userQuery->where('branch_id', $branchId)
+                ))
+                ->count(),
             'classCount' => SchoolClass::count(),
             'subjectCount' => Subject::count(),
-            'guardianCount' => Guardian::count(),
+            'guardianCount' => Guardian::inActiveBranch()->count(),
             'latestStudents' => Student::with(['user', 'class'])->latest()->take(5)->get(),
             'attendanceTrend' => [
                 'labels' => $attendanceDays->map(fn ($date) => $date->format('d M'))->all(),

@@ -257,17 +257,23 @@ class CompleteSampleDataSeeder extends Seeder
 
     private function seedMessages(User $admin): void
     {
-        $others = collect(['registrar', 'accountant', 'teacher'])
-            ->map(fn ($role) => User::query()->where('role', $role)->where('is_active', true)->orderBy('id')->first())
-            ->merge(User::query()->whereIn('email', [
-                'guardian@school.test',
-                'student@school.test',
+        $others = User::query()
+            ->whereIn('email', [
+                'superadmin@school.test',
+                'admin@school.test',
+                'registrar@school.test',
+                'accountant@school.test',
+                'librarian@school.test',
                 'teacher@school.test',
+                'student@school.test',
+                'guardian@school.test',
             ])
-                ->where('is_active', true)
-                ->get())
+            ->where('is_active', true)
+            ->whereKeyNot($admin->id)
+            ->orderBy('id')
+            ->get()
             ->filter()
-            ->unique('id');
+            ->values();
 
         foreach ($others as $user) {
             if ($user->id === $admin->id) {

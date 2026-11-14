@@ -63,12 +63,17 @@ class AccountController extends Controller
 
     private function validated(Request $request, ?Account $account = null): array
     {
+        $code = $request->input('code');
+        if (is_string($code)) {
+            $request->merge(['code' => strtoupper($code)]);
+        }
+
         $data = $request->validate([
-            'code' => ['required', 'string', 'max:20', Rule::unique('accounts', 'code')->ignore($account?->id)],
-            'name' => ['required', 'string', 'max:150'],
+            'code' => ['required', 'string', 'max:20', 'regex:/\A[A-Z0-9-]+\z/', Rule::unique('accounts', 'code')->ignore($account?->id)],
+            'name' => ['required', 'string', 'max:80', 'regex:/\A[A-Za-z][A-Za-z0-9\s\-()&]*\z/'],
             'type' => ['required', Rule::in(array_keys(Account::TYPES))],
             'parent_id' => ['nullable', 'exists:accounts,id'],
-            'description' => ['nullable', 'string', 'max:1000'],
+            'description' => ['nullable', 'string', 'max:255', 'regex:/\A[^=|;\\\\]*\z/'],
         ]);
         $data['is_active'] = $request->boolean('is_active');
 

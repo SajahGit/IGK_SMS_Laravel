@@ -18,7 +18,7 @@ class AnnouncementRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'title' => ['required', 'string', 'max:150'],
+            'title' => ['required', 'string', 'max:120', 'regex:/\A[A-Za-z][A-Za-z0-9\s\-:()!]*\z/'],
             'body' => ['required', 'string'],
             'target_role' => ['required', 'string', 'in:all,admin,registrar,teacher,accountant,student,parent'],
             'program_id' => ['nullable', 'exists:programs,id'],

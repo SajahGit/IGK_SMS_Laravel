@@ -8,6 +8,7 @@ use App\Models\Payment;
 use App\Models\SchoolClass;
 use App\Models\Student;
 use App\Models\User;
+use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -47,6 +48,8 @@ class PdfDocumentsTest extends TestCase
 
     public function test_admin_can_download_an_invoice_and_payment_receipt_pdf(): void
     {
+        $this->artisan('db:seed', ['--class' => RolePermissionSeeder::class])->assertExitCode(0);
+
         $student = $this->createStudent();
         $invoice = $this->createInvoice($student);
         $payment = Payment::create([
@@ -63,6 +66,7 @@ class PdfDocumentsTest extends TestCase
             'password' => 'password',
             'role' => 'admin',
         ]);
+        $admin->syncRoles(['Institution Admin']);
 
         $this->actingAs($admin)
             ->get(route('admin.invoices.pdf', $invoice))

@@ -72,7 +72,7 @@
         <table class="table table-hover mb-0 align-middle">
             <thead class="table-light">
                 <tr>
-                    <th>Class & Section</th>
+                    <th class="print-nowrap">Class & Section</th>
                     <th>Subject</th>
                     <th class="text-center">Sessions Held</th>
                     <th class="text-center">Average Attendance</th>
@@ -83,7 +83,7 @@
                 @forelse ($summary as $row)
                     <tr>
                         <td>
-                            <span class="fw-bold">{{ $row['class']->full_name }}</span>
+                            <span class="fw-bold print-nowrap">{{ $row['class']->full_name }}</span>
                         </td>
                         <td>{{ $row['subject'] }}</td>
                         <td class="text-center">{{ $row['sessions'] }}</td>

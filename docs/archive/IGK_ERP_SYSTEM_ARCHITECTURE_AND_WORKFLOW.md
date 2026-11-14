@@ -7,7 +7,7 @@ Laravel school management ERP. PHP 8.5, Laravel 11, MySQL (archi DB). Blade UI, 
 Browser -> public/index.php -> bootstrap/app.php -> HTTP kernel -> middleware (auth, role, policy) -> routes/web.php -> controller -> form request validation -> service -> Eloquent model -> MySQL -> Blade view response.
 
 ## Modules
-See [IGK_ERP_COMPLETE_MODULE_COMPLIANCE_MATRIX.md](../IGK_ERP_COMPLETE_MODULE_COMPLIANCE_MATRIX.md) for the current implementation snapshot. This architecture note is historical; see `docs/architecture.md` for current architecture.
+This architecture note is historical; see [docs/architecture.md](../architecture.md) for the current architecture.
 
 ## Database
 Tables: users, roles, permissions, model_has_roles, academic_years, terms, departments, programs, subjects, curriculums, classes, sections, staff, students, guardians, student_documents, class_subjects, enrollments, timetables, attendance, attendance_sessions, exams, exam_subjects, marks, grade_scales, results, fee_structures, invoices, payments, receipts, announcements, audit_logs, sessions, cache, jobs, failed_jobs, password_reset_tokens, personal_access_tokens.

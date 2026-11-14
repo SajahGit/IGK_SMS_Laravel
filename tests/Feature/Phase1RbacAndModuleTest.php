@@ -419,6 +419,17 @@ class Phase1RbacAndModuleTest extends TestCase
         $this->delete(route('admin.roles.destroy', $institutionAdminRole))
             ->assertSessionHasErrors('role');
 
+        foreach (['Guardian', 'Librarian'] as $roleName) {
+            $role = Role::findByName($roleName);
+            $this->put(route('admin.roles.update', $role), [
+                'name' => 'Renamed '.$roleName,
+                'guard_name' => 'web',
+            ])->assertSessionHasErrors('name');
+
+            $this->delete(route('admin.roles.destroy', $role))
+                ->assertSessionHasErrors('role');
+        }
+
         $this->assertDatabaseHas('roles', ['name' => 'Institution Admin']);
     }
 
@@ -428,14 +439,14 @@ class Phase1RbacAndModuleTest extends TestCase
         $admin = $this->createSuperAdmin();
 
         $year1 = AcademicYear::create([
-            'name' => '2025/2026',
+            'name' => '2025-2026',
             'start_date' => '2025-01-01',
             'end_date' => '2025-12-31',
             'is_current' => true,
         ]);
 
         $response = $this->actingAs($admin)->post(route('admin.academic-years.store'), [
-            'name' => '2026/2027',
+            'name' => '2026-2027',
             'start_date' => '2026-01-01',
             'end_date' => '2026-12-31',
             'is_current' => 1,
@@ -443,7 +454,7 @@ class Phase1RbacAndModuleTest extends TestCase
         $response->assertRedirect(route('admin.academic-years.index'));
 
         $year1->refresh();
-        $year2 = AcademicYear::where('name', '2026/2027')->first();
+        $year2 = AcademicYear::where('name', '2026-2027')->first();
 
         $this->assertFalse($year1->is_current);
         $this->assertTrue($year2->is_current);

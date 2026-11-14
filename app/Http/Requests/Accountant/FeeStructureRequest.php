@@ -38,7 +38,8 @@ class FeeStructureRequest extends FormRequest
             'name' => [
                 'required',
                 'string',
-                'max:100',
+                'max:80',
+                'regex:/\A[A-Za-z][A-Za-z0-9\s\-()&]*\z/',
                 // SOP §11: a fee name is unique within its class + term (legacy scope).
                 Rule::unique('fee_structures', 'name')
                     ->where(fn ($query) => $query

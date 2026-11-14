@@ -3,15 +3,15 @@
 <div class="row g-3">
     <div class="col-md-6">
         <label class="form-label">Class name (e.g. Grade 10)</label>
-        <input type="text" name="name" class="form-control" value="{{ old('name', $isEdit ? $schoolClass->name : '') }}" required>
+        <input type="text" name="name" class="form-control" value="{{ old('name', $isEdit ? $schoolClass->name : '') }}" maxlength="50" pattern="[A-Za-z][A-Za-z0-9\s\-]*" data-live-filter="letter-start-class" required>
     </div>
     <div class="col-md-3">
         <label class="form-label">Section (e.g. A)</label>
-        <input type="text" name="section" class="form-control" value="{{ old('section', $isEdit ? $schoolClass->section : '') }}" required maxlength="5">
+        <input type="text" name="section" class="form-control" value="{{ old('section', $isEdit ? $schoolClass->section : '') }}" required maxlength="10" pattern="[A-Z0-9]+" data-live-filter="uppercase-section">
     </div>
     <div class="col-md-3">
         <label class="form-label">Capacity</label>
-        <input type="number" name="capacity" class="form-control" min="1" value="{{ old('capacity', $isEdit ? $schoolClass->capacity : 40) }}" required>
+        <input type="number" name="capacity" class="form-control" min="1" max="200" step="1" value="{{ old('capacity', $isEdit ? $schoolClass->capacity : 40) }}" required>
     </div>
     <div class="col-md-6">
         <label class="form-label">Program</label>

@@ -94,7 +94,7 @@
                 <div class="modal-body">
                     <div class="mb-3">
                         <label for="create_title" class="form-label">Notice Title <span class="text-danger">*</span></label>
-                        <input type="text" name="title" id="create_title" class="form-control" placeholder="e.g. Mid-term examination schedule release" required value="{{ old('title') }}">
+                        <input type="text" name="title" id="create_title" class="form-control" maxlength="120" pattern="[A-Za-z][A-Za-z0-9\s\x2d:\x28\x29!]*" data-live-filter="announcement-title" placeholder="e.g. Mid-term examination schedule release" required value="{{ old('title') }}">
                     </div>
                     <div class="mb-3">
                         <label for="create_role" class="form-label">Target Audience <span class="text-danger">*</span></label>

@@ -11,12 +11,39 @@ use App\Models\Student;
 use App\Models\Subject;
 use App\Models\Term;
 use App\Models\User;
+use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use PragmaRX\Google2FA\Google2FA;
 use Tests\TestCase;
 
 class Phase1AuthAndAcademicTest extends TestCase
 {
     use RefreshDatabase;
+
+    private function institutionAdmin(array $attributes): User
+    {
+        $this->artisan('db:seed', ['--class' => RolePermissionSeeder::class])->assertExitCode(0);
+
+        $user = User::create($attributes + [
+            'password' => 'password',
+            'role' => 'admin',
+            'is_active' => true,
+        ]);
+        $user->syncRoles(['Institution Admin']);
+
+        return $user;
+    }
+
+    private function completeInitialTwoFactorSetup(User $user, string $redirectRoute): void
+    {
+        $this->get(route('two-factor.setup'))->assertOk();
+
+        $code = app(Google2FA::class)->getCurrentOtp($user->fresh()->two_factor_secret);
+        $this->post(route('two-factor.setup'), ['code' => $code])
+            ->assertRedirect(route('two-factor.setup'));
+        $this->post(route('two-factor.complete'))
+            ->assertRedirect(route($redirectRoute));
+    }
 
     public function test_inactive_user_cannot_login(): void
     {
@@ -39,12 +66,9 @@ class Phase1AuthAndAcademicTest extends TestCase
 
     public function test_active_user_login_records_last_login_at(): void
     {
-        $user = User::create([
+        $user = $this->institutionAdmin([
             'name' => 'Active Admin',
             'email' => 'active@school.test',
-            'password' => 'password',
-            'role' => 'admin',
-            'is_active' => true,
         ]);
 
         $this->assertNull($user->last_login_at);
@@ -54,7 +78,12 @@ class Phase1AuthAndAcademicTest extends TestCase
             'password' => 'password',
         ]);
 
-        $response->assertRedirect(route('admin.dashboard'));
+        $response->assertRedirect(route('two-factor.setup'));
+        $this->assertGuest();
+        $this->assertSame($user->id, session('two_factor.pending_user_id'));
+        $this->assertNull($user->fresh()->last_login_at);
+
+        $this->completeInitialTwoFactorSetup($user, 'admin.dashboard');
         $this->assertAuthenticatedAs($user);
 
         $user->refresh();
@@ -63,22 +92,19 @@ class Phase1AuthAndAcademicTest extends TestCase
 
     public function test_user_with_must_change_password_is_redirected_to_password_change(): void
     {
-        $user = User::create([
+        $user = $this->institutionAdmin([
             'name' => 'Must Change Admin',
             'email' => 'mustchange@school.test',
-            'password' => 'password',
-            'role' => 'admin',
-            'is_active' => true,
             'must_change_password' => true,
         ]);
 
-        // Login attempt redirects directly to password.change
         $response = $this->post('/login', [
             'email' => 'mustchange@school.test',
             'password' => 'password',
         ]);
 
-        $response->assertRedirect(route('password.change'));
+        $response->assertRedirect(route('two-factor.setup'));
+        $this->completeInitialTwoFactorSetup($user, 'password.change');
 
         // Browsing any dashboard page redirects to password.change
         $dashResponse = $this->actingAs($user)->get(route('admin.dashboard'));
@@ -106,16 +132,13 @@ class Phase1AuthAndAcademicTest extends TestCase
 
     public function test_academic_year_is_current_invariant(): void
     {
-        $admin = User::create([
+        $admin = $this->institutionAdmin([
             'name' => 'Admin User',
             'email' => 'admin_acad@school.test',
-            'password' => 'password',
-            'role' => 'admin',
-            'is_active' => true,
         ]);
 
         $year1 = AcademicYear::create([
-            'name' => '2025/2026',
+            'name' => '2025-2026',
             'start_date' => '2025-01-01',
             'end_date' => '2025-12-31',
             'is_current' => true,
@@ -125,14 +148,14 @@ class Phase1AuthAndAcademicTest extends TestCase
 
         // Create year2 as current via HTTP
         $this->actingAs($admin)->post(route('admin.academic-years.store'), [
-            'name' => '2026/2027',
+            'name' => '2026-2027',
             'start_date' => '2026-01-01',
             'end_date' => '2026-12-31',
             'is_current' => 1,
         ]);
 
         $year1->refresh();
-        $year2 = AcademicYear::where('name', '2026/2027')->first();
+        $year2 = AcademicYear::where('name', '2026-2027')->first();
 
         $this->assertFalse($year1->is_current);
         $this->assertTrue($year2->is_current);
@@ -149,12 +172,9 @@ class Phase1AuthAndAcademicTest extends TestCase
 
     public function test_term_is_current_invariant(): void
     {
-        $admin = User::create([
+        $admin = $this->institutionAdmin([
             'name' => 'Admin User',
             'email' => 'admin_term@school.test',
-            'password' => 'password',
-            'role' => 'admin',
-            'is_active' => true,
         ]);
 
         $year = AcademicYear::create([
@@ -190,6 +210,61 @@ class Phase1AuthAndAcademicTest extends TestCase
 
         $this->assertFalse($term1->is_current);
         $this->assertTrue($term2->is_current);
+    }
+
+    public function test_academic_year_and_term_inputs_enforce_formats_and_date_order(): void
+    {
+        $admin = $this->institutionAdmin([
+            'name' => 'Validation Admin',
+            'email' => 'validation_admin@school.test',
+        ]);
+        $this->actingAs($admin);
+
+        $yearResponse = $this->post(route('admin.academic-years.store'), [
+            'name' => '2026/2027',
+            'start_date' => '2026-01-01',
+            'end_date' => '2026-01-01',
+        ]);
+        $yearResponse->assertSessionHasErrors(['name', 'end_date']);
+
+        $year = AcademicYear::create([
+            'name' => '2026-2027',
+            'start_date' => '2026-01-01',
+            'end_date' => '2026-12-31',
+            'is_current' => false,
+        ]);
+        $termResponse = $this->post(route('admin.terms.store'), [
+            'academic_year_id' => $year->id,
+            'name' => '1st Term',
+            'sequence' => 13,
+            'start_date' => '2026-01-01',
+            'end_date' => '2026-01-01',
+        ]);
+        $termResponse->assertSessionHasErrors(['name', 'sequence', 'end_date']);
+    }
+
+    public function test_class_and_subject_codes_are_normalized_and_fit_their_limits(): void
+    {
+        $admin = $this->institutionAdmin([
+            'name' => 'Academic Inputs Admin',
+            'email' => 'academic_inputs_admin@school.test',
+        ]);
+        $this->actingAs($admin);
+
+        $classResponse = $this->post(route('admin.classes.store'), [
+            'name' => 'Grade 10',
+            'section' => 'abc123',
+            'capacity' => 200,
+        ]);
+        $classResponse->assertSessionHasNoErrors();
+        $this->assertDatabaseHas('classes', ['name' => 'Grade 10', 'section' => 'ABC123', 'capacity' => 200]);
+
+        $subjectResponse = $this->post(route('admin.subjects.store'), [
+            'name' => 'Applied Science',
+            'code' => 'science-2026',
+        ]);
+        $subjectResponse->assertSessionHasNoErrors();
+        $this->assertDatabaseHas('subjects', ['name' => 'Applied Science', 'code' => 'SCIENCE-2026']);
     }
 
     public function test_schema_upgrades(): void

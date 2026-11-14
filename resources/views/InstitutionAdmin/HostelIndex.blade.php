@@ -16,8 +16,8 @@
     <div class="card-body">
         <form method="POST" action="{{ route('admin.hostels.store') }}" class="row g-2 align-items-end">
             @csrf
-            <div class="col-md-4"><label class="form-label" for="hostel-name">Name</label><input id="hostel-name" name="name" class="form-control" pattern="[a-zA-Z0-9\s'-]+" maxlength="80" required></div>
-            <div class="col-md-5"><label class="form-label" for="hostel-location">Location</label><input id="hostel-location" name="location" class="form-control" pattern="[a-zA-Z0-9\s,.-]+" maxlength="120"></div>
+            <div class="col-md-4"><label class="form-label" for="hostel-name">Name</label><input id="hostel-name" name="name" class="form-control" pattern="[a-zA-Z0-9\s\x27\x2d]+" maxlength="80" required></div>
+            <div class="col-md-5"><label class="form-label" for="hostel-location">Location</label><input id="hostel-location" name="location" class="form-control" pattern="[a-zA-Z0-9\s,.\x2d]+" maxlength="120"></div>
             <div class="col-md-3"><button class="btn btn-primary">Add Hostel</button></div>
         </form>
     </div>
@@ -34,8 +34,8 @@
                 </div>
                 <form method="POST" action="{{ route('admin.hostels.update', $hostel) }}" class="d-flex flex-wrap gap-2 align-items-start">
                     @csrf @method('PUT')
-                    <input name="name" value="{{ $hostel->name }}" class="form-control form-control-sm" aria-label="Hostel name" pattern="[a-zA-Z0-9\s'-]+" maxlength="80" required>
-                    <input name="location" value="{{ $hostel->location }}" class="form-control form-control-sm" aria-label="Hostel location" pattern="[a-zA-Z0-9\s,.-]+" maxlength="120">
+                    <input name="name" value="{{ $hostel->name }}" class="form-control form-control-sm" aria-label="Hostel name" pattern="[a-zA-Z0-9\s\x27\x2d]+" maxlength="80" required>
+                    <input name="location" value="{{ $hostel->location }}" class="form-control form-control-sm" aria-label="Hostel location" pattern="[a-zA-Z0-9\s,.\x2d]+" maxlength="120">
                     <select name="is_active" class="form-select form-select-sm" aria-label="Hostel status">
                         <option value="1" @selected($hostel->is_active)>Active</option>
                         <option value="0" @selected(! $hostel->is_active)>Inactive</option>
@@ -52,7 +52,7 @@
             @if ($hostel->is_active)
                 <form method="POST" action="{{ route('admin.hostels.rooms.store', $hostel) }}" class="row g-2 align-items-end mb-3">
                     @csrf
-                    <div class="col-md-4"><label class="form-label" for="room-number-{{ $hostel->id }}">Room number</label><input id="room-number-{{ $hostel->id }}" name="room_number" data-uppercase-filter="code" pattern="[A-Z0-9-]+" class="form-control" maxlength="15" required></div>
+                    <div class="col-md-4"><label class="form-label" for="room-number-{{ $hostel->id }}">Room number</label><input id="room-number-{{ $hostel->id }}" name="room_number" data-uppercase-filter="code" pattern="[A-Z0-9\x2d]+" class="form-control" maxlength="15" required></div>
                     <div class="col-md-3"><label class="form-label" for="room-capacity-{{ $hostel->id }}">Bed capacity</label><input id="room-capacity-{{ $hostel->id }}" name="bed_capacity" type="number" min="1" max="100" class="form-control" required></div>
                     <div class="col-md-3"><button class="btn btn-outline-primary">Add Room</button></div>
                 </form>
@@ -70,7 +70,7 @@
                             <td>
                                 <form method="POST" action="{{ route('admin.hostels.rooms.update', $room) }}" class="d-flex flex-wrap gap-2">
                                     @csrf @method('PUT')
-                                    <input name="room_number" value="{{ $room->room_number }}" data-uppercase-filter="code" pattern="[A-Z0-9-]+" class="form-control form-control-sm" aria-label="Room number" maxlength="15" required>
+                                    <input name="room_number" value="{{ $room->room_number }}" data-uppercase-filter="code" pattern="[A-Z0-9\x2d]+" class="form-control form-control-sm" aria-label="Room number" maxlength="15" required>
                                     <input name="bed_capacity" value="{{ $room->bed_capacity }}" type="number" min="1" max="100" class="form-control form-control-sm" aria-label="Bed capacity" required>
                                     <select name="is_active" class="form-select form-select-sm" aria-label="Room status">
                                         <option value="1" @selected($room->is_active)>Active</option>

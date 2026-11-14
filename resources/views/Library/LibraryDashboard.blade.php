@@ -17,12 +17,12 @@
             <div class="card-body">
                 <form method="POST" action="{{ route('library.books.store') }}" class="row g-3">
                     @csrf
-                    <div class="col-md-6"><label class="form-label" for="title">Title</label><input id="title" name="title" class="form-control" maxlength="200" required></div>
-                    <div class="col-md-6"><label class="form-label" for="author">Author</label><input id="author" name="author" class="form-control" maxlength="120" required></div>
-                    <div class="col-md-6"><label class="form-label" for="category">Category</label><input id="category" name="category" class="form-control" maxlength="80" required></div>
-                    <div class="col-md-6"><label class="form-label" for="isbn">ISBN</label><input id="isbn" name="isbn" class="form-control" maxlength="20"></div>
-                    <div class="col-md-6"><label class="form-label" for="publication_year">Publication year</label><input id="publication_year" name="publication_year" type="number" class="form-control" min="1000" max="{{ now()->year + 1 }}"></div>
-                    <div class="col-md-6"><label class="form-label" for="copies">Number of copies</label><input id="copies" name="copies" type="number" class="form-control" min="1" max="100" value="1" required></div>
+                    <div class="col-md-6"><label class="form-label" for="title">Title</label><input id="title" name="title" class="form-control" maxlength="120" pattern="[A-Za-z][A-Za-z0-9\s:\x28\x29\x27\x26\x2d]*" data-live-filter="letter-start-book" required></div>
+                    <div class="col-md-6"><label class="form-label" for="author">Author</label><input id="author" name="author" class="form-control" maxlength="80" pattern="[A-Za-z\s.\x27\x2d]+" data-live-filter="author-name" required></div>
+                    <div class="col-md-6"><label class="form-label" for="category">Category</label><input id="category" name="category" class="form-control" maxlength="120" pattern="[A-Za-z][A-Za-z0-9\s:\x28\x29\x27\x26\x2d]*" data-live-filter="letter-start-book" required></div>
+                    <div class="col-md-6"><label class="form-label" for="isbn">ISBN</label><input id="isbn" name="isbn" class="form-control" minlength="10" maxlength="17" pattern="[0-9X\x2d]+" data-live-filter="isbn"></div>
+                    <div class="col-md-6"><label class="form-label" for="publication_year">Publication year</label><input id="publication_year" name="publication_year" type="number" class="form-control" min="1800" max="2026" step="1"></div>
+                    <div class="col-md-6"><label class="form-label" for="copies">Number of copies</label><input id="copies" name="copies" type="number" class="form-control" min="1" max="500" step="1" value="1" required></div>
                     <div class="col-12"><button class="btn btn-primary">Add to catalogue</button></div>
                 </form>
             </div>
@@ -115,13 +115,13 @@
     <div class="card-header bg-transparent"><strong>Unpaid overdue fines</strong><span class="text-muted small ms-2">Daily fine: {{ \App\Support\Money::format($dailyFine) }}</span></div>
     <div class="table-responsive">
         <table class="table table-hover mb-0 align-middle">
-            <thead class="table-light"><tr><th>Student</th><th>Book</th><th>Overdue</th><th>Amount</th><th>Action</th></tr></thead>
+            <thead class="table-light"><tr><th>Student</th><th>Book</th><th>Overdue</th><th>Amount</th><th class="text-start text-nowrap">Actions</th></tr></thead>
             <tbody>
             @forelse ($fines as $fine)
                 <tr>
                     <td>{{ $fine->loan->student->user->name }}</td><td>{{ $fine->loan->copy->book->title }}</td>
                     <td>{{ $fine->reason }}</td><td>{{ \App\Support\Money::format($fine->amount) }}</td>
-                    <td><form method="POST" action="{{ route('library.fines.pay', $fine) }}" onsubmit="return confirm('Record this fine as paid?')">@csrf<button class="btn btn-sm btn-outline-primary">Record payment</button></form></td>
+                    <td class="text-start text-nowrap"><form method="POST" action="{{ route('library.fines.pay', $fine) }}" onsubmit="return confirm('Record this fine as paid?')">@csrf<button class="btn btn-sm btn-outline-primary">Record payment</button></form></td>
                 </tr>
             @empty
                 <tr><td colspan="5" class="text-center text-muted py-4">No unpaid library fines.</td></tr>

@@ -48,6 +48,24 @@
 
     // ---- mobile sidebar ----
     var sb = document.getElementById('sidebar'), bd = document.getElementById('sbBackdrop');
+    var navScroll = sb && sb.querySelector('.nav-scroll');
+    var sidebarScrollKey = 'igk-sidebar-scroll';
+    function saveSidebarScroll() {
+        if (!navScroll) return;
+        try { window.sessionStorage.setItem(sidebarScrollKey, String(navScroll.scrollTop)); } catch (e) {}
+    }
+    if (navScroll) {
+        try {
+            var savedSidebarScroll = Number(window.sessionStorage.getItem(sidebarScrollKey));
+            if (Number.isFinite(savedSidebarScroll) && savedSidebarScroll >= 0) {
+                navScroll.scrollTop = savedSidebarScroll;
+            }
+        } catch (e) {}
+        navScroll.addEventListener('scroll', saveSidebarScroll);
+        sb.querySelectorAll('.nav-glass').forEach(function (link) {
+            link.addEventListener('click', saveSidebarScroll);
+        });
+    }
     function toggle(open) {
         if (!sb) return;
         sb.classList.toggle('open', open);
@@ -396,8 +414,7 @@
     });
 
     function enhanceSearchableSelect(select) {
-        if (select.multiple || select.closest('[data-international-country], [data-international-phone], [data-nationality-picker], [data-guardian-selector]')) return;
-        if (!select.matches('[data-searchable-select]') && select.options.length < 16) return;
+        if (select.closest('[data-international-country], [data-international-phone], [data-nationality-picker], [data-guardian-selector]')) return;
         if (select.dataset.searchableEnhanced) return;
 
         select.dataset.searchableEnhanced = 'true';
@@ -414,6 +431,7 @@
         var menu = document.createElement('div');
         menu.className = 'dropdown-menu searchable-select-menu';
         menu.setAttribute('role', 'listbox');
+        if (select.multiple) menu.setAttribute('aria-multiselectable', 'true');
         var searchWrap = document.createElement('div');
         searchWrap.className = 'p-2';
         var search = document.createElement('input');
@@ -448,10 +466,16 @@
                 item.setAttribute('role', 'option');
                 item.setAttribute('aria-selected', option.selected ? 'true' : 'false');
                 item.addEventListener('click', function () {
-                    select.value = option.value;
+                    if (select.multiple) {
+                        option.selected = !option.selected;
+                    } else {
+                        select.value = option.value;
+                    }
                     select.dispatchEvent(new Event('change', { bubbles: true }));
                     syncSelection();
-                    window.bootstrap.Dropdown.getOrCreateInstance(button).hide();
+                    if (!select.multiple && window.bootstrap && window.bootstrap.Dropdown) {
+                        window.bootstrap.Dropdown.getOrCreateInstance(button).hide();
+                    }
                 });
                 optionsWrap.appendChild(item);
             });
@@ -459,11 +483,17 @@
 
         function syncSelection() {
             var selected = select.options[select.selectedIndex];
-            button.textContent = selected ? selected.textContent.trim() : 'Select an option';
+            var selectedOptions = Array.from(select.selectedOptions);
+            button.textContent = select.multiple
+                ? (selectedOptions.length ? selectedOptions.map(function (option) { return option.textContent.trim(); }).join(', ') : 'Select options')
+                : (selected ? selected.textContent.trim() : 'Select an option');
             button.disabled = select.disabled;
             button.classList.toggle('is-invalid', select.classList.contains('is-invalid'));
             optionsWrap.querySelectorAll('[role="option"]').forEach(function (item) {
-                item.setAttribute('aria-selected', item.dataset.value === select.value ? 'true' : 'false');
+                var isSelected = select.multiple
+                    ? selectedOptions.some(function (option) { return option.value === item.dataset.value; })
+                    : item.dataset.value === select.value;
+                item.setAttribute('aria-selected', isSelected ? 'true' : 'false');
             });
             select.setCustomValidity('');
         }
@@ -494,11 +524,24 @@
             search.dispatchEvent(new Event('input'));
             search.focus();
         });
+        button.addEventListener('show.bs.dropdown', function () {
+            renderOptions();
+            syncSelection();
+        });
         renderOptions();
         syncSelection();
     }
 
-    document.querySelectorAll('select.form-select').forEach(enhanceSearchableSelect);
+    document.querySelectorAll('select').forEach(enhanceSearchableSelect);
+    new MutationObserver(function (records) {
+        records.forEach(function (record) {
+            record.addedNodes.forEach(function (node) {
+                if (node.nodeType !== 1) return;
+                if (node.matches('select')) enhanceSearchableSelect(node);
+                node.querySelectorAll('select').forEach(enhanceSearchableSelect);
+            });
+        });
+    }).observe(document.body, { childList: true, subtree: true });
     var importEntitySelect = document.querySelector('[data-import-entity]');
     var importTemplateLink = document.querySelector('[data-import-template-link]');
     if (importEntitySelect && importTemplateLink) {
@@ -522,6 +565,87 @@
                 input.setSelectionRange(Math.min(cursor, value.length), Math.min(cursor, value.length));
             }
         });
+    });
+    document.querySelectorAll('[data-live-filter]').forEach(function (input) {
+        input.addEventListener('input', function () {
+            var value = input.value;
+            var filter = input.dataset.liveFilter;
+            var patterns = {
+                'letter-start-name': /[^A-Za-z0-9\s()\-]/g,
+                'letter-start-book': /[^A-Za-z0-9\s\-:()'&]/g,
+                'letter-start-fee': /[^A-Za-z0-9\s\-()&]/g,
+                'letter-start-account': /[^A-Za-z0-9\s\-()&]/g,
+                'role-name': /[^A-Za-z0-9\s_-]/g,
+                'announcement-title': /[^A-Za-z0-9\s\-:()!]/g,
+                'cashflow-description': /[^A-Za-z0-9\s.&'():!-]/g,
+                'branch-place': /[^A-Za-z0-9\s-]/g,
+                'branch-principal': /[^A-Za-z\s.'-]/g,
+                'letter-start-class': /[^A-Za-z0-9\s-]/g,
+                'letter-start-term': /[^A-Za-z0-9\s-]/g,
+                'author-name': /[^A-Za-z\s.'-]/g,
+                'letters-spaces-hyphens': /[^A-Za-z\s-]/g,
+                'uppercase-code': /[^A-Z0-9-]/g,
+                'uppercase-payment-reference': /[^A-Z0-9\-\/]/g,
+                'uppercase-cashflow-reference': /[^A-Z0-9\/-]/g,
+                'uppercase-section': /[^A-Z0-9]/g,
+                'uppercase-subject-code': /[^A-Z0-9-]/g,
+                isbn: /[^0-9X-]/g,
+                'academic-year': /[^0-9-]/g,
+                description: /[^A-Za-z0-9\s.,!?'"()\-:/]/g,
+                'account-description': /[=|;\\]/g,
+                'procurement-notes': /[\u0000-\u0008\u000B\u000C\u000E-\u001F=\[\]]/g,
+                'journal-text': /[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g
+            };
+            var allowed = patterns[filter];
+            if (!allowed) return;
+            var cursor = input.selectionStart;
+            if (filter === 'uppercase-code' || filter === 'uppercase-payment-reference'
+                || filter === 'uppercase-cashflow-reference' || filter === 'uppercase-section'
+                || filter === 'uppercase-subject-code' || filter === 'isbn') {
+                value = value.toUpperCase();
+            }
+            value = value.replace(allowed, '');
+            if (filter.indexOf('letter-start-') === 0
+                || ['role-name', 'announcement-title', 'cashflow-description', 'branch-place'].indexOf(filter) !== -1
+                || filter === 'uppercase-subject-code') {
+                value = value.replace(/^[^A-Za-z]+/, '');
+            }
+            if (value !== input.value) {
+                input.value = value;
+                input.setSelectionRange(Math.min(cursor, value.length), Math.min(cursor, value.length));
+            }
+            if (filter === 'journal-text') {
+                input.setCustomValidity(value !== '' && !/[A-Za-z]/.test(value)
+                    ? 'Enter text containing at least one letter.'
+                    : '');
+            }
+        });
+    });
+    document.querySelectorAll('[data-contains-letters]').forEach(function (input) {
+        function validateLetters() {
+            input.setCustomValidity(input.value !== '' && !/[A-Za-z]/.test(input.value)
+                ? 'Enter text containing at least one letter.'
+                : '');
+        }
+        input.addEventListener('input', validateLetters);
+        validateLetters();
+    });
+    document.querySelectorAll('[data-date-after]').forEach(function (endDate) {
+        var startDate = document.getElementById(endDate.dataset.dateAfter);
+        if (!startDate) return;
+        var updateMinimum = function () {
+            endDate.min = startDate.value;
+            if (endDate.value && startDate.value && endDate.value <= startDate.value) {
+                endDate.setCustomValidity('End date must be after start date.');
+            } else {
+                endDate.setCustomValidity('');
+            }
+        };
+        startDate.addEventListener('input', updateMinimum);
+        startDate.addEventListener('change', updateMinimum);
+        endDate.addEventListener('input', updateMinimum);
+        endDate.addEventListener('change', updateMinimum);
+        updateMinimum();
     });
     document.querySelectorAll('[data-person-name]').forEach(function (input) {
         input.minLength = 2;

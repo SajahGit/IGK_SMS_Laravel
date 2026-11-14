@@ -41,21 +41,35 @@ class ResultReportController extends Controller
     {
         abort_unless($request->user()->isAdmin() || $request->user()->can('reports.academic'), 403);
         $classes = SchoolHelper::allowedClasses($request->user());
+        $pdfLimit = $request->attributes->get('pdf_export_limit');
 
-        $exams = Exam::with(['class.program.gradeScale.items', 'subject'])
-            ->whereIn('class_id', $classes->pluck('id'))
-            ->orderByDesc('exam_date')
-            ->get();
+        $examQuery = Exam::query()
+            ->select(['id', 'name', 'class_id', 'subject_id', 'exam_date', 'max_marks'])
+            ->with([
+                'class:id,name,section,program_id',
+                'class.program.gradeScale.items',
+                'subject:id,name',
+            ])
+            ->whereIn('class_id', $classes->pluck('id'));
+        $exams = is_int($pdfLimit)
+            ? collect()
+            : (clone $examQuery)->orderByDesc('exam_date')->get();
 
         $exam = null;
         $rows = collect();
         $stats = null;
 
         if ($examId = $request->query('exam_id')) {
-            $exam = $exams->firstWhere('id', (int) $examId);
+            $exam = $exams->firstWhere('id', (int) $examId) ?? $examQuery->find((int) $examId);
             abort_unless($exam, 403, 'You cannot view this exam.');
 
-            $results = Result::with('student.user')->where('exam_id', $exam->id)->orderByDesc('marks')->get();
+            $results = Result::query()
+                ->select(['id', 'exam_id', 'student_id', 'marks', 'is_absent'])
+                ->with(['student:id,user_id,admission_no', 'student.user:id,name'])
+                ->where('exam_id', $exam->id)
+                ->orderByDesc('marks')
+                ->when(is_int($pdfLimit), fn ($query) => $query->limit($pdfLimit))
+                ->get();
 
             $rank = 0;
             $previous = null;

@@ -1,6 +1,6 @@
 ﻿# IGK SCHOOL COMPLETE ERP - FINAL READ-ONLY PROJECT AUDIT AND IMPLEMENTATION READINESS VERIFICATION
 
-> Historical snapshot; superseded by [IGK_ERP_FINAL_SOP_COMPLIANCE_AUDIT.md](../IGK_ERP_FINAL_SOP_COMPLIANCE_AUDIT.md). Do not use this report as evidence of current full SOP compliance or production readiness.
+> Historical snapshot; do not use this report as evidence of current full SOP compliance or production readiness. See [docs/known-issues.md](../../docs/known-issues.md) for maintained project gaps.
 
 **Audit Date:** 2026-11-02  
 **Project Path:** E:\Laravel-Projects\Architectured Final S  

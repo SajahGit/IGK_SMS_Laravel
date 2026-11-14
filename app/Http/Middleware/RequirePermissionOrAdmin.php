@@ -14,7 +14,7 @@ class RequirePermissionOrAdmin
         $requiredPermissions = explode('|', $permissions);
 
         abort_unless(
-            $user && ($user->isAdmin() || collect($requiredPermissions)->contains(fn ($permission) => $user->can($permission))),
+            $user && ($user->isSuperAdmin() || collect($requiredPermissions)->contains(fn ($permission) => $user->can($permission))),
             403
         );
 

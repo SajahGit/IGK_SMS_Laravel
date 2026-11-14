@@ -5,7 +5,6 @@ namespace App\Http\Controllers\InstitutionAdmin;
 use App\Http\Controllers\Controller;
 use App\Models\Branch;
 use App\Rules\ValidInternationalPhone;
-use App\Rules\ValidPersonName;
 use App\Support\AuditLogger;
 use App\Support\InternationalPhoneNumber;
 use Illuminate\Http\RedirectResponse;
@@ -27,7 +26,7 @@ class BranchController extends Controller
         abort_unless($request->user()->isSuperAdmin() || $request->user()->isInstitutionAdmin(), 403);
 
         if ($request->input('branch_id') === 'all') {
-            abort_unless($request->user()->isSuperAdmin(), 403);
+            abort_unless($request->user()->isSuperAdmin() || $request->user()->isInstitutionAdmin(), 403);
             $request->session()->put('active_branch_id', 'all');
             $request->session()->put('branch_context_initialized', true);
 
@@ -89,14 +88,15 @@ class BranchController extends Controller
     private function validated(Request $request, ?Branch $branch = null): array
     {
         InternationalPhoneNumber::normalizeRequest($request);
+        $request->merge(['code' => strtoupper((string) $request->input('code'))]);
         $data = $request->validate([
-            'code' => ['required', 'string', 'max:20', Rule::unique('branches', 'code')->ignore($branch?->id)],
-            'name' => ['required', 'string', 'max:120'],
+            'code' => ['required', 'string', 'max:20', 'regex:/\A[A-Z0-9-]+\z/', Rule::unique('branches', 'code')->ignore($branch?->id)],
+            'name' => ['required', 'string', 'max:120', 'regex:/\A[A-Za-z][A-Za-z0-9\s-]*\z/'],
             'address' => ['nullable', 'string', 'max:255'],
-            'city' => ['nullable', 'string', 'max:80'],
+            'city' => ['nullable', 'string', 'max:80', 'regex:/\A[A-Za-z][A-Za-z0-9\s-]*\z/'],
             'phone' => ['nullable', 'string', 'max:16', Rule::unique('branches', 'phone')->ignore($branch?->id), new ValidInternationalPhone($request->input('phone_region'))],
-            'email' => ['nullable', 'email', 'max:120', Rule::unique('branches', 'email')->ignore($branch?->id)],
-            'principal_name' => ['nullable', 'string', 'max:120', new ValidPersonName],
+            'email' => ['nullable', 'email:rfc', 'max:120', Rule::unique('branches', 'email')->ignore($branch?->id)],
+            'principal_name' => ['nullable', 'string', 'max:120', 'regex:/\A[A-Za-z\s.\'-]+\z/'],
         ]);
         $data['is_main'] = $request->boolean('is_main');
         $data['is_active'] = $request->boolean('is_active');

@@ -96,13 +96,13 @@
             <thead class="table-light">
                 <tr>
                     <th>Receipt No</th>
-                    <th>Date</th>
-                    <th>Term</th>
+                    <th class="print-nowrap">Date</th>
+                    <th class="print-nowrap">Term</th>
                     <th>Program</th>
-                    <th>Invoice No</th>
+                    <th class="print-nowrap">Invoice No</th>
                     <th>Student Details</th>
-                    <th>Class</th>
-                    <th>Amount (invoice currency)</th>
+                    <th class="print-nowrap">Class</th>
+                    <th class="print-nowrap">Amount (invoice currency)</th>
                     <th>Method</th>
                     <th>Reference</th>
                     <th>Cashier</th>
@@ -117,16 +117,16 @@
                                 <code>{{ $p->receipt_no }}</code>
                             </a>
                         </td>
-                        <td>{{ $p->paid_at->format('d M Y') }}</td>
-                        <td>{{ $p->invoice->term?->name ?? '—' }}</td>
+                        <td class="print-nowrap">{{ $p->paid_at->format('d M Y') }}</td>
+                        <td class="print-nowrap">{{ $p->invoice->term?->name ?? '—' }}</td>
                         <td>{{ $p->invoice->student->program?->name ?? $p->invoice->student->class?->program?->name ?? '—' }}</td>
-                        <td><code>{{ $p->invoice->invoice_no }}</code></td>
+                        <td class="print-nowrap"><code>{{ $p->invoice->invoice_no }}</code></td>
                         <td>
                             <div class="fw-semibold">{{ $p->invoice->student->user->name }}</div>
                             <small class="text-muted">Adm: {{ $p->invoice->student->admission_no }}</small>
                         </td>
-                        <td>{{ $p->invoice->student->class?->full_name ?? '—' }}</td>
-                        <td class="fw-bold text-success">{{ \App\Support\Money::format($p->amount, $p->currency.' ') }}</td>
+                        <td class="print-nowrap">{{ $p->invoice->student->class?->full_name ?? '—' }}</td>
+                        <td class="print-nowrap fw-bold text-success">{{ \App\Support\Money::format($p->amount, $p->currency.' ') }}</td>
                         <td>{{ ucwords(str_replace('_', ' ', $p->method)) }}</td>
                         <td>{{ $p->reference ?: '—' }}</td>
                         <td>{{ $p->receiver?->name ?: 'System' }}</td>

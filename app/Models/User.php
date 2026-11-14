@@ -89,6 +89,11 @@ class User extends Authenticatable
                 || in_array(strtolower($this->role), ['admin', 'institution admin'], true));
     }
 
+    public function requiresTwoFactor(): bool
+    {
+        return $this->isSuperAdmin() || $this->isInstitutionAdmin();
+    }
+
     public function isTeacher(): bool
     {
         return strtolower($this->role) === 'teacher';

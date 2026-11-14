@@ -17,7 +17,11 @@ class ClassResultSummaryReportController extends Controller
 {
     public function index(Request $request)
     {
-        [$classes, $terms, $programs, $classId, $termId, $programId, $subjects, $rows, $stats] = $this->data($request);
+        $pdfLimit = $request->attributes->get('pdf_export_limit');
+        [$classes, $terms, $programs, $classId, $termId, $programId, $subjects, $rows, $stats] = $this->data(
+            $request,
+            is_int($pdfLimit) ? $pdfLimit : null
+        );
 
         return view('Reports.ReportClassResultSummary', compact(
             'classes', 'terms', 'programs', 'classId', 'termId', 'programId', 'subjects', 'rows', 'stats'
@@ -43,7 +47,7 @@ class ClassResultSummaryReportController extends Controller
         }, "class-result-term-{$termId}.csv", ['Content-Type' => 'text/csv']);
     }
 
-    private function data(Request $request): array
+    private function data(Request $request, ?int $pdfLimit = null): array
     {
         abort_unless($request->user()->isAdmin() || $request->user()->can('reports.academic'), 403);
         $validated = $request->validate([
@@ -69,14 +73,26 @@ class ClassResultSummaryReportController extends Controller
         $subjects = collect();
 
         if ($termId) {
-            $offerings = ClassSubject::with('subject')
+            $offerings = ClassSubject::query()
+                ->select(['id', 'class_id', 'subject_id', 'term_id'])
+                ->with('subject:id,name,code')
                 ->whereIn('class_id', $classes->pluck('id'))
                 ->where(fn ($query) => $query->where('term_id', $termId)->orWhereNull('term_id'))
                 ->get();
             $subjects = $offerings->pluck('subject')->filter()->unique('id')->sortBy('name')->values();
+            $students = Student::query()
+                ->select(['id', 'user_id', 'class_id', 'admission_no'])
+                ->with(['user:id,name', 'class:id,name,section'])
+                ->whereIn('class_id', $classes->pluck('id'))
+                ->where('status', 'active')
+                ->orderBy('admission_no')
+                ->when($pdfLimit !== null, fn ($query) => $query->limit($pdfLimit))
+                ->get();
             $allSubjectResults = SubjectResult::query()
+                ->select(['id', 'class_id', 'term_id', 'student_id', 'subject_id', 'percentage', 'grade', 'result_status'])
                 ->whereIn('class_id', $classes->pluck('id'))
                 ->where('term_id', $termId)
+                ->whereIn('student_id', $students->pluck('id'))
                 ->whereIn('student_id', TermResult::query()
                     ->select('student_id')
                     ->where('term_id', $termId)
@@ -85,16 +101,13 @@ class ClassResultSummaryReportController extends Controller
                 ->get()
                 ->groupBy(fn ($result) => $result->student_id);
             $publishedResults = TermResult::query()
+                ->select(['id', 'class_id', 'term_id', 'student_id', 'gpa', 'result_status'])
                 ->whereIn('class_id', $classes->pluck('id'))
                 ->where('term_id', $termId)
                 ->where('publication_status', 'published')
+                ->whereIn('student_id', $students->pluck('id'))
                 ->get()
                 ->keyBy('student_id');
-            $students = Student::with(['user', 'class'])
-                ->whereIn('class_id', $classes->pluck('id'))
-                ->where('status', 'active')
-                ->orderBy('admission_no')
-                ->get();
 
             $rows = $students->map(function ($student) use ($allSubjectResults, $publishedResults, $subjects) {
                 $storedSubjects = $allSubjectResults->get($student->id, collect())->keyBy('subject_id');

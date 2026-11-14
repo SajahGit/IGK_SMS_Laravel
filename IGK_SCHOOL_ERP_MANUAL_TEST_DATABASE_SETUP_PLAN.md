@@ -1,77 +1,73 @@
-﻿# IGK SCHOOL ERP - MANUAL TEST DATABASE SETUP PLAN
+# IGK School ERP — Manual Test Database Setup Plan
 
-**Generated:** 2026-11-02  
-**Project Path:** E:\Laravel-Projects\Architectured Final S  
-**Target Test DB:** archi_manual_test (separate MySQL schema - created)  
-**Production/Dev DB:** archi (MUST remain untouched)  
+**Updated:** 2026-11-14
+**Target:** `school_management_system_testing_db` on each developer's own local MySQL instance
+**Current workspace DB at verification:** `school_management_new` — existing database; do not overwrite or drop as part of this setup.
 
-## 1. MIGRATION FILES (24 total) - Execution Order
-1. 0001_01_01_000000_create_users_table.php
-2. 0001_01_01_000001_create_cache_table.php
-3. 0001_01_01_000002_create_jobs_table.php
-4. 2026_01_01_000001_add_role_to_users_table.php
-5. 2026_01_01_000002_create_classes_table.php
-6. 2026_01_01_000003_create_subjects_table.php
-7. 2026_01_01_000004_create_teachers_table.php
-8. 2026_01_01_000005_create_guardians_table.php
-9. 2026_01_01_000006_create_students_table.php
-10. 2026_01_01_000007_create_class_subject_table.php
-11. 2026_01_01_000008_create_attendance_table.php
-12. 2026_01_01_000009_create_exams_table.php
-13. 2026_01_01_000010_create_results_table.php
-14. 2026_01_01_000011_upgrade_core_tables_for_sop.php
-15. 2026_01_01_000012_create_student_documents_table.php
-16. 2026_01_01_000013_create_timetable_slots_table.php
-17. 2026_01_01_000014_create_finance_tables.php
-18. 2026_01_01_000015_create_announcements_table.php
-19. 2026_01_01_000016_create_audit_logs_table.php
-20. 2026_01_01_000017_create_rbac_tables.php (spatie)
-21. 2026_01_01_000018_create_departments_table.php
-22. 2026_01_01_000019_create_programs_table.php
-23. 2026_01_01_000020_create_curricula_table.php
-24. 2026_01_01_000021_create_settings_table.php
+## Goal and isolation
 
-## 2. SEEDERS
-| Seeder | Responsibility |
-|---|---|
-| RolePermissionSeeder | Creates 6 roles, permissions, assigns per SOP matrix |
-| SuperAdminSeeder | Creates superadmin@school.test with Super Admin role |
-| SettingSeeder | Settings |
-| GradeScaleSeeder | Grade scales |
-| DatabaseSeeder | Orchestrates RolePermissionSeeder; creates academic year/term, System Admin, classes/subjects/teachers, demo students/guardians, timetable/attendance/exams/results, finance data via PaymentService, announcements, syncs roles |
+Create the same synthetic demo starting data for each teammate by running the same committed migrations and seeders against their **own local MySQL server**. A matching schema name on separate laptops does not share data. Do not have the team connect to one shared server/schema unless an explicitly managed shared environment is intended.
 
-## 3. WHAT IS CREATED
-- 6 MVP roles + permissions (Spatie)
-- Users (System Admin admin@school.test, Super Admin superadmin@school.test per seeders)
-- Academic year/term (2026/Term 1)
-- Classes/sections, departments/programs/subjects/curriculum structure as seeded
-- Teachers, students, guardians (demo data)
-- Timetable, attendance, exams/results, fee structures/invoices/payments, announcements
+Automated tests use in-memory SQLite from `phpunit.xml`; the manual app demo uses the MySQL schema selected in `.env`.
 
-## 4. SAFETY NOTES
-- No truncation/deletion logic obvious in inspected seeders, but still dangerous if run against wrong DB
-- Foreign keys require migrations in order
-- Do NOT run migrate:fresh/migrate:refresh/db:wipe
+## Setup steps
 
-## 5. EXACT COMMANDS (archi_manual_test ONLY)
-`powershell
-# Create DB (done via MySQL)
-# Temporarily point
-="archi_manual_test"; php artisan config:clear
-# Verify
-php artisan config:show database | Select-String -Pattern "database"
-# Migrate (only if needed)
-="archi_manual_test"; php artisan config:clear; php artisan migrate --force
-# Seed (only if needed)
-="archi_manual_test"; php artisan config:clear; php artisan db:seed
-# Restore
-Remove-Item Env:DB_DATABASE -ErrorAction SilentlyContinue; php artisan config:clear
-`
-Never modify .env. Never touch archi.
+1. Make a private `.env` for this checkout using `.env.example`:
 
-## 6. RISKS & MITIGATIONS
-- Wrong DB: always verify with config:show
-- Accidental migration/seeding of archi: never run without override and confirmation
-- Tests isolated (SQLite in-memory)
+   ```powershell
+   Copy-Item .env.example .env
+   php artisan key:generate
+   ```
 
-**Plan Created:** Read-only inspection complete. No changes made to system.
+   If `.env` already exists, back it up before editing and never distribute it.
+
+2. Set the local connection in `.env` (fill in your own MySQL account):
+
+   ```dotenv
+   APP_ENV=local
+   DB_CONNECTION=mysql
+   DB_HOST=127.0.0.1
+   DB_PORT=3306
+   DB_DATABASE=school_management_system_testing_db
+   DB_USERNAME=<your-local-mysql-user>
+   DB_PASSWORD=<your-local-mysql-password>
+   ```
+
+3. In phpMyAdmin connected to your own local MySQL, create the empty schema:
+
+   ```sql
+   CREATE DATABASE school_management_system_testing_db
+     CHARACTER SET utf8mb4
+     COLLATE utf8mb4_unicode_ci;
+   ```
+
+4. Verify Laravel's target before any schema/data command:
+
+   ```powershell
+   php artisan config:clear
+   php artisan config:show database.default
+   php artisan config:show database.connections.mysql.database
+   ```
+
+   Continue only if the connection is `mysql` and database is `school_management_system_testing_db`.
+
+5. Apply current migrations and local demo seeders:
+
+   ```powershell
+   php artisan migrate --seed
+   php artisan storage:link
+   ```
+
+6. Verify using `php artisan migrate:status`, phpMyAdmin table view, and the documented local login/QA steps in `sample dataset.md`.
+
+## Expected data flow
+
+`DatabaseSeeder` dispatches `ProductionSeeder` only in production; local/testing runs `FullSampleDataSeeder`. The full local chain creates synthetic roles, accounts, academic records, students/staff, fees/invoices/payments, and other demo module data. Production seeding is not a demo-data command.
+
+`migrate --seed` writes only to the DB selected by the current `.env`. It does not import records from `school_management_new` or synchronize user-created changes across team members.
+
+## Destructive command warning
+
+`php artisan migrate:fresh --seed` deletes every table and row in the selected database before recreating and seeding it. Only use it after checking the exact database name and confirming that the DB is your disposable local test schema. Never run it against `school_management_new`, any shared database, or production. The team has not run or authorized a cleanup of the existing databases.
+
+For the detailed current DB snapshot and phpMyAdmin-safe cleanup guidance, see `README-SETUP.md`.

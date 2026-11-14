@@ -25,7 +25,7 @@ class ProductionSeederTest extends TestCase
         // "are you sure?" confirmation, which cannot be answered inside a test.
         (new ProductionSeeder)->setContainer($this->app)->run();
 
-        $this->assertSame(7, Role::count());
+        $this->assertSame(8, Role::count());
         $this->assertSame(Permission::query()->distinct('name')->count('name'), Permission::count());
         $this->assertSame(1, User::role('Super Admin')->count());
         $this->assertTrue(User::role('Super Admin')->firstOrFail()->must_change_password);

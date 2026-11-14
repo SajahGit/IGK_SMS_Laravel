@@ -80,9 +80,12 @@ class RoleController extends Controller
     {
         $this->authorize('delete', $role);
 
-        if (in_array($role->name, ['Super Admin', 'Institution Admin', 'Registrar', 'Teacher', 'Accountant', 'Student'], true)) {
+        if (in_array($role->name, [
+            'Super Admin', 'Institution Admin', 'Registrar', 'Teacher',
+            'Accountant', 'Student', 'Guardian', 'Librarian',
+        ], true)) {
             throw ValidationException::withMessages([
-                'role' => 'The six built-in SOP roles cannot be deleted.',
+                'role' => 'Built-in system roles cannot be deleted.',
             ]);
         }
 

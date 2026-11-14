@@ -8,12 +8,21 @@ use App\Models\Program;
 use App\Models\Student;
 use App\Support\SchoolHelper;
 use Illuminate\Http\Request;
+use Illuminate\View\View;
 
 class StudentReportController extends Controller
 {
     public function index(Request $request)
     {
         [$classes, $students, $filters, $programs, $academicYears] = $this->data($request);
+
+        return view('Reports.ReportStudents', compact('classes', 'students', 'filters', 'programs', 'academicYears'));
+    }
+
+    public function pdf(Request $request): View
+    {
+        $limit = (int) $request->attributes->get('pdf_export_limit', 500);
+        [$classes, $students, $filters, $programs, $academicYears] = $this->data($request, $limit);
 
         return view('Reports.ReportStudents', compact('classes', 'students', 'filters', 'programs', 'academicYears'));
     }
@@ -43,7 +52,7 @@ class StudentReportController extends Controller
         }, 'student-report.csv', ['Content-Type' => 'text/csv']);
     }
 
-    private function data(Request $request): array
+    private function data(Request $request, ?int $limit = null): array
     {
         abort_unless($request->user()->isAdmin() || $request->user()->can('reports.academic'), 403);
         $filters = $request->validate([
@@ -60,7 +69,15 @@ class StudentReportController extends Controller
             abort_unless($classes->contains('id', (int) $classId), 403, 'You cannot view this class.');
         }
 
-        $students = Student::with(['user', 'class.program', 'program', 'primaryGuardian'])
+        $studentQuery = Student::query()
+            ->select(['id', 'user_id', 'class_id', 'program_id', 'admission_no', 'status', 'admission_date', 'gender'])
+            ->with([
+                'user:id,name',
+                'class:id,name,section,program_id',
+                'class.program:id,name',
+                'program:id,name',
+                'primaryGuardian:id,phone',
+            ])
             ->whereIn('class_id', $classId ? [(int) $classId] : $classes->pluck('id'))
             ->when(isset($filters['program_id']), fn ($query) => $query->where(function ($programs) use ($filters) {
                 $programs->where('program_id', $filters['program_id'])
@@ -71,10 +88,15 @@ class StudentReportController extends Controller
                     ->orWhereHas('class', fn ($classes) => $classes->where('academic_year_id', $filters['academic_year_id']));
             }))
             ->when(isset($filters['status']), fn ($query) => $query->where('status', $filters['status']))
-            ->when(isset($filters['gender']), fn ($query) => $query->where('gender', $filters['gender']))
-            ->orderBy('class_id')->orderBy('admission_no')
+            ->when(isset($filters['gender']), fn ($query) => $query->where('gender', $filters['gender']));
+
+        $totalCount = $limit === null ? null : (clone $studentQuery)->count('students.id');
+        $students = $studentQuery
+            ->orderBy('class_id')
+            ->orderBy('admission_no')
+            ->when($limit !== null, fn ($query) => $query->limit($limit))
             ->get();
 
-        return [$classes, $students, $filters, Program::orderBy('name')->get(), AcademicYear::orderByDesc('start_date')->get()];
+        return [$classes, $students, $filters, Program::orderBy('name')->get(), AcademicYear::orderByDesc('start_date')->get(), $totalCount];
     }
 }

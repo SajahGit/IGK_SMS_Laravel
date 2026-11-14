@@ -27,10 +27,15 @@ class SchoolClassController extends Controller
 
     public function store(Request $request)
     {
+        $section = $request->input('section');
+        if (is_string($section)) {
+            $request->merge(['section' => strtoupper($section)]);
+        }
+
         $data = $request->validate([
-            'name' => 'required|string|max:50',
-            'section' => ['required', 'string', 'max:5', Rule::unique('classes')->where('name', $request->name)],
-            'capacity' => ['required', 'integer', 'min:1'],
+            'name' => ['required', 'string', 'max:50', 'regex:/\A[A-Za-z][A-Za-z0-9\s-]*\z/'],
+            'section' => ['required', 'string', 'max:10', 'regex:/\A[A-Z0-9]+\z/', Rule::unique('classes')->where('name', $request->name)],
+            'capacity' => ['required', 'integer', 'min:1', 'max:200'],
             'program_id' => ['nullable', 'exists:programs,id'],
             'academic_year_id' => ['nullable', 'exists:academic_years,id'],
             'branch_id' => ['nullable', Rule::requiredIf(Branch::where('is_active', true)->exists()), 'exists:branches,id'],
@@ -49,11 +54,16 @@ class SchoolClassController extends Controller
 
     public function update(Request $request, SchoolClass $schoolClass)
     {
+        $section = $request->input('section');
+        if (is_string($section)) {
+            $request->merge(['section' => strtoupper($section)]);
+        }
+
         $data = $request->validate([
-            'name' => 'required|string|max:50',
-            'section' => ['required', 'string', 'max:5',
+            'name' => ['required', 'string', 'max:50', 'regex:/\A[A-Za-z][A-Za-z0-9\s-]*\z/'],
+            'section' => ['required', 'string', 'max:10', 'regex:/\A[A-Z0-9]+\z/',
                 Rule::unique('classes')->where('name', $request->name)->ignore($schoolClass->id)],
-            'capacity' => ['required', 'integer', 'min:1'],
+            'capacity' => ['required', 'integer', 'min:1', 'max:200'],
             'program_id' => ['nullable', 'exists:programs,id'],
             'academic_year_id' => ['nullable', 'exists:academic_years,id'],
             'branch_id' => ['nullable', Rule::requiredIf(Branch::where('is_active', true)->exists()), 'exists:branches,id'],

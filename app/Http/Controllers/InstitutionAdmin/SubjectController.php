@@ -24,9 +24,14 @@ class SubjectController extends Controller
 
     public function store(Request $request)
     {
+        $code = $request->input('code');
+        if (is_string($code)) {
+            $request->merge(['code' => strtoupper($code)]);
+        }
+
         $data = $request->validate([
-            'name' => 'required|string|max:100',
-            'code' => 'required|string|max:10|unique:subjects,code',
+            'name' => ['required', 'string', 'max:80', 'regex:/\A[A-Za-z][A-Za-z0-9\s()\-]*\z/'],
+            'code' => ['required', 'string', 'max:15', 'regex:/\A[A-Z][A-Z0-9-]*\z/', 'unique:subjects,code'],
         ]);
 
         $subject = Subject::create($data);
@@ -42,9 +47,14 @@ class SubjectController extends Controller
 
     public function update(Request $request, Subject $subject)
     {
+        $code = $request->input('code');
+        if (is_string($code)) {
+            $request->merge(['code' => strtoupper($code)]);
+        }
+
         $data = $request->validate([
-            'name' => 'required|string|max:100',
-            'code' => ['required', 'string', 'max:10', Rule::unique('subjects', 'code')->ignore($subject->id)],
+            'name' => ['required', 'string', 'max:80', 'regex:/\A[A-Za-z][A-Za-z0-9\s()\-]*\z/'],
+            'code' => ['required', 'string', 'max:15', 'regex:/\A[A-Z][A-Z0-9-]*\z/', Rule::unique('subjects', 'code')->ignore($subject->id)],
         ]);
 
         $before = $subject->toArray();

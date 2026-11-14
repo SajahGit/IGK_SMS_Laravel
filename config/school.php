@@ -44,9 +44,5 @@ return [
     'demo_emails' => [
         'superadmin@school.test',
         'admin@school.test',
-        'registrar@school.test',
-        'teacher@school.test',
-        'accountant@school.test',
-        'student@school.test',
     ],
 ];

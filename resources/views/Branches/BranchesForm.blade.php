@@ -15,21 +15,21 @@
             @if ($branch->exists) @method('PUT') @endif
             <div class="row g-3">
                 <div class="col-md-6"><label class="form-label">Branch Name <span class="text-danger">*</span></label>
-                    <input type="text" name="name" @class(['form-control', 'is-invalid' => $errors->has('name')]) required value="{{ old('name', $branch->name) }}">
+                    <input type="text" name="name" @class(['form-control', 'is-invalid' => $errors->has('name')]) required maxlength="120" pattern="[A-Za-z][A-Za-z0-9\s\x2d]*" data-live-filter="branch-place" value="{{ old('name', $branch->name) }}">
                     @error('name')<div class="invalid-feedback">{{ $message }}</div>@enderror</div>
                 <div class="col-md-3"><label class="form-label">Code <span class="text-danger">*</span></label>
-                    <input type="text" name="code" @class(['form-control', 'is-invalid' => $errors->has('code')]) required maxlength="20" value="{{ old('code', $branch->code) }}">
+                    <input type="text" name="code" @class(['form-control', 'is-invalid' => $errors->has('code')]) required maxlength="20" pattern="[A-Z0-9\x2d]+" data-live-filter="uppercase-code" value="{{ old('code', $branch->code) }}">
                     @error('code')<div class="invalid-feedback">{{ $message }}</div>@enderror</div>
                 <div class="col-md-3"><label class="form-label">City</label>
-                    <input type="text" name="city" class="form-control" value="{{ old('city', $branch->city) }}"></div>
+                    <input type="text" name="city" class="form-control" maxlength="80" pattern="[A-Za-z][A-Za-z0-9\s\x2d]*" data-live-filter="branch-place" value="{{ old('city', $branch->city) }}"></div>
                 <div class="col-md-12"><label class="form-label">Address</label>
                     <input type="text" name="address" class="form-control" value="{{ old('address', $branch->address) }}"></div>
                 <div class="col-md-4"><label class="form-label">Principal</label>
-                    <input type="text" name="principal_name" class="form-control" value="{{ old('principal_name', $branch->principal_name) }}"></div>
+                    <input type="text" name="principal_name" class="form-control" maxlength="120" pattern="[A-Za-z\s.\x27\x2d]+" data-live-filter="branch-principal" value="{{ old('principal_name', $branch->principal_name) }}"></div>
                 <div class="col-md-4"><label class="form-label">Phone</label>
                     <x-international-phone-input name="phone" :value="$branch->phone" /></div>
                 <div class="col-md-4"><label class="form-label">Email</label>
-                    <input type="email" name="email" @class(['form-control', 'is-invalid' => $errors->has('email')]) value="{{ old('email', $branch->email) }}">
+                    <input type="email" name="email" @class(['form-control', 'is-invalid' => $errors->has('email')]) maxlength="120" value="{{ old('email', $branch->email) }}">
                     @error('email')<div class="invalid-feedback">{{ $message }}</div>@enderror</div>
                 <div class="col-md-3"><div class="form-check">
                     <input class="form-check-input" type="checkbox" name="is_main" value="1" @checked(old('is_main', $branch->is_main))>

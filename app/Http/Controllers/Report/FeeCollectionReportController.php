@@ -17,7 +17,11 @@ class FeeCollectionReportController extends Controller
     {
         abort_unless(auth()->user()->isAdmin() || auth()->user()->can('reports.financial'), 403);
 
-        [$from, $to, $termId, $programId, $method, $payments, $totalCollected, $byMethod, $terms, $programs] = $this->data($request);
+        $pdfLimit = $request->attributes->get('pdf_export_limit');
+        [$from, $to, $termId, $programId, $method, $payments, $totalCollected, $byMethod, $terms, $programs] = $this->data(
+            $request,
+            is_int($pdfLimit) ? $pdfLimit : null
+        );
 
         return view('Reports.ReportFeeCollection', compact('from', 'to', 'termId', 'programId', 'method', 'payments', 'totalCollected', 'byMethod', 'terms', 'programs') + [
             'reportRoutePrefix' => request()->routeIs('accountant.*') ? 'accountant.reports' : 'reports',
@@ -79,9 +83,20 @@ class FeeCollectionReportController extends Controller
         ];
     }
 
-    private function query(string $from, string $to, ?int $termId, ?int $programId, ?string $method)
+    private function query(string $from, string $to, ?int $termId, ?int $programId, ?string $method, ?int $limit = null)
     {
-        return Payment::with(['invoice.term', 'invoice.student.user', 'invoice.student.class.program', 'invoice.student.program', 'receiver'])
+        return Payment::query()
+            ->select(['id', 'invoice_id', 'receipt_no', 'paid_at', 'amount', 'currency', 'method', 'reference', 'received_by', 'reversed_at'])
+            ->with([
+                'invoice:id,student_id,term_id,invoice_no',
+                'invoice.term:id,name',
+                'invoice.student:id,user_id,class_id,program_id,admission_no',
+                'invoice.student.user:id,name',
+                'invoice.student.class:id,name,section,program_id',
+                'invoice.student.class.program:id,name',
+                'invoice.student.program:id,name',
+                'receiver:id,name',
+            ])
             ->whereHas('invoice.student.user')
             ->whereDate('paid_at', '>=', $from)
             ->whereDate('paid_at', '<=', $to)
@@ -90,14 +105,15 @@ class FeeCollectionReportController extends Controller
             ->when($programId, fn ($q) => $q->whereHas('invoice.student', fn ($student) => $student
                 ->where('program_id', $programId)
                 ->orWhereHas('class', fn ($class) => $class->where('program_id', $programId))))
-            ->orderByDesc('paid_at');
+            ->orderByDesc('paid_at')
+            ->when($limit !== null, fn ($query) => $query->limit($limit));
     }
 
-    private function data(Request $request): array
+    private function data(Request $request, ?int $pdfLimit = null): array
     {
         [$from, $to, $termId, $programId, $method] = $this->filters($request);
 
-        $payments = $this->query($from, $to, $termId, $programId, $method)->get();
+        $payments = $this->query($from, $to, $termId, $programId, $method, $pdfLimit)->get();
 
         $activePayments = $payments->whereNull('reversed_at');
 

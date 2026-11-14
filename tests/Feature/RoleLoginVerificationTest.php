@@ -6,7 +6,9 @@ use App\Models\User;
 use Database\Seeders\DatabaseSeeder;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Hash;
 use PHPUnit\Framework\Attributes\Test;
+use PragmaRX\Google2FA\Google2FA;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
@@ -33,6 +35,7 @@ class RoleLoginVerificationTest extends TestCase
             'Accountant',
             'Student',
             'Guardian',
+            'Librarian',
         ];
 
         foreach ($expectedRoles as $roleName) {
@@ -40,7 +43,7 @@ class RoleLoginVerificationTest extends TestCase
             $this->assertTrue(Role::where('name', $roleName)->exists());
         }
 
-        $this->assertCount(7, Role::all());
+        $this->assertCount(8, Role::all());
     }
 
     #[Test]
@@ -161,7 +164,11 @@ class RoleLoginVerificationTest extends TestCase
         $this->actingAs($superAdmin)
             ->get(route('admin.dashboard'))
             ->assertOk()
-            ->assertSeeText('Roles & Permissions');
+            ->assertSeeText('Roles & Permissions')
+            ->assertSeeText('Users')
+            ->assertSeeText('Enrollment Register')
+            ->assertSeeText('Student Ledger')
+            ->assertSeeText('Record Payment');
 
         $institutionAdmin = User::create([
             'name' => 'Institution Admin',
@@ -174,7 +181,12 @@ class RoleLoginVerificationTest extends TestCase
         $this->actingAs($institutionAdmin)
             ->get(route('admin.dashboard'))
             ->assertOk()
-            ->assertDontSeeText('Roles & Permissions');
+            ->assertDontSeeText('Roles & Permissions')
+            ->assertSeeText('Users')
+            ->assertSeeText('Departments')
+            ->assertDontSeeText('Record Payment');
+
+        $this->get(route('admin.payments.create'))->assertForbidden();
     }
 
     #[Test]
@@ -230,6 +242,30 @@ class RoleLoginVerificationTest extends TestCase
         foreach (['students.create', 'attendance.create', 'results.publish', 'invoices.create', 'payments.create'] as $permission) {
             $this->assertFalse($guardian->hasPermissionTo($permission));
         }
+    }
+
+    #[Test]
+    public function librarian_has_library_permissions_and_cannot_open_admin_routes(): void
+    {
+        $this->seedRolesAndPermissions();
+        $librarianRole = Role::findByName('Librarian');
+
+        foreach (['library.read', 'library.create', 'library.update', 'library.delete', 'students.read'] as $permission) {
+            $this->assertTrue($librarianRole->hasPermissionTo($permission));
+        }
+        $this->assertFalse($librarianRole->hasPermissionTo('users.create'));
+        $this->assertFalse($librarianRole->hasPermissionTo('roles_and_permissions.update'));
+
+        $librarian = User::create([
+            'name' => 'Demo Librarian',
+            'email' => 'demo-librarian@school.test',
+            'password' => 'password',
+            'role' => 'librarian',
+        ]);
+        $librarian->syncRoles(['Librarian']);
+
+        $this->actingAs($librarian)->get(route('library.dashboard'))->assertOk();
+        $this->get(route('admin.dashboard'))->assertForbidden();
     }
 
     #[Test]
@@ -349,7 +385,7 @@ class RoleLoginVerificationTest extends TestCase
     }
 
     #[Test]
-    public function login_demo_accounts_match_six_roles(): void
+    public function login_demo_accounts_match_all_builtin_roles(): void
     {
         $this->artisan('db:seed', ['--class' => DatabaseSeeder::class])->run();
 
@@ -359,7 +395,9 @@ class RoleLoginVerificationTest extends TestCase
             'registrar@school.test' => 'Registrar',
             'teacher@school.test' => 'Teacher',
             'accountant@school.test' => 'Accountant',
+            'librarian@school.test' => 'Librarian',
             'student@school.test' => 'Student',
+            'guardian@school.test' => 'Guardian',
         ];
 
         foreach ($demoAccounts as $email => $expectedRole) {
@@ -367,14 +405,113 @@ class RoleLoginVerificationTest extends TestCase
             $this->assertNotNull($user, "Demo account {$email} should be seeded");
             $this->assertTrue($user->hasRole($expectedRole),
                 "User {$email} should have role {$expectedRole}");
+            $this->assertTrue(Hash::check('password', $user->password),
+                "Demo account {$email} should use the documented password");
+
+            $response = $this->post(route('login.attempt'), [
+                'email' => $email,
+                'password' => 'password',
+            ]);
+
+            if ($user->requiresTwoFactor()) {
+                $response->assertRedirect(route('two-factor.setup'))
+                    ->assertSessionHas('two_factor.pending_user_id', $user->id);
+                $this->get(route('two-factor.setup'))
+                    ->assertOk()
+                    ->assertSee(config('school.local_demo_two_factor_setup_code'));
+                $this->post(route('two-factor.cancel'))->assertRedirect(route('login'));
+            } else {
+                $response->assertRedirect(route($user->dashboardRoute()));
+                $this->assertAuthenticatedAs($user);
+                $this->assertNotNull($user->fresh()->last_login_at);
+                $this->assertFalse(session()->has('two_factor.pending_user_id'));
+                $this->get(route('two-factor.setup'))->assertForbidden();
+                $this->post(route('logout'))->assertRedirect(route('login'));
+            }
         }
 
         $this->assertFalse(User::where('email', 'superadmin@school.test')->first()->must_change_password);
         $this->get(route('login'))
             ->assertSee('data-email="superadmin@school.test" data-password="password"', false);
+        $this->get(route('login'))
+            ->assertSee('data-email="librarian@school.test" data-password="password"', false);
 
         // Parent must NOT be a demo login role
         $this->assertFalse(Role::where('name', 'Parent')->exists());
+    }
+
+    #[Test]
+    public function invalid_login_error_is_attached_to_the_password_field(): void
+    {
+        User::create([
+            'name' => 'Login Error Test',
+            'email' => 'login-error@school.test',
+            'password' => 'correct-password',
+            'role' => 'librarian',
+        ]);
+
+        $this->from(route('login'))->post(route('login.attempt'), [
+            'email' => 'login-error@school.test',
+            'password' => 'wrong-password',
+        ])->assertRedirect(route('login'))
+            ->assertSessionHasErrors(['password']);
+
+        $this->assertFalse(session('errors')->getBag('default')->has('email'));
+    }
+
+    #[Test]
+    public function local_demo_seeder_repairs_and_enables_the_librarian_login(): void
+    {
+        $this->seedRolesAndPermissions();
+        $librarian = User::create([
+            'name' => 'Old Librarian',
+            'email' => 'librarian@school.test',
+            'password' => 'old-password',
+            'role' => 'librarian',
+            'is_active' => false,
+            'must_change_password' => true,
+        ]);
+
+        $this->artisan('db:seed', ['--class' => \Database\Seeders\LocalDemoCredentialsSeeder::class])->run();
+
+        $librarian->refresh();
+        $this->assertTrue($librarian->is_active);
+        $this->assertTrue($librarian->hasRole('Librarian'));
+        $this->assertTrue(Hash::check('password', $librarian->password));
+
+        $this->post(route('login.attempt'), [
+            'email' => 'librarian@school.test',
+            'password' => 'password',
+        ])->assertRedirect(route('library.dashboard'));
+
+        $this->assertAuthenticatedAs($librarian);
+    }
+
+    #[Test]
+    public function non_admin_login_does_not_require_two_factor_even_if_it_was_previously_enabled(): void
+    {
+        $this->seedRolesAndPermissions();
+        $google2fa = app(Google2FA::class);
+        $teacher = User::create([
+            'name' => 'Teacher Two-Factor',
+            'email' => 'teacher-two-factor@school.test',
+            'password' => 'password',
+            'role' => 'teacher',
+            'two_factor_secret' => $google2fa->generateSecretKey(),
+            'two_factor_enabled_at' => now(),
+        ]);
+        $teacher->syncRoles(['Teacher']);
+
+        $this->post(route('login.attempt'), [
+            'email' => $teacher->email,
+            'password' => 'password',
+        ])->assertRedirect(route('teacher.dashboard'));
+
+        $this->assertAuthenticatedAs($teacher);
+        $this->assertNotNull($teacher->fresh()->last_login_at);
+        $this->assertFalse(session()->has('two_factor.pending_user_id'));
+        $this->get(route('two-factor.setup'))->assertForbidden();
+        $this->get(route('two-factor.challenge'))->assertRedirect(route('login'));
     }
 
     #[Test]

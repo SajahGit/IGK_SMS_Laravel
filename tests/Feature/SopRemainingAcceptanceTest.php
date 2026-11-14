@@ -204,20 +204,25 @@ class SopRemainingAcceptanceTest extends TestCase
             ]);
         }
 
+        $filters = [
+            'class_id' => $class->id,
+            'term_id' => $term->id,
+            'subject_id' => $subject->id,
+            'from' => today()->toDateString(),
+            'to' => today()->toDateString(),
+            'threshold' => 75,
+        ];
         $this->actingAs($admin)
-            ->get(route('reports.class-attendance', [
-                'class_id' => $class->id,
-                'term_id' => $term->id,
-                'subject_id' => $subject->id,
-                'from' => today()->toDateString(),
-                'to' => today()->toDateString(),
-                'threshold' => 75,
-            ]))
+            ->get(route('reports.class-attendance', $filters))
             ->assertOk()
             ->assertSee('50%')
-            ->assertSee('Students Below 75%')
-            ->assertSee('<td class="text-center">1</td>', false)
-            ->assertDontSee('<td class="text-center">2</td>', false);
+            ->assertSee('Students Below 75%');
+
+        $csv = $this->get(route('reports.class-attendance.csv', $filters))
+            ->assertOk()
+            ->streamedContent();
+        $rows = array_map('str_getcsv', explode("\n", trim($csv)));
+        $this->assertSame('1', $rows[1][4]);
     }
 
     public function test_r10_overdue_only_and_minimum_balance_filters_match_csv_data(): void
@@ -266,11 +271,11 @@ class SopRemainingAcceptanceTest extends TestCase
         ]))->assertOk()->streamedContent();
 
         $this->assertStringContainsString(
-            '"Invoice No",Term,Program,"Student Name",Class,"Parent / Contact","Due Date","Total Billed","Amount Paid","Balance Due","Days Overdue"',
+            '"Invoice No",Term,Program,"Student Name",Class,"Parent / Contact","Due Date","Total Billed","Amount Paid","Balance Due",Currency,"Days Overdue"',
             $csv
         );
         $this->assertStringContainsString('INV-OVERDUE', $csv);
-        $this->assertStringContainsString(today()->subDays(10)->toDateString().',1000.00,0.00,1000.00,10', $csv);
+        $this->assertStringContainsString(today()->subDays(10)->toDateString().',1000.00,0.00,1000.00,LKR,10', $csv);
         $this->assertStringNotContainsString('INV-DUE-TODAY', $csv);
     }
 

@@ -56,10 +56,14 @@ class ClassAttendanceSummaryReportController extends Controller
             'threshold' => ['nullable', 'numeric', 'min:0', 'max:100'],
         ]);
         $classes = SchoolHelper::allowedClasses($request->user());
+        $pdfLimit = $request->attributes->get('pdf_export_limit');
         $classId = $validated['class_id'] ?? null;
         if ($classId) {
             abort_unless($classes->contains('id', (int) $classId), 403, 'You cannot view this class.');
             $classes = $classes->where('id', (int) $classId)->values();
+        }
+        if (is_int($pdfLimit)) {
+            $classes = $classes->take($pdfLimit)->values();
         }
         $termId = $validated['term_id'] ?? null;
         $subjectId = $validated['subject_id'] ?? null;
@@ -76,46 +80,69 @@ class ClassAttendanceSummaryReportController extends Controller
             ->sortBy('name')
             ->values();
 
-        $summary = $classes->map(function ($class) use ($termId, $subjectId, $from, $to, $threshold) {
-            $sessions = AttendanceSession::query()
-                ->where('class_id', $class->id)
-                ->whereDate('date', '>=', $from)
-                ->whereDate('date', '<=', $to)
-                ->when($termId, fn ($query) => $query->where('term_id', $termId))
-                ->when($subjectId, fn ($query) => $query->whereHas('classSubject', fn ($subject) => $subject->where('subject_id', $subjectId)))
-                ->get();
-            $records = Attendance::whereIn('attendance_session_id', $sessions->pluck('id'))->get();
-            $presentAndLate = $records->whereIn('status', ['present', 'late'])->count();
-            $eligible = $records->whereNotIn('status', ['excused'])->count();
-            $byStudent = $records->groupBy('student_id');
-            $activeStudentQuery = Student::query()
-                ->where('class_id', $class->id)
-                ->where('status', 'active');
-            if ($subjectId) {
-                $enrolledStudentIds = DB::table('student_subject_enrollments')
-                    ->join('class_subject', 'class_subject.id', '=', 'student_subject_enrollments.class_subject_id')
-                    ->where('class_subject.class_id', $class->id)
-                    ->where('class_subject.subject_id', $subjectId)
-                    ->where('student_subject_enrollments.status', 'enrolled')
-                    ->pluck('student_subject_enrollments.student_id');
-                $activeStudentQuery->whereIn('id', $enrolledStudentIds);
-            }
-            $activeStudents = $activeStudentQuery->get(['id']);
-            $belowThreshold = $activeStudents->filter(function ($student) use ($byStudent, $threshold) {
-                $counts = $byStudent->get($student->id, collect())->countBy('status');
-                $attended = (int) ($counts['present'] ?? 0) + (int) ($counts['late'] ?? 0);
-                $eligibleRecords = $counts->except('excused')->sum();
-                $percentage = $eligibleRecords > 0 ? ($attended / $eligibleRecords) * 100 : 0;
-
-                return $percentage < $threshold;
-            })->count();
+        $sessionQuery = AttendanceSession::query()
+            ->whereIn('class_id', $classes->pluck('id'))
+            ->whereDate('date', '>=', $from)
+            ->whereDate('date', '<=', $to)
+            ->when($termId, fn ($query) => $query->where('term_id', $termId))
+            ->when($subjectId, fn ($query) => $query->whereHas('classSubject', fn ($subject) => $subject->where('subject_id', $subjectId)));
+        $sessionCounts = (clone $sessionQuery)
+            ->select('class_id')
+            ->selectRaw('COUNT(*) as total')
+            ->groupBy('class_id')
+            ->pluck('total', 'class_id');
+        $sessionIds = (clone $sessionQuery)->select('id');
+        $attendanceTotals = Attendance::query()
+            ->whereIn('attendance_session_id', $sessionIds)
+            ->select('class_id')
+            ->selectRaw("SUM(CASE WHEN status IN ('present', 'late') THEN 1 ELSE 0 END) as present_and_late")
+            ->selectRaw("SUM(CASE WHEN status <> 'excused' THEN 1 ELSE 0 END) as eligible")
+            ->groupBy('class_id')
+            ->get()
+            ->keyBy('class_id');
+        $activeStudentQuery = Student::query()
+            ->whereIn('students.class_id', $classes->pluck('id'))
+            ->where('students.status', 'active');
+        if ($subjectId) {
+            $enrolledStudentIds = DB::table('student_subject_enrollments')
+                ->join('class_subject', 'class_subject.id', '=', 'student_subject_enrollments.class_subject_id')
+                ->whereIn('class_subject.class_id', $classes->pluck('id'))
+                ->where('class_subject.subject_id', $subjectId)
+                ->where('student_subject_enrollments.status', 'enrolled')
+                ->select('student_subject_enrollments.student_id');
+            $activeStudentQuery->whereIn('students.id', $enrolledStudentIds);
+        }
+        $attendanceByStudent = Attendance::query()
+            ->whereIn('attendance_session_id', $sessionIds)
+            ->select('class_id', 'student_id')
+            ->selectRaw("SUM(CASE WHEN status IN ('present', 'late') THEN 1 ELSE 0 END) as attended")
+            ->selectRaw("SUM(CASE WHEN status <> 'excused' THEN 1 ELSE 0 END) as eligible")
+            ->groupBy('class_id', 'student_id');
+        $belowThresholdCounts = (clone $activeStudentQuery)
+            ->leftJoinSub($attendanceByStudent, 'student_attendance', function ($join) {
+                $join->on('students.id', '=', 'student_attendance.student_id')
+                    ->on('students.class_id', '=', 'student_attendance.class_id');
+            })
+            ->whereRaw(
+                '(CASE WHEN COALESCE(student_attendance.eligible, 0) > 0 THEN COALESCE(student_attendance.attended, 0) * 100.0 / student_attendance.eligible ELSE 0 END) < CAST(? AS DECIMAL(5, 2))',
+                [$threshold]
+            )
+            ->selectRaw('students.class_id as class_id_key')
+            ->selectRaw('COUNT(DISTINCT students.id) as total')
+            ->groupBy('students.class_id')
+            ->get()
+            ->pluck('total', 'class_id_key');
+        $summary = $classes->map(function ($class) use ($sessionCounts, $attendanceTotals, $belowThresholdCounts, $subjectId, $subjects) {
+            $totals = $attendanceTotals->get($class->id);
+            $presentAndLate = (int) ($totals?->present_and_late ?? 0);
+            $eligible = (int) ($totals?->eligible ?? 0);
 
             return [
                 'class' => $class,
-                'subject' => $subjectId ? ($sessions->first()?->classSubject?->subject?->name ?? '—') : 'All subjects',
-                'sessions' => $sessions->count(),
+                'subject' => $subjectId ? ($subjects->firstWhere('id', $subjectId)?->name ?? '—') : 'All subjects',
+                'sessions' => (int) $sessionCounts->get($class->id, 0),
                 'percentage' => $eligible > 0 ? round(($presentAndLate / $eligible) * 100, 1) : 0.0,
-                'below_threshold' => $belowThreshold,
+                'below_threshold' => (int) $belowThresholdCounts->get($class->id, 0),
             ];
         });
 

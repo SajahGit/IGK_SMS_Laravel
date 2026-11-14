@@ -3,8 +3,7 @@
 Laravel-based school management ERP (admissions, academics, marks and results, finance, reports).
 
 ## Quick start
-See [README-SETUP.md](./README-SETUP.md) for the step-by-step Windows setup and the local demo accounts,
-and [README-SETUP.md](./README-SETUP.md) for the short checklist.
+See [README-SETUP.md](./README-SETUP.md) for Windows Git/ZIP setup, `.env` creation, local demo seeding, and run instructions. Team module ownership is in [IGK_ERP_TEAM_MODULE_OWNERSHIP_MATRIX.md](./IGK_ERP_TEAM_MODULE_OWNERSHIP_MATRIX.md); demo logins and role-wise QA data are in [sample dataset.md](./sample%20dataset.md).
 
 ## Documentation
 - `docs/guides/` - install, environment, deploy, backup and role guides

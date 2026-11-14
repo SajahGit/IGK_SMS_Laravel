@@ -36,17 +36,22 @@ class JournalEntryController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
+        $reference = $request->input('reference');
+        if (is_string($reference)) {
+            $request->merge(['reference' => strtoupper($reference)]);
+        }
+
         $data = $request->validate([
             'entry_date' => ['required', 'date'],
             'currency' => ['required', 'string', 'size:3', \Illuminate\Validation\Rule::in(config('school.currencies', ['LKR']))],
-            'description' => ['required', 'string', 'max:255'],
-            'reference' => ['nullable', 'string', 'max:80'],
+            'description' => ['required', 'string', 'max:255', 'regex:/\A(?=.*[A-Za-z]).+\z/s'],
+            'reference' => ['nullable', 'string', 'max:30', 'regex:/\A[A-Z0-9-]*\z/'],
             'branch_id' => ['nullable', 'exists:branches,id'],
             'lines' => ['required', 'array', 'min:2'],
             'lines.*.account_id' => ['required', 'exists:accounts,id'],
             'lines.*.debit' => ['nullable', 'numeric', 'min:0'],
             'lines.*.credit' => ['nullable', 'numeric', 'min:0'],
-            'lines.*.memo' => ['nullable', 'string', 'max:255'],
+            'lines.*.memo' => ['nullable', 'string', 'max:255', 'regex:/\A(?=.*[A-Za-z]).+\z/s'],
         ]);
 
         $lines = collect($data['lines'])->filter(fn ($l) => (float) ($l['debit'] ?? 0) > 0 || (float) ($l['credit'] ?? 0) > 0)->values()->all();

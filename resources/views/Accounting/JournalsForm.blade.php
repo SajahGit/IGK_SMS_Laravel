@@ -14,9 +14,9 @@
                 <div class="col-md-3"><label class="form-label">Date <span class="text-danger">*</span></label>
                     <input type="date" name="entry_date" class="form-control" required value="{{ old('entry_date', now()->toDateString()) }}"></div>
                 <div class="col-md-5"><label class="form-label">Description <span class="text-danger">*</span></label>
-                    <input type="text" name="description" class="form-control" required value="{{ old('description') }}"></div>
+                    <input type="text" name="description" class="form-control" maxlength="255" pattern="(?=.*[A-Za-z]).+" data-live-filter="journal-text" required value="{{ old('description') }}"></div>
                 <div class="col-md-2"><label class="form-label">Reference</label>
-                    <input type="text" name="reference" class="form-control" value="{{ old('reference') }}"></div>
+                    <input type="text" name="reference" class="form-control" maxlength="30" pattern="[A-Z0-9\x2d]*" data-live-filter="uppercase-code" value="{{ old('reference') }}"></div>
                 <div class="col-md-2"><label class="form-label">Currency</label>
                     <select name="currency" class="form-select" required>@foreach (config('school.currencies', ['LKR']) as $currency)<option value="{{ $currency }}" @selected(old('currency', config('school.default_currency', 'LKR')) === $currency)>{{ $currency }}</option>@endforeach</select></div>
                 <div class="col-md-2"><label class="form-label">Branch</label>
@@ -36,7 +36,7 @@
                             </select></td>
                             <td><input type="number" step="0.01" min="0" name="lines[{{ $i }}][debit]" class="form-control" value="{{ old("lines.$i.debit") }}"></td>
                             <td><input type="number" step="0.01" min="0" name="lines[{{ $i }}][credit]" class="form-control" value="{{ old("lines.$i.credit") }}"></td>
-                            <td><input type="text" name="lines[{{ $i }}][memo]" class="form-control" value="{{ old("lines.$i.memo") }}"></td>
+                            <td><input type="text" name="lines[{{ $i }}][memo]" class="form-control" maxlength="255" pattern="(?=.*[A-Za-z]).+" data-live-filter="journal-text" value="{{ old("lines.$i.memo") }}"></td>
                         </tr>
                     @endfor
                     </tbody>

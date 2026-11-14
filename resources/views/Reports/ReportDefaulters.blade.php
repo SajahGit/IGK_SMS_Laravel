@@ -99,16 +99,16 @@
         <table class="table table-hover mb-0 align-middle">
             <thead class="table-light">
                 <tr>
-                    <th>Invoice No</th>
-                    <th>Term</th>
+                    <th class="print-nowrap">Invoice No</th>
+                    <th class="print-nowrap">Term</th>
                     <th>Program</th>
                     <th>Student Name</th>
-                    <th>Class</th>
+                    <th class="print-nowrap">Class</th>
                     <th>Guardian / Contact</th>
-                    <th>Due Date</th>
-                    <th>Total Billed</th>
-                    <th>Amount Paid</th>
-                    <th>Balance Due</th>
+                    <th class="print-nowrap">Due Date</th>
+                    <th class="print-nowrap">Total Billed</th>
+                    <th class="print-nowrap">Amount Paid</th>
+                    <th class="print-nowrap">Balance Due</th>
                     <th>Days Overdue</th>
                 </tr>
             </thead>
@@ -123,22 +123,22 @@
                                 <code>{{ $inv->invoice_no }}</code>
                             </a>
                         </td>
-                        <td>{{ $inv->term?->name ?? '—' }}</td>
+                        <td class="print-nowrap">{{ $inv->term?->name ?? '—' }}</td>
                         <td>{{ $inv->student->program?->name ?? $inv->student->class?->program?->name ?? '—' }}</td>
                         <td>
                             <div class="fw-semibold">{{ $inv->student->user->name }}</div>
                             <small class="text-muted"><code>{{ $inv->student->admission_no }}</code></small>
                         </td>
-                        <td>{{ $inv->student->class?->full_name ?? '—' }}</td>
+                        <td class="print-nowrap">{{ $inv->student->class?->full_name ?? '—' }}</td>
                         <td>
                             @php $primaryGuardian = $inv->student->guardians->firstWhere('pivot.is_primary', true) ?? $inv->student->guardians->first(); @endphp
                             <div>{{ $primaryGuardian?->user?->name ?: '—' }}</div>
                             <small class="text-muted"><i class="bi bi-telephone me-1"></i>{{ $primaryGuardian?->phone ?: 'No phone' }}</small>
                         </td>
-                        <td>{{ $inv->due_date->format('d M Y') }}</td>
-                        <td>{{ \App\Support\Money::format($inv->total, $inv->currency.' ') }}</td>
-                        <td class="text-success">{{ \App\Support\Money::format($inv->amount_paid, $inv->currency.' ') }}</td>
-                        <td class="fw-bold text-danger">{{ \App\Support\Money::format($inv->balance, $inv->currency.' ') }}</td>
+                        <td class="print-nowrap">{{ $inv->due_date->format('d M Y') }}</td>
+                        <td class="print-nowrap">{{ \App\Support\Money::format($inv->total, $inv->currency.' ') }}</td>
+                        <td class="print-nowrap text-success">{{ \App\Support\Money::format($inv->amount_paid, $inv->currency.' ') }}</td>
+                        <td class="print-nowrap fw-bold text-danger">{{ \App\Support\Money::format($inv->balance, $inv->currency.' ') }}</td>
                         <td>
                             @if ($daysOverdue > 0)
                                 <span class="badge bg-danger">{{ $daysOverdue }} days overdue</span>

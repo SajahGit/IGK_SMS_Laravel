@@ -333,7 +333,7 @@ class TwoFactorController extends Controller
 
     private function requiresTwoFactor(User $user): bool
     {
-        return $user->isAdmin() || $user->isSuperAdmin() || $user->isInstitutionAdmin();
+        return $user->is_active && $user->requiresTwoFactor();
     }
 
     private function generateRecoveryCodes(): array

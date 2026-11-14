@@ -26,7 +26,7 @@
     <div class="col-md-2"><button class="btn btn-outline-primary w-100"><i class="bi bi-funnel me-1"></i>Show</button></div>
 </form>
 
-@if ($exams->isEmpty())
+@if ($exams->isEmpty() && !$exam && !request()->attributes->has('pdf_export_limit'))
     <div class="alert alert-info">No exams available yet.</div>
 @endif
 
@@ -44,12 +44,12 @@
 
     <div class="card shadow-sm"><div class="table-responsive">
         <table class="table table-hover mb-0">
-            <thead><tr><th>Rank</th><th>Admission No</th><th>Name</th><th>Marks</th><th>Maximum</th><th>Percentage</th><th>Grade</th><th>Absent</th></tr></thead>
+            <thead><tr><th>Rank</th><th class="print-nowrap">Admission No</th><th>Name</th><th class="print-nowrap">Marks</th><th class="print-nowrap">Maximum</th><th class="print-nowrap">Percentage</th><th>Grade</th><th>Absent</th></tr></thead>
             <tbody>
             @forelse ($rows as $r)
                 <tr>
                     <td>{{ $r['rank'] }}</td>
-                    <td>{{ $r['result']->student->admission_no }}</td>
+                    <td class="print-nowrap">{{ $r['result']->student->admission_no }}</td>
                     <td>{{ $r['result']->student->user->name }}</td>
                     <td>{{ $r['absent'] ? 'Absent' : \App\Support\SchoolHelper::formatMarks($r['result']->marks) }}</td>
                     <td>{{ $exam->max_marks }}</td>

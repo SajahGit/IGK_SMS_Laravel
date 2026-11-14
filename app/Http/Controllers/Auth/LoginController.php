@@ -23,7 +23,7 @@ class LoginController extends Controller
         if (! Auth::validate($credentials)) {
             AuditLogger::log('login_failed', User::class, null, ['email' => $credentials['email']]);
 
-            return back()->withErrors(['email' => 'Invalid email or password.'])->onlyInput('email');
+            return back()->withErrors(['password' => 'Invalid email or password.'])->onlyInput('email');
         }
 
         /** @var User $user */
@@ -37,24 +37,31 @@ class LoginController extends Controller
 
         $request->session()->regenerate();
 
-        if ($user->isAdmin() || $user->isSuperAdmin() || $user->isInstitutionAdmin()) {
-            $request->session()->put('two_factor.pending_user_id', $user->id);
-            $request->session()->put('two_factor.remember', $request->boolean('remember'));
+        if (! $user->requiresTwoFactor()) {
+            $request->session()->forget([
+                'two_factor.pending_user_id',
+                'two_factor.remember',
+                'two_factor.recovery_code_used',
+                'two_factor.newly_enabled',
+            ]);
+            Auth::login($user, $request->boolean('remember'));
+            $user->update(['last_login_at' => now()]);
 
-            return redirect()->route(
-                $user->two_factor_enabled_at ? 'two-factor.challenge' : 'two-factor.setup'
-            );
+            AuditLogger::log('logged_in', $user, null, ['email' => $user->email, 'two_factor' => false]);
+
+            if ($user->must_change_password) {
+                return redirect()->route('password.change');
+            }
+
+            return redirect()->intended(route($user->dashboardRoute()));
         }
 
-        Auth::login($user, $request->boolean('remember'));
-        $user->update(['last_login_at' => now()]);
-        AuditLogger::log('logged_in', $user, null, ['email' => $user->email]);
+        $request->session()->put('two_factor.pending_user_id', $user->id);
+        $request->session()->put('two_factor.remember', $request->boolean('remember'));
 
-        if ($user->must_change_password) {
-            return redirect()->route('password.change');
-        }
-
-        return redirect()->intended(route($user->dashboardRoute()));
+        return redirect()->route(
+            $user->two_factor_enabled_at ? 'two-factor.challenge' : 'two-factor.setup'
+        );
     }
 
     public function logout(Request $request)

@@ -18,11 +18,19 @@ class UpdateLibraryBookRequest extends FormRequest
         $book = $this->route('book');
 
         return [
-            'title' => ['required', 'string', 'max:200'],
-            'author' => ['required', 'string', 'max:120'],
-            'category' => ['required', 'string', 'max:80'],
-            'isbn' => ['nullable', 'string', 'max:20', Rule::unique('library_books', 'isbn')->ignore($book instanceof LibraryBook ? $book->id : null)],
-            'publication_year' => ['nullable', 'integer', 'between:1000,'.(now()->year + 1)],
+            'title' => ['required', 'string', 'max:120', 'regex:/\A[A-Za-z][A-Za-z0-9\s\-:()\'&]*\z/'],
+            'author' => ['required', 'string', 'max:80', 'regex:/\A[A-Za-z\s.\'-]+\z/'],
+            'category' => ['required', 'string', 'max:120', 'regex:/\A[A-Za-z][A-Za-z0-9\s\-:()\'&]*\z/'],
+            'isbn' => ['nullable', 'string', 'min:10', 'max:17', 'regex:/\A[0-9X-]+\z/', Rule::unique('library_books', 'isbn')->ignore($book instanceof LibraryBook ? $book->id : null)],
+            'publication_year' => ['nullable', 'integer', 'between:1800,2026'],
         ];
+    }
+
+    protected function prepareForValidation(): void
+    {
+        $isbn = $this->input('isbn');
+        if (is_string($isbn)) {
+            $this->merge(['isbn' => strtoupper($isbn)]);
+        }
     }
 }

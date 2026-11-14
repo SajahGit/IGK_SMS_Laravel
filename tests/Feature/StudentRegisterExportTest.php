@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\SchoolClass;
 use App\Models\Student;
 use App\Models\User;
+use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -12,14 +13,24 @@ class StudentRegisterExportTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_admin_can_export_filtered_student_register_as_csv(): void
+    private function institutionAdmin(string $email): User
     {
+        $this->artisan('db:seed', ['--class' => RolePermissionSeeder::class])->assertExitCode(0);
+
         $admin = User::create([
             'name' => 'Admin',
-            'email' => 'admin@example.test',
+            'email' => $email,
             'password' => 'password',
             'role' => 'admin',
         ]);
+        $admin->syncRoles(['Institution Admin']);
+
+        return $admin;
+    }
+
+    public function test_admin_can_export_filtered_student_register_as_csv(): void
+    {
+        $admin = $this->institutionAdmin('admin@example.test');
         $class = SchoolClass::create(['name' => 'Grade 8', 'section' => 'A']);
         $studentUser = User::create([
             'name' => 'Sam Student',
@@ -59,12 +70,7 @@ class StudentRegisterExportTest extends TestCase
 
     public function test_student_register_export_is_limited_to_ten_requests_per_minute(): void
     {
-        $admin = User::create([
-            'name' => 'Admin',
-            'email' => 'export-throttle@example.test',
-            'password' => 'password',
-            'role' => 'admin',
-        ]);
+        $admin = $this->institutionAdmin('export-throttle@example.test');
 
         for ($attempt = 0; $attempt < 10; $attempt++) {
             $this->actingAs($admin)->get(route('admin.students.export'))->assertOk();

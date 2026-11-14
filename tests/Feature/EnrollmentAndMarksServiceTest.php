@@ -18,6 +18,7 @@ use App\Models\Term;
 use App\Models\User;
 use App\Services\EnrollmentService;
 use App\Services\MarksEntryService;
+use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Validation\ValidationException;
 use Tests\TestCase;
@@ -79,6 +80,8 @@ class EnrollmentAndMarksServiceTest extends TestCase
 
     public function test_new_class_subject_is_assigned_to_already_enrolled_students(): void
     {
+        $this->artisan('db:seed', ['--class' => RolePermissionSeeder::class])->assertExitCode(0);
+
         $class = SchoolClass::create(['name' => 'Grade 10', 'section' => 'A']);
         $student = Student::create([
             'user_id' => User::create(['name' => 'Student', 'email' => 'student@example.test', 'password' => 'password', 'role' => 'student'])->id,
@@ -91,6 +94,7 @@ class EnrollmentAndMarksServiceTest extends TestCase
         ]);
         $subject = Subject::create(['name' => 'Maths', 'code' => 'MTH']);
         $admin = User::create(['name' => 'Admin', 'email' => 'admin@example.test', 'password' => 'password', 'role' => 'admin']);
+        $admin->syncRoles(['Institution Admin']);
 
         $response = $this->actingAs($admin)->post(route('admin.class-subjects.store'), [
             'class_id' => $class->id,

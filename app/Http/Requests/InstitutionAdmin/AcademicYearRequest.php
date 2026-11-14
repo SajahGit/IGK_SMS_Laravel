@@ -20,11 +20,12 @@ class AcademicYearRequest extends FormRequest
             'name' => [
                 'required',
                 'string',
-                'max:50',
+                'max:9',
+                'regex:/\A[0-9]{4}(?:-[0-9]{4})?\z/',
                 Rule::unique('academic_years', 'name')->ignore($yearId),
             ],
             'start_date' => ['required', 'date'],
-            'end_date' => ['required', 'date', 'after_or_equal:start_date'],
+            'end_date' => ['required', 'date', 'after:start_date'],
             'is_current' => ['nullable', 'boolean'],
         ];
     }

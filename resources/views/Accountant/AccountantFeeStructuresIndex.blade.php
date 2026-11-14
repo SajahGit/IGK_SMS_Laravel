@@ -160,11 +160,11 @@
                                         @csrf
                                         <div class="col-md-4">
                                             <label class="form-label small mb-1">Item name</label>
-                                            <input type="text" name="name" class="form-control form-control-sm" placeholder="e.g. Lab fee" required>
+                                            <input type="text" name="name" class="form-control form-control-sm" placeholder="e.g. Lab fee" maxlength="80" pattern="[A-Za-z][A-Za-z0-9\s\x28\x29\x26\x2d]*" data-live-filter="letter-start-fee" required>
                                         </div>
                                         <div class="col-md-3">
                                             <label class="form-label small mb-1">Amount ({{ $fee->currency }})</label>
-                                            <input type="number" step="0.01" min="0" name="amount" class="form-control form-control-sm" placeholder="0.00" required>
+                                            <input type="number" step="0.01" min="0.01" name="amount" class="form-control form-control-sm" placeholder="0.00" required>
                                         </div>
                                         <div class="col-md-3">
                                             <input type="hidden" name="is_mandatory" value="0">
@@ -257,7 +257,7 @@
                     </div>
                     <div class="mb-3">
                         <label for="create_name" class="form-label">Fee Name <span class="text-danger">*</span></label>
-                        <input type="text" name="name" id="create_name" class="form-control" placeholder="e.g. Term Tuition Fee, Lab Fee" required value="{{ old('name') }}">
+                        <input type="text" name="name" id="create_name" class="form-control" placeholder="e.g. Term Tuition Fee, Lab Fee" maxlength="80" pattern="[A-Za-z][A-Za-z0-9\s\x28\x29\x26\x2d]*" data-live-filter="letter-start-fee" required value="{{ old('name') }}">
                     </div>
                     <div class="mb-3">
                         <label for="create_amount" class="form-label">Amount <span class="text-danger">*</span></label>
@@ -348,7 +348,7 @@
                     </div>
                     <div class="mb-3">
                         <label for="edit_name" class="form-label">Fee Name <span class="text-danger">*</span></label>
-                        <input type="text" name="name" id="edit_name" class="form-control" required>
+                        <input type="text" name="name" id="edit_name" class="form-control" maxlength="80" pattern="[A-Za-z][A-Za-z0-9\s\x28\x29\x26\x2d]*" data-live-filter="letter-start-fee" required>
                     </div>
                     <div class="mb-3">
                         <label for="edit_amount" class="form-label">Amount <span class="text-danger">*</span></label>

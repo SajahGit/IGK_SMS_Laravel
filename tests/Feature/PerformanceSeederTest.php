@@ -100,5 +100,33 @@ class PerformanceSeederTest extends TestCase
         $this->assertSame(5000, DB::table('students')->count());
         $this->assertSame(5000, DB::table('students')->whereNotNull('document_number')->count());
         $this->assertGreaterThan(0, DB::table('biometric_events')->count());
+
+        $librarian = DB::table('users')->where('email', 'librarian@school.test')->first();
+        $this->assertNotNull($librarian->branch_id);
+        $this->assertGreaterThanOrEqual(3, DB::table('library_loans')
+            ->join('students', 'students.id', '=', 'library_loans.student_id')
+            ->where('students.branch_id', $librarian->branch_id)
+            ->whereNull('library_loans.returned_at')
+            ->count());
+        $this->assertGreaterThan(0, DB::table('library_fines')
+            ->join('library_loans', 'library_loans.id', '=', 'library_fines.loan_id')
+            ->join('students', 'students.id', '=', 'library_loans.student_id')
+            ->where('students.branch_id', $librarian->branch_id)
+            ->whereNull('library_fines.paid_at')
+            ->count());
+
+        foreach ([
+            'superadmin@school.test',
+            'admin@school.test',
+            'registrar@school.test',
+            'teacher@school.test',
+            'accountant@school.test',
+            'librarian@school.test',
+            'student@school.test',
+            'guardian@school.test',
+        ] as $email) {
+            $userId = DB::table('users')->where('email', $email)->value('id');
+            $this->assertGreaterThan(0, DB::table('message_participants')->where('user_id', $userId)->count(), "{$email} should have a demo conversation.");
+        }
     }
 }

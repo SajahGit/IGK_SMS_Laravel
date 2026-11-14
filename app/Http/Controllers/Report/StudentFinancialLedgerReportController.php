@@ -24,27 +24,40 @@ class StudentFinancialLedgerReportController extends Controller
         ]);
         $studentId = $validated['student_id'] ?? null;
         $academicYearId = isset($validated['academic_year_id']) ? (int) $validated['academic_year_id'] : null;
-        $academicYears = AcademicYear::orderByDesc('start_date')->get();
+        $academicYears = AcademicYear::orderByDesc('start_date')->get(['id', 'name', 'start_date']);
+        $pdfLimit = $request->attributes->get('pdf_export_limit');
 
         if ($isStudent) {
             $ownStudent = $request->user()->student;
             abort_unless($ownStudent, 403, 'Student account is not linked to a student profile.');
             abort_if($studentId && (int) $studentId !== $ownStudent->id, 403, 'You can only view your own ledger.');
             $studentId = $ownStudent->id;
-            $students = Student::with(['user', 'class'])->whereKey($studentId)->get();
+            $students = Student::query()
+                ->select(['id', 'user_id', 'class_id', 'admission_no'])
+                ->with(['user:id,name', 'class:id,name,section'])
+                ->whereKey($studentId)
+                ->get();
         } else {
-            $students = Student::with(['user', 'class'])->orderBy('admission_no')->get();
+            $students = Student::query()
+                ->select(['id', 'user_id', 'class_id', 'admission_no'])
+                ->with(['user:id,name', 'class:id,name,section'])
+                ->orderBy('admission_no')
+                ->when(is_int($pdfLimit), fn ($query) => $query->limit($pdfLimit))
+                ->get();
         }
 
         $ledger = collect();
         $selectedStudent = null;
 
         if ($studentId) {
-            $selectedStudent = Student::with(['user', 'class'])->findOrFail($studentId);
+            $selectedStudent = Student::query()
+                ->select(['id', 'user_id', 'class_id', 'admission_no'])
+                ->with(['user:id,name', 'class:id,name,section'])
+                ->findOrFail($studentId);
             if ($isStudent) {
                 abort_unless($selectedStudent->id === $request->user()->student->id, 403);
             }
-            $events = $this->ledgerEvents($selectedStudent, $academicYearId);
+            $events = $this->ledgerEvents($selectedStudent, $academicYearId, is_int($pdfLimit) ? $pdfLimit : null);
 
             $balances = [];
             $ledger = $events->map(function ($event) use (&$balances) {
@@ -120,15 +133,21 @@ class StudentFinancialLedgerReportController extends Controller
     /**
      * Build a chronological ledger of charges (invoices) and payments for a student.
      */
-    private function ledgerEvents(Student $student, ?int $academicYearId): Collection
+    private function ledgerEvents(Student $student, ?int $academicYearId, ?int $limit = null): Collection
     {
-        $invoiceQuery = Invoice::live()->where('student_id', $student->id);
+        $invoiceQuery = Invoice::live()
+            ->select(['id', 'student_id', 'issue_date', 'created_at', 'invoice_no', 'total', 'currency'])
+            ->where('student_id', $student->id);
 
         if ($academicYearId) {
             $invoiceQuery->whereHas('term', fn ($q) => $q->where('academic_year_id', $academicYearId));
         }
 
-        $invoices = $invoiceQuery->get();
+        $eventLimit = $limit === null ? null : (int) ceil($limit / 2);
+        $invoices = $invoiceQuery
+            ->orderBy('issue_date')
+            ->when($eventLimit !== null, fn ($query) => $query->limit($eventLimit))
+            ->get();
         $charges = $invoices->map(function ($inv) {
             return [
                 'date' => $inv->issue_date?->toDateString() ?? $inv->created_at->toDateString(),
@@ -139,8 +158,12 @@ class StudentFinancialLedgerReportController extends Controller
             ];
         });
 
-        $payments = Payment::whereIn('invoice_id', $invoices->pluck('id'))
+        $payments = Payment::query()
+            ->select(['id', 'invoice_id', 'paid_at', 'created_at', 'receipt_no', 'amount', 'currency'])
+            ->whereIn('invoice_id', $invoices->pluck('id'))
             ->whereNull('reversed_at')
+            ->orderBy('paid_at')
+            ->when($eventLimit !== null, fn ($query) => $query->limit($eventLimit))
             ->get()
             ->map(function ($p) {
                 return [

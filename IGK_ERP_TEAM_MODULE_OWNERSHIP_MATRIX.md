@@ -1,16 +1,57 @@
 # IGK ERP Team Module Ownership Matrix
 
-| Member | Role | Module | Folders | Reviewer | Hours |
-|---|---|---|---|---|---|
-| Alas | Team Lead | Auth, RBAC, Exams, Grading, Results; shared finance foundation and integration | app/Http/Controllers/Auth, app/Policies, app/Services/GradingService.php; finance migrations, permissions, policies, shared routes, app/Support/Money.php | Mentor | 120 |
-| Shilfa | Team Lead | Finance fee structures (M19) and finance dashboard implementation (M23) | app/Http/Controllers/Accountant/FeeStructureController.php, app/Http/Controllers/Accountant/DashboardController.php; corresponding fee/dashboard views, requests and tests | Alas (finance), Rajiya (dashboard UI) | 60 |
-| Rajiya | Member; D4 UI reviewer | Students, Guardians, Documents, Enrollment; finance invoices (M20), R10 defaulters report, dashboard UI review | app/Models/Student.php, app/Services/EnrollmentService.php, resources/views/students; invoice models/service/job/controller/views/PDF, DefaultersReportController.php and report view/tests; review Shilfa's dashboard UI | Alas (finance), Shilfa (reports) | 80 |
-| Hasfa | Member | Academic structure, Timetable, Attendance; finance payments/receipts (M21) and fee collection report (R9) | app/Models/AcademicYear.php, Term.php, ClassModel.php, resources/views/academic; payment service/controller, receipt numbering/views/PDF, FeeCollectionReportController.php with tests | Alas | 80 |
-| Sumaiya | Member; D6 QA/release | M25 audit hooks, finance QA/security/performance, R11 ledger implementation, finance test documentation; announcements QA | Finance audit hooks and test data; authorization/audit/security tests; StudentFinancialLedgerReportController.php, ReportStudentFinancialLedger.blade.php and R11 tests; finance test-case register, docs/known-issues.md | Alas (audit/security), Rajiya (independent R11 review) | 80 |
+இந்தப் பங்கு ஒதுக்கீடு team planning-க்கானது. **Core / Accounts** என்பது MVP வேலைப் பிரிவு; **Post-MVP + Missing Modules** என்பது அடுத்த கட்ட விரிவாக்கம். ஒரு feature ஏற்கனவே ஓரளவு உள்ளது என்பதற்காக அதை மீண்டும் எழுத வேண்டாம்—முதலில் தற்போதைய routes, controllers, models, migrations, seeders, tests-ஐப் பார்த்து gap மட்டும் implement செய்யவும்.
 
-Team leads: Alas and Shilfa. Other team members: Rajiya, Hasfa, Sumaiya. Finance role mapping for this team: Alas = D1, Rajiya = D4 (UI review), Shilfa = D5 (finance owner), Sumaiya = D6 (QA/release); Hasfa retains the academic-domain allocation and implements the delegated payment/R9 work.
+## Core
 
-SOP §22 assigns finance ownership (M19-M21, M24) to D5, dashboard/UI (M23) to D4, and audit/QA (M25) to D6. For the Accounts task split, Shilfa implements M19 and M23; Rajiya implements M20 and R10; Hasfa implements M21 and R9; Sumaiya implements M25/QA and the R11 report. Shilfa retains D5 accountability for M24, with R11 implementation delegated to D6/Sumaiya and independently reviewed by Rajiya. Shilfa owns the dashboard implementation and Rajiya provides the D4 UI review. This is the agreed task-level split; it keeps Shilfa to M19/M23, Rajiya to M20/R10, Hasfa to M21/R9, and Sumaiya to QA/M25 plus delegated R11.
+| Member | Assigned modules |
+|---|---|
+| Alas | Admin; Parent/Guardian |
+| Rajiya | Student |
+| Hasfa | Reports |
+| Sumaiya | Teacher |
 
-Alas is the single coordinator/author for shared finance migrations, permissions, policies, shared finance routes, and shared money helpers. No other developer edits those shared files concurrently; schema requests go through Alas. Feature owners implement module files and tests on separate branches and submit PRs for review. Shared files requiring leader approval also include routes/web.php, config/*, app/Models/User.php, shared layouts, and common services.
-No same file assigned to two developers simultaneously.
+## Accounts
+
+| Member | Assigned modules |
+|---|---|
+| Shilfa | Fee structures; fee items |
+| Rajiya | Payments; receipts |
+| Alas | Invoices; shared files |
+| Sumaiya | Term automation; artisan commands; events |
+| Hasfa | Dashboard; portals; PDF; access tests |
+
+## Post-MVP + Missing Modules
+
+| Member | Assigned modules / enhancements |
+|---|---|
+| Alas | HR and payroll; staff attendance; CSV bulk imports; saved filter presets; two-factor authentication |
+| Shilfa | Finance and accounting ledger; online payment gateway; multi-branch |
+| Rajiya | Inventory and stock; procurement; transportation |
+| Sumaiya | Messaging and SMS; transcripts and CGPA; daily absentee digest |
+| Hasfa | Library; LMS; dashboard charts; PDF export of reports |
+
+## Working boundaries
+
+- Each owner leads implementation, tests, and documentation for the assigned module. Coordinate cross-module dependencies before changing shared code.
+- Alas coordinates shared authentication/authorization foundations and requests affecting shared routes, policies, permissions, configuration, common models/services, migrations, or layouts. Agree the owner before editing a shared file; do not have two people modify the same file concurrently.
+- Use a separate feature branch per task and submit a focused Pull Request for review; do not push module work directly to `main`.
+- A module assignment describes ownership, not a claim that the feature is missing or complete. Reuse existing implementation and add only the agreed gap/enhancement.
+
+## Current project code map
+
+Paths below are starting points, not an exhaustive list; follow existing code and route conventions:
+
+| Area | Existing code locations |
+|---|---|
+| Admin / authentication | `app/Http/Controllers/InstitutionAdmin/`, `app/Http/Controllers/SuperAdmin/`, `app/Http/Controllers/Auth/` |
+| Student / guardian | `app/Http/Controllers/Student/`, `app/Http/Controllers/Guardian/`, `app/Models/` |
+| Teacher / academic | `app/Http/Controllers/Teacher/`, `app/Http/Controllers/Registrar/`, `app/Models/` |
+| Accounts / finance | `app/Http/Controllers/Accountant/`, `app/Http/Controllers/Accounting/` |
+| Reports | `app/Http/Controllers/Report/` |
+| Shared and integration work | `app/Policies/`, `app/Services/`, `app/Support/`, `app/Observers/`, `routes/`, `database/migrations/`, `database/seeders/`, `tests/` |
+| Views | Existing feature folders under `resources/views/` |
+
+## Setup and shared demo data
+
+Every developer should run the same committed migrations and seeders against their **own** local database. Follow [README-SETUP.md](./README-SETUP.md) to create `.env`, run `php artisan migrate --seed`, start the app, and safely refresh local demo data. Demo credentials and role-wise test examples are in [sample dataset.md](./sample%20dataset.md). Do not share a database file or `.env`.

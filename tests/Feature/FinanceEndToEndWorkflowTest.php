@@ -86,10 +86,11 @@ class FinanceEndToEndWorkflowTest extends TestCase
             'invoice_id' => $invoice->id,
             'amount' => '7500.00',
             'method' => 'bank_transfer',
-            'reference' => 'TX-E2E-1',
+            'reference' => 'tx-e2e-1',
             'paid_at' => today()->toDateString(),
         ])->assertRedirect();
 
+        $this->assertDatabaseHas('payments', ['invoice_id' => $invoice->id, 'reference' => 'TX-E2E-1']);
         $invoice->refresh();
         $this->assertSame('12500.00', $invoice->amount_paid);
         $this->assertSame('0.00', $invoice->balance);

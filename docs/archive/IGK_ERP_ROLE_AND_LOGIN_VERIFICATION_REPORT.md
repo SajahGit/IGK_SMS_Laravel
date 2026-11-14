@@ -1,6 +1,6 @@
 # IGK ERP Role and Login Verification Report
 
-> Historical role-verification snapshot. Current route-level verification and latest test results are documented in [IGK_ERP_FINAL_SOP_COMPLIANCE_AUDIT.md](../IGK_ERP_FINAL_SOP_COMPLIANCE_AUDIT.md).
+> Historical role-verification snapshot. Current role permissions are defined in [RolePermissionSeeder.php](../../database/seeders/RolePermissionSeeder.php), with route-level checks in [RoleLoginVerificationTest.php](../../tests/Feature/RoleLoginVerificationTest.php).
 
 **Project:** E:\Laravel-Projects\Architectured Final S  
 **Audit Type:** READ-ONLY verification — no files or database records modified  

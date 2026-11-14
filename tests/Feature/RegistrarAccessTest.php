@@ -13,7 +13,7 @@ class RegistrarAccessTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_registrar_can_open_its_dashboard_and_read_academic_and_financial_reports(): void
+    public function test_registrar_can_open_its_dashboard_and_read_academic_but_not_financial_reports(): void
     {
         $this->artisan('db:seed', ['--class' => RolePermissionSeeder::class])->run();
         app()[PermissionRegistrar::class]->forgetCachedPermissions();
@@ -37,7 +37,9 @@ class RegistrarAccessTest extends TestCase
             ->assertOk();
 
         $this->get(route('reports.fee-collection'))
-            ->assertOk();
+            ->assertForbidden();
+        $this->get(route('reports.student-ledger'))
+            ->assertForbidden();
     }
 
     public function test_registrar_gets_scoped_read_access_but_not_role_or_finance_write_access(): void
@@ -58,13 +60,13 @@ class RegistrarAccessTest extends TestCase
             ->assertOk();
 
         $this->get(route('admin.students.index'))->assertOk();
-        $this->get(route('admin.departments.create'))->assertOk();
-        $this->get(route('admin.programs.create'))->assertOk();
-        $this->get(route('admin.curricula.create'))->assertOk();
+        $this->get(route('admin.departments.create'))->assertForbidden();
+        $this->get(route('admin.programs.create'))->assertForbidden();
+        $this->get(route('admin.curricula.create'))->assertForbidden();
         $this->get(route('admin.exams.create'))->assertOk();
         $this->post(route('admin.departments.store'), ['name' => 'Languages', 'code' => 'LANG'])
-            ->assertRedirect(route('admin.departments.index'));
-        $this->assertDatabaseHas('departments', ['code' => 'LANG']);
+            ->assertForbidden();
+        $this->assertDatabaseMissing('departments', ['code' => 'LANG']);
         $this->get(route('admin.roles.index'))->assertForbidden();
         $this->get(route('admin.users.create'))->assertForbidden();
         $this->get(route('accountant.invoices.create'))->assertForbidden();

@@ -34,6 +34,7 @@ class LocalDemoCredentialsSeeder extends Seeder
                     'teacher@school.test',
                     'teacher2@school.test',
                     'accountant@school.test',
+                    'librarian@school.test',
                     'student@school.test',
                     'guardian@school.test',
                 ])
@@ -61,6 +62,7 @@ class LocalDemoCredentialsSeeder extends Seeder
             'student' => 'Student',
             'registrar' => 'Registrar',
             'accountant' => 'Accountant',
+            'librarian' => 'Librarian',
             'parent' => 'Guardian',
         ];
         $users->each(function (User $user) use ($roleMap): void {
@@ -75,14 +77,24 @@ class LocalDemoCredentialsSeeder extends Seeder
         foreach ([
             'registrar@school.test' => ['Amina Rahman', 'registrar'],
             'accountant@school.test' => ['Daniel Osei', 'accountant'],
+            'librarian@school.test' => ['Mina Perera', 'librarian'],
         ] as $email => [$name, $role]) {
-            User::firstOrCreate(['email' => $email], [
+            $user = User::firstOrCreate(['email' => $email], [
                 'name' => $name,
                 'password' => 'password',
                 'role' => $role,
                 'is_active' => true,
                 'must_change_password' => false,
             ]);
+
+            if ($email === 'librarian@school.test') {
+                $user->update([
+                    'name' => $name,
+                    'role' => $role,
+                    'is_active' => true,
+                    'must_change_password' => false,
+                ]);
+            }
         }
 
         $this->ensureProfileLogin('teacher@school.test', 'Mr. Lathif', 'teacher', Teacher::class, 'user_id');

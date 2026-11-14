@@ -17,7 +17,7 @@
             @csrf
             <div class="mb-3">
                 <label for="name" class="form-label">Role name</label>
-                <input id="name" name="name" type="text" class="form-control" value="{{ old('name') }}" required maxlength="255">
+                <input id="name" name="name" type="text" class="form-control" value="{{ old('name') }}" required maxlength="50" pattern="[A-Za-z][A-Za-z0-9\s_\x2d]*" data-live-filter="role-name">
             </div>
             <div class="mb-3">
                 <label for="guard_name" class="form-label">Guard</label>

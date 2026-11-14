@@ -1,77 +1,49 @@
-﻿# IGK SCHOOL ERP - MANUAL TEST DATABASE SAFETY REVIEW
+# IGK School ERP — Manual Test Database Safety Review
 
-**Generated:** 2026-11-02  
-**Project:** E:\Laravel-Projects\Architectured Final S  
-**Target:** archi_manual_test (CREATED - separate schema)  
-**Protected:** archi (UNTOUCHED)  
+**Updated:** 2026-11-14
+**Approved local test schema name:** `school_management_system_testing_db`
+**Existing workspace schema observed:** `school_management_new` (not to be reset or dropped by this guide)
 
-## 1. CONFIGURATION VERIFIED
-- .env unchanged: DB_CONNECTION=mysql, DB_HOST=127.0.0.1, DB_PORT=3306, DB_DATABASE=archi, DB_USERNAME=root
-- config/database.php uses env vars; tests isolated via phpunit.xml (SQLite in-memory)
+## Findings
 
-## 2. TEMPORARY OVERRIDE (SAFE)
-`powershell
-="archi_manual_test"
+- The current `.env` at inspection time selected MySQL at `127.0.0.1:3306/school_management_new`, not the SQLite values pasted into chat.
+- The existing schema had 10,017 `users` rows and 64 applied migrations; the two newest migrations were pending.
+- `school_management_system_testing_db` was not present in the inspected server schema list.
+- `phpunit.xml` configures `APP_ENV=testing` and in-memory SQLite, so the automated suite is isolated from the local MySQL app DB.
+- `php artisan db:show --counts` failed because this MySQL setup lacks `performance_schema.session_status`; that command failure is not proof the application database is missing. Use config output, `migrate:status`, and phpMyAdmin.
+
+## Safe commands for the new local test database
+
+Create the target schema in phpMyAdmin (on your own local server):
+
+```sql
+CREATE DATABASE school_management_system_testing_db
+  CHARACTER SET utf8mb4
+  COLLATE utf8mb4_unicode_ci;
+```
+
+Set that database in your private `.env`, then verify before any migration or seeding:
+
+```powershell
 php artisan config:clear
-php artisan config:show database | Select-String -Pattern "database"
-# restore
-Remove-Item Env:DB_DATABASE -ErrorAction SilentlyContinue
-php artisan config:clear
-`
+php artisan config:show database.default
+php artisan config:show database.connections.mysql.database
+php artisan migrate:status
+```
 
-## 3. CONNECTION SAFETY
-Laravel will connect to archi_manual_test only when override is set and config cleared. Always verify with config:show before any DB command. Never modify .env.
+Proceed only when the connection is `mysql` and the selected DB is exactly `school_management_system_testing_db`:
 
-## 4. MIGRATIONS (24) - ORDER OK
-Ordered by timestamp; dependencies reviewed. No circular issues obvious.
+```powershell
+php artisan migrate --seed
+php artisan storage:link
+```
 
-## 5. SEEDERS REVIEW
-RolePermissionSeeder: creates 6 roles/permissions, firstOrCreate - safe if run on empty DB.  
-SuperAdminSeeder: creates superadmin by email, firstOrCreate-like - safe.  
-DatabaseSeeder: calls RolePermissionSeeder, creates demo data via create() with mt_srand(42); no TRUNCATE/DELETE found.  
-SettingSeeder/GradeScaleSeeder: inspected as existing, likely firstOrCreate.
+Each teammate should create the same-named schema on their own local MySQL instance and run the same seeders. Do not share one database or `.env` unless a shared development server was explicitly chosen and separately protected.
 
-**Caution:** Running twice may cause unique constraint errors. Only run on empty archi_manual_test.
+## Reset and deletion safeguards
 
-## 6. EXACT COMMANDS
-**Verify before every DB command:**
-`powershell
-php artisan config:show database | Select-String -Pattern "connection|host|database"
-`
+`php artisan migrate:fresh --seed` is destructive: it removes all tables/data from the configured database. Never run it until you verify that `.env` selects your disposable local test schema. Never run it against `school_management_new`, a shared DB, or production.
 
-**Migrate:**
-`powershell
-="archi_manual_test"; php artisan config:clear
-php artisan config:show database | Select-String -Pattern "database"  # must be archi_manual_test
-php artisan migrate --force
-`
+Unknown phpMyAdmin schemas are not automatically unused. Identify owner and application, export a backup, verify the target DB works, and only then manually drop a single confirmed-unused schema. Do not use wildcard/loop/bulk DROP commands. Never delete MySQL system schemas (`information_schema`, `mysql`, `performance_schema`, `sys`) or phpMyAdmin metadata unless you understand the consequences. This work has not deleted or seeded any database.
 
-**Seed (approved order):**
-`powershell
-="archi_manual_test"; php artisan config:clear
-php artisan config:show database | Select-String -Pattern "database"  # must be archi_manual_test
-php artisan db:seed --class=RolePermissionSeeder --force
-php artisan db:seed --class=SuperAdminSeeder --force
-php artisan db:seed --class=SettingSeeder --force
-php artisan db:seed --class=GradeScaleSeeder --force
-php artisan db:seed --force
-`
-
-**Verify seeded:**
-Check roles/users/permissions in archi_manual_test via MySQL tools.
-
-**Restore:**
-`powershell
-Remove-Item Env:DB_DATABASE -ErrorAction SilentlyContinue
-php artisan config:clear
-php artisan config:show database | Select-String -Pattern "database"  # must be archi
-`
-
-## 7. SAFETY CHECKLIST
-- [ ] Never modify .env
-- [ ] Never touch archi
-- [ ] Always verify target DB before commands
-- [ ] Never use migrate:fresh/refresh/wipe
-- [ ] Restore env after testing
-
-**Review Complete:** No commands executed, no files/DB modified. Ready with full safeguards.
+This guide supersedes the older 2026-11-02 version, which named different databases and described an earlier migration/seeder state. Follow current `README-SETUP.md` and the current application migrations/seeders.

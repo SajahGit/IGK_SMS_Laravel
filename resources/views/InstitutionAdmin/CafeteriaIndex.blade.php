@@ -14,9 +14,9 @@
         <form method="POST" action="{{ route('admin.cafeteria.items.store') }}" class="row g-2 align-items-end">
             @csrf
             <div class="col-md-3"><label for="new-inventory-item" class="form-label">Stock item</label><select id="new-inventory-item" name="inventory_item_id" class="form-select" required><option value="">Choose stock</option>@foreach ($inventoryItems as $inventoryItem)<option value="{{ $inventoryItem->id }}">{{ $inventoryItem->name }} ({{ $inventoryItem->quantity_on_hand }} {{ $inventoryItem->unit }})</option>@endforeach</select></div>
-            <div class="col-md-3"><label for="new-name" class="form-label">Menu name</label><input id="new-name" name="name" class="form-control" maxlength="150" required></div>
+            <div class="col-md-3"><label for="new-name" class="form-label">Menu name</label><input id="new-name" name="name" class="form-control" maxlength="80" pattern="[A-Za-z][A-Za-z0-9\s\x28\x29\x2d]*" data-live-filter="letter-start-name" required></div>
             <div class="col-md-2"><label for="new-price" class="form-label">Price</label><input id="new-price" name="price" type="number" step="0.01" min="0.01" class="form-control" required></div>
-            <div class="col-md-3"><label for="new-description" class="form-label">Description</label><input id="new-description" name="description" class="form-control" maxlength="2000"></div>
+            <div class="col-md-3"><label for="new-description" class="form-label">Description</label><input id="new-description" name="description" class="form-control" maxlength="255" pattern="[A-Za-z0-9\s.,!?\x22\x27\x28\x29\x2d\x2f:]*" data-live-filter="description"></div>
             <div class="col-md-1"><button class="btn btn-primary">Add</button></div>
         </form>
     </div>
@@ -45,9 +45,9 @@
                                     <option value="{{ $item->inventory_item_id }}" selected>{{ $item->inventoryItem->name }} (inactive stock)</option>
                                 @endif
                             </select>
-                            <input name="name" value="{{ $item->name }}" class="form-control form-control-sm" aria-label="Menu name" maxlength="150" required>
+                            <input name="name" value="{{ $item->name }}" class="form-control form-control-sm" aria-label="Menu name" maxlength="80" pattern="[A-Za-z][A-Za-z0-9\s\x28\x29\x2d]*" data-live-filter="letter-start-name" required>
                             <input name="price" value="{{ $item->price }}" type="number" min="0.01" step="0.01" class="form-control form-control-sm" aria-label="Price" required>
-                            <input name="description" value="{{ $item->description }}" class="form-control form-control-sm" aria-label="Description" maxlength="2000">
+                            <input name="description" value="{{ $item->description }}" class="form-control form-control-sm" aria-label="Description" maxlength="255" pattern="[A-Za-z0-9\s.,!?\x22\x27\x28\x29\x2d\x2f:]*" data-live-filter="description">
                             <select name="is_available" class="form-select form-select-sm" aria-label="Availability">
                                 <option value="1" @selected($item->is_available)>Available</option>
                                 <option value="0" @selected(! $item->is_available)>Unavailable</option>

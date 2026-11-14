@@ -96,11 +96,11 @@ class CafeteriaController extends Controller
                 Rule::exists('inventory_items', 'id'),
                 Rule::unique('cafeteria_items', 'inventory_item_id')->ignore($item?->id),
             ],
-            'name' => ['required', 'string', 'max:150'],
-            'description' => ['nullable', 'string', 'max:2000'],
-            'price' => ['required', 'numeric', 'gt:0', 'max:9999999999.99', function ($attribute, $value, $fail): void {
+            'name' => ['required', 'string', 'max:80', 'regex:/\A[A-Za-z][A-Za-z0-9\s()\-]*\z/'],
+            'description' => ['nullable', 'string', 'max:255', 'regex:/\A[A-Za-z0-9\s.,!?\'"()\-:\/]*\z/'],
+            'price' => ['required', 'numeric', 'min:0.01', 'max:9999999999.99', function ($attribute, $value, $fail): void {
                 if (! Money::hasValidScale($value)) {
-                    $fail('The price must be a non-negative amount with no more than two decimal places.');
+                    $fail('The price must be at least 0.01 with no more than two decimal places.');
                 }
             }],
             'is_available' => [$item ? 'required' : 'sometimes', 'boolean'],

@@ -62,13 +62,13 @@
 <div class="card shadow-sm border-0">
     <div class="table-responsive">
         <table class="table table-hover mb-0 align-middle">
-            <thead><tr><th>Term</th><th>Program</th><th>Section</th><th>Subject</th><th>Teacher</th><th>Student Count</th><th>Student List</th></tr></thead>
+            <thead><tr><th class="print-nowrap">Term</th><th>Program</th><th class="print-nowrap">Section</th><th>Subject</th><th>Teacher</th><th class="print-nowrap">Student Count</th><th>Student List</th></tr></thead>
             <tbody>
             @forelse ($rows as $row)
                 <tr>
-                    <td>{{ $row['term'] }}</td>
+                    <td class="print-nowrap">{{ $row['term'] }}</td>
                     <td>{{ $row['program'] }}</td>
-                    <td>{{ $row['class'] }}</td>
+                    <td class="print-nowrap">{{ $row['class'] }}</td>
                     <td>{{ $row['subject'] }}</td>
                     <td>{{ $row['teacher'] }}</td>
                     <td>{{ $row['student_count'] }}</td>

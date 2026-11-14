@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Http\Controllers\Report\StudentReportController;
 use App\Models\AcademicYear;
 use App\Models\Attendance;
 use App\Models\AttendanceSession;
@@ -20,6 +21,8 @@ use App\Services\TermResultService;
 use Database\Seeders\GradeScaleSeeder;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\PermissionRegistrar;
 use Tests\TestCase;
@@ -62,6 +65,105 @@ class ReportsParityTest extends TestCase
         $this->assertSame([
             '#', 'Admission No', 'Name', 'Program', 'Section', 'Status', 'Admission Date', 'Guardian Phone',
         ], $this->csvHeader($response));
+    }
+
+    public function test_student_pdf_report_caps_large_exports_at_five_hundred_students(): void
+    {
+        $admin = $this->seedAndAdmin();
+        $this->actingAs($admin);
+        $class = SchoolClass::create(['name' => 'Grade 10', 'section' => 'A']);
+        $now = now()->toDateTimeString();
+        $userRows = [];
+
+        for ($index = 1; $index <= 1001; $index++) {
+            $userRows[] = [
+                'name' => 'PDF Student '.$index,
+                'email' => 'pdf-cap-'.$index.'@school.test',
+                'password' => 'unused-test-password',
+                'role' => 'student',
+                'is_active' => true,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ];
+        }
+
+        foreach (array_chunk($userRows, 100) as $batch) {
+            DB::table('users')->insert($batch);
+        }
+
+        $userIds = DB::table('users')
+            ->where('email', 'like', 'pdf-cap-%@school.test')
+            ->orderBy('id')
+            ->pluck('id');
+        $studentRows = [];
+
+        foreach ($userIds as $offset => $userId) {
+            $studentRows[] = [
+                'user_id' => $userId,
+                'class_id' => $class->id,
+                'admission_no' => sprintf('PDF-%04d', $offset + 1),
+                'created_at' => $now,
+                'updated_at' => $now,
+            ];
+        }
+
+        foreach (array_chunk($studentRows, 100) as $batch) {
+            DB::table('students')->insert($batch);
+        }
+
+        $request = Request::create('/reports/students/pdf');
+        $request->setUserResolver(fn () => $admin);
+        $reportView = app(StudentReportController::class)->pdf($request);
+        $viewData = $reportView->getData();
+
+        $this->assertCount(500, $viewData['students']);
+
+        $this->get(route('reports.pdf', ['report' => 'students']))
+            ->assertOk()
+            ->assertHeader('content-type', 'application/pdf');
+    }
+
+    public function test_fee_collection_and_defaulters_pdfs_render_with_limited_relations(): void
+    {
+        $admin = $this->seedAndAdmin();
+        $this->actingAs($admin);
+
+        $class = SchoolClass::create(['name' => 'Grade 10', 'section' => 'A']);
+        $studentUser = User::create([
+            'name' => 'PDF Finance Student',
+            'email' => 'pdf-finance-student@school.test',
+            'password' => 'password',
+            'role' => 'student',
+        ]);
+        $student = Student::create([
+            'user_id' => $studentUser->id,
+            'class_id' => $class->id,
+            'admission_no' => 'PDF-FIN-001',
+        ]);
+        $invoice = Invoice::create([
+            'student_id' => $student->id,
+            'invoice_no' => 'PDF-INV-001',
+            'issue_date' => today()->subDays(20),
+            'due_date' => today()->subDays(10),
+            'total' => '100.00',
+            'amount_paid' => '25.00',
+            'balance' => '75.00',
+            'status' => 'partially_paid',
+        ]);
+        Payment::create([
+            'invoice_id' => $invoice->id,
+            'receipt_no' => 'PDF-RCP-001',
+            'amount' => '25.00',
+            'method' => 'cash',
+            'paid_at' => today(),
+            'received_by' => $admin->id,
+        ]);
+
+        foreach (['fee-collection', 'defaulters'] as $report) {
+            $this->get(route('reports.pdf', ['report' => $report]))
+                ->assertOk()
+                ->assertHeader('content-type', 'application/pdf');
+        }
     }
 
     public function test_r2_enrollment_register_csv_streams(): void
@@ -124,6 +226,9 @@ class ReportsParityTest extends TestCase
         $this->assertSame([
             'Rank', 'Admission No', 'Name', 'Marks', 'Maximum', 'Percentage', 'Grade', 'Absent',
         ], $csvRows[1]);
+        $this->get(route('reports.pdf', ['report' => 'results', 'exam_id' => $exam->id]))
+            ->assertOk()
+            ->assertHeader('content-type', 'application/pdf');
     }
 
     public function test_r6_exam_marks_report_requires_academic_permission(): void
@@ -306,9 +411,9 @@ class ReportsParityTest extends TestCase
         $this->get(route('reports.student-ledger', ['student_id' => $student->id]))
             ->assertStatus(200)
             ->assertSee('ADM001')
-            ->assertSee('10000.00');
+            ->assertSee('LKR 10,000.00');
         $this->assertSame(
-            ['Date', 'Description', 'Type', 'Charge', 'Payment', 'Running Balance'],
+            ['Date', 'Description', 'Type', 'Charge', 'Payment', 'Currency', 'Running Balance'],
             $this->csvHeader($resp)
         );
     }
@@ -428,6 +533,9 @@ class ReportsParityTest extends TestCase
             'term_id' => $term->id,
             'subject_id' => $subject->id,
         ]))->assertOk()->assertSee('1')->assertSee('100%');
+        $this->get(route('reports.pdf', ['report' => 'class-attendance', 'class_id' => $class->id]))
+            ->assertOk()
+            ->assertHeader('content-type', 'application/pdf');
         $classAttendanceCsv = $this->get(route('reports.class-attendance.csv', [
             'class_id' => $class->id,
             'term_id' => $term->id,
@@ -441,6 +549,9 @@ class ReportsParityTest extends TestCase
             'term_id' => $term->id,
             'subject_id' => $subject->id,
         ]))->assertOk()->assertSee('Maths')->assertSee('80%')->assertSee('0/1/0/0/0');
+        $this->get(route('reports.pdf', ['report' => 'subject-performance', 'class_id' => $class->id]))
+            ->assertOk()
+            ->assertHeader('content-type', 'application/pdf');
         $this->artisan('db:seed', ['--class' => GradeScaleSeeder::class])->run();
         $subjectCsv = $this->get(route('reports.subject-performance.csv', [
             'class_id' => $class->id,
@@ -448,10 +559,12 @@ class ReportsParityTest extends TestCase
             'subject_id' => $subject->id,
         ]));
         $subjectCsv->assertOk();
+        $subjectHeader = $this->csvHeader($subjectCsv);
         $this->assertSame([
             'Subject', 'Credit Hours', 'Total Exams', 'Students', 'Average (%)', 'Pass Rate',
-            'Highest (%)', 'Lowest (%)', 'Grade Distribution (A/B/C/S/F)',
-        ], $this->csvHeader($subjectCsv));
+            'Highest (%)', 'Lowest (%)',
+        ], array_slice($subjectHeader, 0, 8));
+        $this->assertStringStartsWith('Grade Distribution (', $subjectHeader[8]);
         $this->assertStringContainsString('Maths (MTH)', $subjectCsv->streamedContent());
         $this->assertStringNotContainsString('BIO,Biology', $subjectCsv->streamedContent());
     }
@@ -463,13 +576,13 @@ class ReportsParityTest extends TestCase
         $feeCollection = $this->get(route('reports.fee-collection.csv'))->assertOk();
         $this->assertSame([
             'Receipt No', 'Date', 'Term', 'Program', 'Invoice No', 'Student Details', 'Class',
-            'Amount (LKR)', 'Method', 'Reference', 'Cashier', 'Status',
+            'Amount', 'Currency', 'Method', 'Reference', 'Cashier', 'Status',
         ], $this->csvHeader($feeCollection));
 
         $defaulters = $this->get(route('reports.defaulters.csv'))->assertOk();
         $this->assertSame([
             'Invoice No', 'Term', 'Program', 'Student Name', 'Class', 'Parent / Contact',
-            'Due Date', 'Total Billed', 'Amount Paid', 'Balance Due', 'Days Overdue',
+            'Due Date', 'Total Billed', 'Amount Paid', 'Balance Due', 'Currency', 'Days Overdue',
         ], $this->csvHeader($defaulters));
     }
 

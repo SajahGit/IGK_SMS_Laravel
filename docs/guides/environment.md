@@ -1,78 +1,49 @@
-# Environment Documentation (environment.md)
+# IGK School ERP Environment Configuration
 
-**Project:** IGK School ERP — Laravel 12.70.0  
-**SOP Reference:** §29 Handover Artefact #3, §27 Pre-deployment checklist  
-**Owner:** D6  
+This guide describes application environment settings without containing real credentials. Use `.env.example` as the local template. Each developer keeps a private `.env`, unique `APP_KEY`, and local database login; never commit or share the `.env`.
 
----
+## Local development and team testing
 
-## .env Key Reference
+The current team test schema name is `school_management_system_testing_db`. Each developer may use that same schema name on their **own local MySQL server**. Do not connect all developers to the same database unless a separately managed shared environment is intended.
 
-Every `.env` key, its meaning, and its production value source. Secrets are referenced, never printed.
+```dotenv
+APP_ENV=local
+APP_DEBUG=true
+APP_URL=http://127.0.0.1:8000
+APP_TIMEZONE=Asia/Colombo
 
-| Key | Meaning | Local Value | Production Value Source | Secret? |
-|---|---|---|---|---|
-| `APP_NAME` | Application name | `Laravel` | `IGK School ERP` | No |
-| `APP_ENV` | Application environment | `local` | `production` | No |
-| `APP_KEY` | Encryption key | `base64:...` | Unique key, generated for production, stored in credential record | Yes |
-| `APP_DEBUG` | Show detailed errors | `true` | `false` | No |
-| `APP_URL` | Application URL | `http://localhost` | `https://sms.school.example` | No |
-| `APP_LOCALE` | Default locale | `en` | `en` | No |
-| `APP_FALLBACK_LOCALE` | Fallback locale | `en` | `en` | No |
-| `APP_FAKER_LOCALE` | Faker locale | `en_US` | N/A (dev only) | No |
-| `APP_MAINTENANCE_DRIVER` | Maintenance mode driver | `file` | `database` | No |
-| `BCRYPT_ROUNDS` | Password hashing cost | `12` | `12` | No |
-| `LOG_CHANNEL` | Log channel | `stack` | `stack` | No |
-| `LOG_STACK` | Log stack channel | `single` | `single` | No |
-| `LOG_DEPRECATIONS_CHANNEL` | Deprecation log channel | `null` | `null` | No |
-| `LOG_LEVEL` | Log level | `debug` | `error` | No |
-| `DB_CONNECTION` | Database connection | `mysql` | `mysql` | No |
-| `DB_HOST` | Database host | `127.0.0.1` | `127.0.0.1` | No |
-| `DB_PORT` | Database port | `3306` | `3306` | No |
-| `DB_DATABASE` | Database name | `archi` | `sms_production` | No |
-| `DB_USERNAME` | Database username | `root` | Dedicated app user (DML-only grants) | Yes |
-| `DB_PASSWORD` | Database password | `AD49#s10f%23` | Stored in credential record | Yes |
-| `SESSION_DRIVER` | Session driver | `database` | `database` | No |
-| `SESSION_LIFETIME` | Session lifetime (minutes) | `120` | `120` | No |
-| `SESSION_ENCRYPT` | Encrypt session cookies | `false` | `false` | No |
-| `SESSION_PATH` | Session cookie path | `/` | `/` | No |
-| `SESSION_DOMAIN` | Session cookie domain | `null` | `null` | No |
-| `SESSION_SECURE_COOKIE` | Secure cookie flag | (not set) | `true` | No |
-| `BROADCAST_CONNECTION` | Broadcast driver | `log` | `log` | No |
-| `FILESYSTEM_DISK` | Default filesystem disk | `local` | Private disk | No |
-| `QUEUE_CONNECTION` | Queue connection | `database` | `database` | No |
-| `CACHE_STORE` | Cache store | `database` | `database` | No |
-| `MEMCACHED_HOST` | Memcached host | `127.0.0.1` | N/A | No |
-| `REDIS_CLIENT` | Redis client | `phpredis` | N/A | No |
-| `REDIS_HOST` | Redis host | `127.0.0.1` | N/A | No |
-| `REDIS_PASSWORD` | Redis password | `null` | N/A | Yes |
-| `REDIS_PORT` | Redis port | `639` | N/A | No |
-| `MAIL_MAILER` | Mail driver | `log` | `smtp` or `mailgun` | No |
-| `MAIL_SCHEME` | Mail scheme | `null` | `tls` | No |
-| `MAIL_HOST` | Mail host | `127.0.0.1` | SMTP host | Yes |
-| `MAIL_PORT` | Mail port | `2525` | `587` | No |
-| `MAIL_USERNAME` | Mail username | `null` | SMTP username | Yes |
-| `MAIL_PASSWORD` | Mail password | `null` | SMTP password | Yes |
-| `MAIL_FROM_ADDRESS` | From address | `hello@example.com` | `noreply@school.example` | No |
-| `MAIL_FROM_NAME` | From name | `${APP_NAME}` | `IGK School ERP` | No |
-| `AWS_ACCESS_KEY_ID` | AWS access key | (empty) | N/A (no S3 in MVP) | Yes |
-| `AWS_SECRET_ACCESS_KEY` | AWS secret key | (empty) | N/A (no S3 in MVP) | Yes |
-| `AWS_DEFAULT_REGION` | AWS region | `us-east-1` | N/A | No |
-| `AWS_BUCKET` | AWS bucket | (empty) | N/A | No |
-| `AWS_USE_PATH_STYLE_ENDPOINT` | Path style endpoint | `false` | N/A | No |
-| `VITE_APP_NAME` | Vite app name | `${APP_NAME}` | `${APP_NAME}` | No |
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=school_management_system_testing_db
+DB_USERNAME=<your-local-mysql-user>
+DB_PASSWORD=<your-local-mysql-password>
+```
 
----
+`.env.example` also sets local log, cache, session, queue, filesystem and mail-to-log defaults. Set `APP_KEY` using `php artisan key:generate`; do not reuse another developer's key.
 
-## Production .env Requirements (§27 Pre-deployment checklist)
+Before any migration/seeding command:
 
-1. `APP_ENV=production`
-2. `APP_DEBUG=false`
-3. `APP_URL` correct (HTTPS)
-4. Unique `APP_KEY` generated for production, stored in credential record
-5. Database credentials set; `.env` permissions `600`, owned by deploy user, not in Git
-6. `SESSION_SECURE_COOKIE=true`
-7. `SESSION_DRIVER=database`
-8. `QUEUE_CONNECTION=database`
-9. `FILESYSTEM_DISK` configured with a private disk
-10. Telescope absent from production dependencies
+```powershell
+php artisan config:clear
+php artisan config:show database.default
+php artisan config:show database.connections.mysql.database
+```
+
+Run `php artisan migrate --seed` only after confirming the local target name. Automated tests use `phpunit.xml`'s in-memory SQLite and do not require the MySQL demo schema.
+
+## Workspace snapshot (2026-11-14)
+
+The checked workspace `.env` selected local MySQL `127.0.0.1:3306/school_management_new`. That database already contained data and had two current migrations pending. The requested `school_management_system_testing_db` schema was not present on the inspected server at the time. This snapshot may become stale; inspect the actual private `.env` and config output before executing commands. Do not use this documentation snapshot as permission to alter or delete either database.
+
+## Production principles
+
+- `APP_ENV=production` and `APP_DEBUG=false`.
+- Use a unique production `APP_KEY` and a dedicated least-privilege database account.
+- Store database, SMTP, SMS and payment-gateway secrets in the deployment secret manager or protected environment configuration, never Git or documentation.
+- Configure HTTPS, secure session cookies, production queue/cache/filesystem settings and monitoring before release.
+- Do not use local demo credentials or run local demo seeders in production. Follow `docs/guides/deploy.md`.
+
+## Sensitive configuration
+
+Document variable names and purpose, never secret values. If an actual credential was committed or shared, rotate it and remove it from tracked files/history using the repository's approved secret-response process.

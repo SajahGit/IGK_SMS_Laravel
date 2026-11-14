@@ -14,6 +14,7 @@ use App\Services\InvoiceService;
 use App\Services\PaymentService;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use RuntimeException;
@@ -436,6 +437,21 @@ class AccountsModuleCompletionTest extends TestCase
         $this->assertSame(0, FeeStructure::count());
     }
 
+    public function test_fee_name_format_and_positive_amount_are_enforced(): void
+    {
+        $class = $this->makeClass();
+        $base = ['class_id' => $class->id, 'amount' => '10.00', 'is_active' => 1];
+
+        $this->actingAs($this->accountant)
+            ->post(route('accountant.fee-structures.store'), $base + ['name' => '2026 / Tuition'])
+            ->assertSessionHasErrors('name');
+
+        $this->post(route('accountant.fee-structures.store'), ['class_id' => $class->id, 'name' => 'Tuition', 'amount' => '0.00'])
+            ->assertSessionHasErrors('amount');
+
+        $this->assertSame(0, FeeStructure::count());
+    }
+
     // ---- dashboards / totals -----------------------------------------------------------
 
     public function test_dashboard_totals_ignore_reversed_payments_and_cancelled_invoices(): void
@@ -454,9 +470,9 @@ class AccountsModuleCompletionTest extends TestCase
             ->get(route('accountant.dashboard'))
             ->assertOk()
             ->assertViewHas('invoiceCount', 2)
-            ->assertViewHas('totalBilled', '7000.00')
-            ->assertViewHas('totalCollected', '1500.00')
-            ->assertViewHas('totalOutstanding', '5500.00');
+            ->assertViewHas('totalBilled', fn (array $amounts) => count($amounts) === 1 && (float) reset($amounts) === 7000.0)
+            ->assertViewHas('totalCollected', fn (array $amounts) => count($amounts) === 1 && (float) reset($amounts) === 1500.0)
+            ->assertViewHas('totalOutstanding', fn (array $amounts) => count($amounts) === 1 && (float) reset($amounts) === 5500.0);
     }
 
     // ---- integrity ---------------------------------------------------------------------
@@ -504,6 +520,6 @@ class AccountsModuleCompletionTest extends TestCase
 
     private function artisanExit(string $command): int
     {
-        return \Illuminate\Support\Facades\Artisan::call($command);
+        return Artisan::call($command);
     }
 }

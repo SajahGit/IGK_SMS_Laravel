@@ -49,20 +49,20 @@
 @if ($classId)
 <div class="card shadow-sm"><div class="table-responsive">
     <table class="table table-hover mb-0 align-middle">
-        <thead><tr><th>Date</th><th>Class/Section</th><th>Subject</th><th>Teacher</th><th>Admission No</th><th>Student</th><th>Status</th><th>Remarks</th><th>Taken by</th><th>Time</th></tr></thead>
+        <thead><tr><th class="print-nowrap">Date</th><th class="print-nowrap">Class/Section</th><th>Subject</th><th>Teacher</th><th class="print-nowrap">Admission No</th><th>Student</th><th>Status</th><th>Remarks</th><th>Taken by</th><th class="print-nowrap">Time</th></tr></thead>
         <tbody>
         @forelse ($rows as $row)
             <tr>
-                <td>{{ $row['session']->date->format('d M Y') }}</td>
-                <td>{{ $row['session']->schoolClass->full_name }}</td>
+                <td class="print-nowrap">{{ $row['session']->date->format('d M Y') }}</td>
+                <td class="print-nowrap">{{ $row['session']->schoolClass->full_name }}</td>
                 <td>{{ $row['session']->classSubject?->subject?->name ?? $row['session']->session_label }}</td>
                 <td>{{ $row['session']->classSubject?->teacher?->user?->name ?? '—' }}</td>
-                <td>{{ $row['record']->student->admission_no }}</td>
+                <td class="print-nowrap">{{ $row['record']->student->admission_no }}</td>
                 <td>{{ $row['record']->student->user->name }}</td>
                 <td>{{ ucfirst($row['record']->status) }}</td>
                 <td>{{ $row['record']->remarks ?: '—' }}</td>
                 <td>{{ $row['session']->taker?->name ?? '—' }}</td>
-                <td>{{ $row['session']->start_time ? substr($row['session']->start_time, 0, 5) : ($row['session']->created_at?->format('H:i') ?? '—') }}</td>
+                <td class="print-nowrap">{{ $row['session']->start_time ? substr($row['session']->start_time, 0, 5) : ($row['session']->created_at?->format('H:i') ?? '—') }}</td>
             </tr>
         @empty
             <tr><td colspan="10" class="text-center text-muted">No attendance records match these filters.</td></tr>

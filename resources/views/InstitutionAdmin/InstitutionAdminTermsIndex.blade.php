@@ -192,11 +192,11 @@
                     <div class="row g-2 mb-3">
                         <div class="col-8">
                             <label for="create_term_name" class="form-label">Term Name <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="create_term_name" name="name" placeholder="e.g. Term 1 or First Semester" required value="{{ old('name') }}">
+                            <input type="text" class="form-control" id="create_term_name" name="name" placeholder="e.g. Term 1 or First Semester" maxlength="40" pattern="[A-Za-z][A-Za-z0-9\s\-]*" data-live-filter="letter-start-term" required value="{{ old('name') }}">
                         </div>
                         <div class="col-4">
                             <label for="create_term_seq" class="form-label">Sequence <span class="text-danger">*</span></label>
-                            <input type="number" class="form-control" id="create_term_seq" name="sequence" min="1" max="10" required value="{{ old('sequence', 1) }}">
+                            <input type="number" class="form-control" id="create_term_seq" name="sequence" min="1" max="12" step="1" required value="{{ old('sequence', 1) }}">
                         </div>
                     </div>
                     <div class="row g-2 mb-3">
@@ -206,7 +206,7 @@
                         </div>
                         <div class="col-6">
                             <label for="create_term_end" class="form-label">End Date <span class="text-danger">*</span></label>
-                            <input type="date" class="form-control" id="create_term_end" name="end_date" required value="{{ old('end_date') }}">
+                            <input type="date" class="form-control" id="create_term_end" name="end_date" data-date-after="create_term_start" required value="{{ old('end_date') }}">
                         </div>
                     </div>
                     <div class="form-check">
@@ -249,11 +249,11 @@
                     <div class="row g-2 mb-3">
                         <div class="col-8">
                             <label for="edit_term_name" class="form-label">Term Name <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="edit_term_name" name="name" required>
+                            <input type="text" class="form-control" id="edit_term_name" name="name" maxlength="40" pattern="[A-Za-z][A-Za-z0-9\s\-]*" data-live-filter="letter-start-term" required>
                         </div>
                         <div class="col-4">
                             <label for="edit_term_seq" class="form-label">Sequence <span class="text-danger">*</span></label>
-                            <input type="number" class="form-control" id="edit_term_seq" name="sequence" min="1" max="10" required>
+                            <input type="number" class="form-control" id="edit_term_seq" name="sequence" min="1" max="12" step="1" required>
                         </div>
                     </div>
                     <div class="row g-2 mb-3">
@@ -263,7 +263,7 @@
                         </div>
                         <div class="col-6">
                             <label for="edit_term_end" class="form-label">End Date <span class="text-danger">*</span></label>
-                            <input type="date" class="form-control" id="edit_term_end" name="end_date" required>
+                            <input type="date" class="form-control" id="edit_term_end" name="end_date" data-date-after="edit_term_start" required>
                         </div>
                     </div>
                     <div class="form-check">
@@ -304,6 +304,8 @@
                 seqInput.value = this.dataset.sequence;
                 startInput.value = this.dataset.start;
                 endInput.value = this.dataset.end;
+                endInput.min = startInput.value;
+                startInput.dispatchEvent(new Event('input'));
                 currentInput.checked = this.dataset.current === '1';
                 editModal.show();
             });

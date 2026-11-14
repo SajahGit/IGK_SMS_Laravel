@@ -18,7 +18,9 @@ class EnrollmentRegisterReportController extends Controller
     {
         abort_unless($request->user()->can('reports.academic'), 403);
 
-        return view('Reports.ReportEnrollmentRegister', $this->reportData($request));
+        $pdfLimit = $request->attributes->get('pdf_export_limit');
+
+        return view('Reports.ReportEnrollmentRegister', $this->reportData($request, is_int($pdfLimit) ? $pdfLimit : null));
     }
 
     public function csv(Request $request): StreamedResponse
@@ -44,7 +46,7 @@ class EnrollmentRegisterReportController extends Controller
         }, 'enrollment-register.csv', ['Content-Type' => 'text/csv']);
     }
 
-    private function reportData(Request $request): array
+    private function reportData(Request $request, ?int $pdfLimit = null): array
     {
         $filters = $request->validate([
             'class_id' => ['nullable', 'integer', 'exists:classes,id'],
@@ -59,25 +61,45 @@ class EnrollmentRegisterReportController extends Controller
             abort_unless($classes->contains('id', (int) $classId), 403, 'You cannot view this class.');
         }
 
-        $classSubjects = ClassSubject::with(['subject', 'teacher.user', 'schoolClass.program', 'term'])
+        $classSubjects = ClassSubject::query()
+            ->select(['id', 'class_id', 'subject_id', 'teacher_id', 'term_id'])
+            ->with([
+                'subject:id,name,code',
+                'teacher:id,user_id',
+                'teacher.user:id,name',
+                'schoolClass:id,name,section,program_id',
+                'schoolClass.program:id,name',
+                'term:id,name',
+            ])
             ->whereIn('class_id', $classes->pluck('id'))
             ->when($classId, fn ($query) => $query->where('class_id', $classId))
             ->when(isset($filters['program_id']), fn ($query) => $query->whereHas('schoolClass', fn ($classes) => $classes->where('program_id', $filters['program_id'])))
             ->when(isset($filters['term_id']), fn ($query) => $query->where('term_id', $filters['term_id']))
             ->when(isset($filters['subject_id']), fn ($query) => $query->where('subject_id', $filters['subject_id']))
-            ->orderBy('class_id')->orderBy('term_id')->orderBy('subject_id')->get();
+            ->orderBy('class_id')->orderBy('term_id')->orderBy('subject_id')
+            ->when($pdfLimit !== null, fn ($query) => $query->limit($pdfLimit))
+            ->get();
 
-        $rows = $classSubjects->map(function (ClassSubject $classSubject) use ($filters) {
-            $students = $classSubject->students()
-                ->with('user')
+        $rows = $classSubjects->map(function (ClassSubject $classSubject) use ($filters, $pdfLimit) {
+            $studentQuery = $classSubject->students()
+                ->select(['students.id', 'students.user_id', 'students.admission_no'])
+                ->with('user:id,name')
                 ->when(isset($filters['status']), fn ($query) => $query->whereIn(
                     'students.id',
                     DB::table('student_subject_enrollments')
                         ->select('student_id')
                         ->where('class_subject_id', $classSubject->id)
                         ->where('status', $filters['status'])
-                ))
-                ->orderBy('admission_no')->get();
+                ));
+            $studentCount = $pdfLimit === null ? null : (clone $studentQuery)->count('students.id');
+            $students = $studentQuery
+                ->orderBy('admission_no')
+                ->when($pdfLimit !== null, fn ($query) => $query->limit(min(20, $pdfLimit)))
+                ->get();
+            $studentList = $students->map(fn ($student) => $student->admission_no.' - '.$student->user->name)->implode(', ');
+            if ($studentCount !== null && $studentCount > $students->count()) {
+                $studentList .= ($studentList ? ', ' : '').'and '.($studentCount - $students->count()).' more';
+            }
 
             return [
                 'term' => $classSubject->term?->name ?? 'Legacy offering',
@@ -85,8 +107,8 @@ class EnrollmentRegisterReportController extends Controller
                 'subject' => $classSubject->subject->name.' ('.$classSubject->subject->code.')',
                 'class' => $classSubject->schoolClass->full_name,
                 'teacher' => $classSubject->teacher?->user?->name ?? '—',
-                'student_count' => $students->count(),
-                'student_list' => $students->map(fn ($student) => $student->admission_no.' - '.$student->user->name)->implode(', ') ?: '—',
+                'student_count' => $studentCount ?? $students->count(),
+                'student_list' => $studentList ?: '—',
             ];
         });
 

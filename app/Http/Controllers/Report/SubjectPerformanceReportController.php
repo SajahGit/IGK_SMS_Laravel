@@ -84,7 +84,19 @@ class SubjectPerformanceReportController extends Controller
             ->unique()
             ->values()
             ->all();
-        $subjectResults = SubjectResult::query()
+        $passingRanges = [];
+        $passingBindings = [];
+        foreach ($classes as $class) {
+            foreach (GradeScaleService::items($class->program?->gradeScale)->where('is_pass', true) as $item) {
+                $passingRanges[] = '(class_id = ? AND COALESCE(percentage, 0) BETWEEN ? AND ?)';
+                array_push($passingBindings, $class->id, $item->min_percent, $item->max_percent);
+            }
+        }
+        $passExpression = $passingRanges === []
+            ? '0'
+            : 'CASE WHEN '.implode(' OR ', $passingRanges).' THEN 1 ELSE 0 END';
+
+        $subjectResultQuery = SubjectResult::query()
             ->whereIn('class_id', $classes->pluck('id'))
             ->where('result_status', 'graded')
             ->when($termId, fn ($query) => $query->where('term_id', $termId))
@@ -96,10 +108,16 @@ class SubjectPerformanceReportController extends Controller
                     ->whereColumn('term_results.class_id', 'subject_results.class_id')
                     ->whereColumn('term_results.student_id', 'subject_results.student_id')
                     ->where('term_results.publication_status', 'published');
-            })
-            ->with('subject')
-            ->get()
-            ->groupBy('subject_id');
+            });
+        $subjectResultAggregates = (clone $subjectResultQuery)
+            ->select('subject_id', 'class_id', 'grade')
+            ->selectRaw('COUNT(*) as results_count')
+            ->selectRaw('SUM(COALESCE(percentage, 0)) as percentage_sum')
+            ->selectRaw('MIN(COALESCE(percentage, 0)) as lowest_percentage')
+            ->selectRaw('MAX(COALESCE(percentage, 0)) as highest_percentage')
+            ->selectRaw("SUM({$passExpression}) as passed_count", $passingBindings)
+            ->groupBy('subject_id', 'class_id', 'grade')
+            ->get();
         $examCounts = Exam::query()
             ->whereIn('class_id', $classes->pluck('id'))
             ->where('is_published', true)
@@ -108,32 +126,52 @@ class SubjectPerformanceReportController extends Controller
             ->selectRaw('subject_id, COUNT(*) as total')
             ->groupBy('subject_id')
             ->pluck('total', 'subject_id');
-        $subjects = $subjectResults->map(function ($rows) use ($gradeLabels, $examCounts, $classes) {
-            $subject = $rows->first()->subject;
-            $studentTermResults = $rows->unique(fn ($row) => $row->term_id.':'.$row->student_id);
-            $grades = collect(array_fill_keys($gradeLabels, 0));
-            foreach ($studentTermResults as $result) {
-                if ($grades->has($result->grade)) {
-                    $grades->put($result->grade, $grades->get($result->grade) + 1);
-                }
+        $subjectIds = $subjectResultAggregates->pluck('subject_id')->unique();
+        $subjectModels = Subject::query()
+            ->whereIn('id', $subjectIds)
+            ->get(['id', 'name', 'code', 'credit_hours'])
+            ->keyBy('id');
+        $subjectsById = [];
+        foreach ($subjectResultAggregates as $aggregate) {
+            $id = (int) $aggregate->subject_id;
+            $subjectsById[$id] ??= [
+                'results_count' => 0,
+                'percentage_sum' => 0.0,
+                'passed_count' => 0,
+                'highest_percentage' => null,
+                'lowest_percentage' => null,
+                'grades' => array_fill_keys($gradeLabels, 0),
+            ];
+            $subjectsById[$id]['results_count'] += (int) $aggregate->results_count;
+            $subjectsById[$id]['percentage_sum'] += (float) $aggregate->percentage_sum;
+            $subjectsById[$id]['passed_count'] += (int) $aggregate->passed_count;
+            $subjectsById[$id]['highest_percentage'] = max(
+                $subjectsById[$id]['highest_percentage'] ?? (float) $aggregate->highest_percentage,
+                (float) $aggregate->highest_percentage
+            );
+            $subjectsById[$id]['lowest_percentage'] = min(
+                $subjectsById[$id]['lowest_percentage'] ?? (float) $aggregate->lowest_percentage,
+                (float) $aggregate->lowest_percentage
+            );
+            if (array_key_exists($aggregate->grade, $subjectsById[$id]['grades'])) {
+                $subjectsById[$id]['grades'][$aggregate->grade] += (int) $aggregate->results_count;
             }
-            $percentages = $studentTermResults->pluck('percentage')->map(fn ($value) => (float) $value);
-            $passed = $studentTermResults->filter(fn ($result) => GradeScaleService::isPassing(
-                (float) $result->percentage,
-                $classes->firstWhere('id', $result->class_id)?->program?->gradeScale
-            ))->count();
+        }
+        $subjects = collect($subjectsById)->map(function ($aggregate, $id) use ($subjectModels, $examCounts) {
+            $count = $aggregate['results_count'];
+            $subject = $subjectModels->get($id);
 
             return [
                 'subject' => $subject,
-                'exams_count' => (int) $examCounts->get($subject->id, 0),
-                'results_count' => $studentTermResults->count(),
-                'avg_percentage' => $percentages->isNotEmpty() ? round($percentages->avg(), 1) : 0.0,
-                'pass_rate' => $studentTermResults->isNotEmpty() ? round($passed / $studentTermResults->count() * 100, 1) : 0.0,
-                'highest_percentage' => $percentages->isNotEmpty() ? $percentages->max() : '—',
-                'lowest_percentage' => $percentages->isNotEmpty() ? $percentages->min() : '—',
-                'grades' => $grades->all(),
+                'exams_count' => (int) $examCounts->get($id, 0),
+                'results_count' => $count,
+                'avg_percentage' => $count > 0 ? round($aggregate['percentage_sum'] / $count, 1) : 0.0,
+                'pass_rate' => $count > 0 ? round($aggregate['passed_count'] / $count * 100, 1) : 0.0,
+                'highest_percentage' => $aggregate['highest_percentage'] ?? '—',
+                'lowest_percentage' => $aggregate['lowest_percentage'] ?? '—',
+                'grades' => $aggregate['grades'],
             ];
-        })->sortBy(fn ($row) => $row['subject']->name)->values();
+        })->filter(fn ($row) => $row['subject'] !== null)->sortBy(fn ($row) => $row['subject']->name)->values();
 
         return [
             SchoolHelper::allowedClasses($request->user()), Term::orderByDesc('start_date')->get(),

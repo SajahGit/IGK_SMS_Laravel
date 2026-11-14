@@ -16,13 +16,17 @@ class UpdateRoleRequest extends FormRequest
     {
         $role = $this->route('role');
         $roleId = $role?->id;
-        $coreRoles = ['Super Admin', 'Institution Admin', 'Registrar', 'Teacher', 'Accountant', 'Student'];
+        $coreRoles = [
+            'Super Admin', 'Institution Admin', 'Registrar', 'Teacher',
+            'Accountant', 'Student', 'Guardian', 'Librarian',
+        ];
 
         return [
             'name' => [
                 'required',
                 'string',
                 'max:50',
+                'regex:/\A[A-Za-z][A-Za-z0-9\s_-]*\z/',
                 Rule::unique('roles', 'name')->ignore($roleId),
                 ...($role && in_array($role->name, $coreRoles, true) ? [Rule::in([$role->name])] : []),
             ],

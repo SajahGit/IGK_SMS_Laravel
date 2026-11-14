@@ -5,12 +5,14 @@ namespace Tests\Feature;
 use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
+use PHPUnit\Framework\Attributes\RunInSeparateProcess;
 use Tests\TestCase;
 
 class InternationalDemoSeederTest extends TestCase
 {
     use RefreshDatabase;
 
+    #[RunInSeparateProcess]
     public function test_full_sample_dataset_covers_international_school_workflows_and_is_idempotent(): void
     {
         DB::table('classes')->insert([

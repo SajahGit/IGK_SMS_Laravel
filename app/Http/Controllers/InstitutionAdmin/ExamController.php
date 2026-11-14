@@ -103,8 +103,8 @@ class ExamController extends Controller
     private function validatedExam(Request $request): array
     {
         $data = $request->validate([
-            'name' => ['required', 'string', 'max:100'],
-            'type' => ['required', 'string', 'max:30'],
+            'name' => ['required', 'string', 'max:80', 'regex:/\A[A-Za-z][A-Za-z0-9\s()\-]*\z/'],
+            'type' => ['required', 'string', 'max:30', 'regex:/\A[A-Za-z\s-]+\z/'],
             'class_id' => ['required', 'integer', 'exists:classes,id'],
             'subject_id' => ['required', 'integer', 'exists:subjects,id'],
             'term_id' => ['required', 'integer', 'exists:terms,id'],
