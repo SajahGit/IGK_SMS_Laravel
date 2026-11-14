@@ -348,7 +348,7 @@ class Phase1AuthAndAcademicTest extends TestCase
                 'email' => 'throttletest@school.test',
                 'password' => 'wrongpassword',
             ]);
-            $response->assertSessionHasErrors('email');
+            $response->assertSessionHasErrors('password');
         }
 
         // 6th attempt should be throttled (429 status code)
