@@ -20,7 +20,7 @@ class BranchOwned implements Scope
             return;
         }
 
-        if (BranchContext::isGlobalAdmin($user)) {
+        if (BranchContext::canAccessAllBranches($user)) {
             $branchId = BranchContext::activeBranchId($user);
             if ($branchId !== null) {
                 $builder->where($model->qualifyColumn('branch_id'), $branchId);

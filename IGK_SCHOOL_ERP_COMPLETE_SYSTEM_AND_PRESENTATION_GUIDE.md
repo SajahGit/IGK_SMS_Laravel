@@ -48,18 +48,17 @@ Browser
 
 The system brings common school records and work into one role-based application. Users see only the screens and actions permitted for their role and, where applicable, their institution/branch context.
 
-The current demo roles are:
+The current active primary roles are:
 
 | Role | Typical responsibility |
 |---|---|
-| Super Admin | Platform-wide setup, roles, permissions, and privileged administration |
-| Institution Admin | Institution and campus operations |
-| Registrar | Student and academic administration |
-| Teacher | Classes, learning, attendance, and academic work |
-| Accountant | Fees, invoices, payments, receipts, and finance views |
-| Librarian | Library catalog and circulation |
-| Student | Own learning, profile, and permitted student portal views |
-| Guardian | Linked student/family views and permitted communication |
+| Super Admin | Platform-wide setup, roles & permissions, salary deductions governance, payment reversals |
+| Institution Admin | Campus operations, academic structures, faculty management, and HR payroll generation |
+| Registrar | Student admissions, enrollment registers, class/section allocations, and campus transfers |
+| Teacher | Assigned classes, lesson plans, timetable, student attendance, marks entry, and self-service profile |
+| Accountant | Fee structures, invoices, payment receipts, procurement, and financial reports |
+| Student | Personal academic profile, timetable, published exam results, report cards, fee invoices, and PayHere checkout |
+| Guardian | Linked children overview, attendance history, academic report cards, and family fee statements |
 
 Exact actions are determined by the current permission definitions and routes; this table is a stakeholder-level overview, not an authorization specification.
 
@@ -188,9 +187,13 @@ These are implementation patterns found in the services/controllers. They are us
 
 **Purchasing and stock:** A user creates a supplier-linked purchase order → submits → an authorized approver approves → full or partial receipt validates quantities/campus and creates inventory receipt movements within a transaction → stock balance changes and audit trail are recorded. Inventory adjustment/issue likewise checks the resulting balance; deleting referenced stock records is guarded.
 
-**Payroll:** HR maintains employees and leave requests → a monthly payroll command/job creates a draft (not paid) run → payroll entries calculate configured statutory values → a different authorized person approves → marking paid posts a balanced journal. Generation does not by itself approve or pay staff.
+**Payroll & Salary Deductions:** HR maintains employees and leave requests → `HrPayrollService` creates a draft payroll run → calculates statutory EPF (8% employee, 12% employer), ETF (3%), and progressive APIT tax. Dual-mode deductions are applied: Automatic Attendance Deductions compute unpaid leave and absent days based on Super Admin policy (dynamic pro-rata or fixed daily amount); Manual Deductions allow Super Admin to enter custom/wished amounts with itemized reasons. A dedicated Super Admin console (`/admin/salary-deductions`) provides strict governance isolated from branch HR. Connected staff members have full transparency into earnings and deductions on their self-service portal (`/teacher/profile`). Payslips feature dark-mode immunity and clean A4 portrait physical printing.
 
-**Portal and communications:** Students and guardians see their permitted linked records; teachers act only on assigned classes/subjects; announcements select recipients by role/academic relationship; messages and notifications are stored for the receiving account. Files/transcripts/reports are returned only through their authorized routes.
+**Multi-Branch Operations:** Branch assignments for both students and teachers guarantee strict campus isolation via `BranchOwned` global scopes. Transfers between physical campuses are orchestrated by `BranchTransferService`, maintaining immutable audit records in `branch_transfers`.
+
+**Portal and communications:** Students and guardians see their permitted linked records; teachers act only on assigned classes/subjects; announcements select recipients by role/academic relationship. 
+
+**Confidential Private Messaging:** 1-on-1 private messaging (`/messages`) connects all institutional actors. The message composer (`/messages/create`) displays all active Students, Teachers, Admin Staff, and Guardians organized in categorized groups with instant live search and role filter pills. Strict privacy invariants guarantee that a conversation is accessible **only to the sender and designated recipient**; unauthorized users or third parties attempting direct URL access receive `403 Forbidden`. The inbox directory (`/messages`) and conversation thread (`/messages/{id}`) explicitly indicate who sent each message via direction badges (*"You sent to [Recipient]"* vs *"Received from [Sender]"*), author names, role badges, timestamps, and read receipts. Database notifications are dispatched exclusively to the recipient with sender identification. Files/transcripts/reports are returned only through their authorized routes.
 
 ## 5. Team module ownership and presentation mapping
 
@@ -206,17 +209,25 @@ This is the team's agreed allocation from the ownership matrix; it does not asse
 
 Shared migrations, route files, roles/permissions, common models/services, and layouts require advance coordination and one agreed editor/reviewer. Feature owners should use separate branches and PRs. Exact folders and module areas are in `IGK_ERP_TEAM_MODULE_OWNERSHIP_MATRIX.md`.
 
-**Suggested code entry points by member** (start here, then follow routes, requests, models, services, views and tests; shared files are not exclusive ownership):
+**Perfected Modular Engineering Division & Ownership Matrix** (detailed in [`docs/TEAM/TEAM_OVERVIEW_AND_RESPONSIBILITY_MATRIX.md`](./docs/TEAM/TEAM_OVERVIEW_AND_RESPONSIBILITY_MATRIX.md)):
 
-| Member | Code areas to trace | Functions/logic to demonstrate |
+| Member | Architectural Engineering Domain | Standalone Deployment Package |
 |---|---|---|
-| Alas | `InstitutionAdmin`/`SuperAdmin` and `Auth` controllers; Guardian portal; Accountant invoice controller; HR/payroll/staff-attendance/import/filter/auth files | Admin and guardian access; invoice creation/issue/cancel/PDF; employee/leave/payroll lifecycle; bulk import/filter; password/2FA and shared authorization. |
-| Rajiya | Student controllers/models/views; `EnrollmentService`; Accountant payment controller and `PaymentService`; inventory, procurement and transport controllers/services | Student/guardian linking and enrollment; invoice payment/receipt/reversal; stock movement and procurement receipt; student transport assignment. |
-| Hasfa | `app/Http/Controllers/Report/`; report PDF controller/views; dashboards and portals; report/access feature tests; Library/LMS routes/controllers/views | Filtered reports and CSV/PDF; dashboard/portal access checks; library circulation and LMS screens where present. |
-| Sumaiya | Teacher controllers/views; attendance/marks/term-result services; jobs/events/notifications/console commands; message/transcript services; absentee mail/command/view | Teacher assignments, attendance and marks; result generation/publication; messaging/announcements; transcript/CGPA; scheduled absentee digest. |
-| Shilfa | Accountant fee structure controller/requests/views; `FeeStructure`, `FeeItem`; accounting journal/report code; PayHere and branch code for roadmap items | Fee structure/item configuration; applicable fee line generation; balanced journal/report flow; sandbox gateway and branch behavior only after runtime verification. |
+| **Alass** (Team Lead) | **Super Admin, Multi-Campus & Governance**: Multi-branch switching, RBAC security, HR & statutory payroll processing (EPF/ETF), Super Admin salary deductions console, system settings, forensic audit trail, and private messaging. | `ALASS_ADMIN_PACKAGE.zip` (71 items) |
+| **Sumaiya** | **Teacher Portal & Examinations**: Teacher desk portal, faculty self-service, class-subject allocation, automated timetable clash detector, attendance roll call, biometric endpoints, marks boundary checks, and batch GPA publishing. | `SUMAIYA_TEACHER_PACKAGE.zip` (57 items) |
+| **Rajiya** | **Student Lifecycle & Guardian Portal**: Admissions registration & onboarding, Student master directory (SIS), multi-child Guardian portal & family context switcher, academic catalog, transcripts, hostels, transport, and cafeteria. | `RAJIYA_STUDENT_PACKAGE.zip` (103 items) |
+| **Hasfa** | **The 11 Master Reports Suite & LMS**: The 11 Master Reports Suite (Enrollment, Attendance, Results, Performance, Financial, Defaulters), real-time CSV streaming engine, pixel-perfect DomPDF generation, Library circulation desk, and LMS. | `HASFA_REPORTS_PACKAGE.zip` (37 items) |
+| **Shilfa** | **Financial Accounting, Ledgers & Procurement**: Fee structures catalog, cohort student invoicing engine, counter cashier payments & receipts, PayHere online gateway, double-entry general ledger, and Procurement supply chain. | `SHILFA_FINANCE_PACKAGE.zip` (68 items) |
+| **All Team** | **Core Shared Architecture**: Base Laravel 12 kernel, `LayoutApp` views, `glass.css`, `app.js`, `User` model, `BranchOwned` global scope, base migrations, and `RolePermissionSeeder`. | `CORE_SHARED_SYSTEM_PACKAGE.zip` (20 items) |
 
-This code map is a presentation aid, not an instruction to edit every listed file. Confirm the current owner and review shared-file changes before implementation.
+Detailed individual guides and Git Fork collaboration instructions are provided in `docs/TEAM/` (and mirrored in `documents/TEAM/`):
+- [Alass Admin Guide](./docs/TEAM/ALASS_ADMIN_AND_SYSTEM_GOVERNANCE.md)
+- [Sumaiya Teacher Guide](./docs/TEAM/SUMAIYA_TEACHER_EXAMS_AND_ACADEMICS.md)
+- [Rajiya Student Guide](./docs/TEAM/RAJIYA_STUDENT_ADMISSIONS_AND_GUARDIAN.md)
+- [Hasfa Reports Guide](./docs/TEAM/HASFA_REPORTS_LIBRARY_AND_LMS.md)
+- [Shilfa Finance Guide](./docs/TEAM/SHILFA_FINANCE_ACCOUNTING_AND_PROCUREMENT.md)
+- [Core Shared Architecture](./docs/TEAM/CORE_SHARED_ARCHITECTURE.md)
+- [Git & Fork Collaboration Guide](./docs/TEAM/GIT_FORK_COLLABORATION_AND_SETUP_GUIDE.md)
 
 ## 6. Detailed file and function catalog
 
@@ -673,7 +684,7 @@ The UI is mainly server-rendered Blade. `resources/views/Layouts/LayoutApp.blade
 - `Teacher/`: `LmsIndex.blade.php`, `LmsShow.blade.php`, `TeacherAttendanceCreate.blade.php`, `TeacherAttendanceIndex.blade.php`, `TeacherClassesIndex.blade.php`, `TeacherClassesStudents.blade.php`, `TeacherDashboard.blade.php`, `TeacherExamsCreate.blade.php`, `TeacherExamsIndex.blade.php`, `TeacherMarksEdit.blade.php`, `TeacherMarksShow.blade.php`, `TeacherTimetableIndex.blade.php`.
 - `Accounting/`: `AccountsForm.blade.php`, `AccountsIndex.blade.php`, `CashflowForm.blade.php`, `IncomeExpense.blade.php`, `JournalsForm.blade.php`, `JournalsIndex.blade.php`, `JournalsShow.blade.php`, `Ledger.blade.php`, `TrialBalance.blade.php`.
 - `Accountant/`: `AccountantDashboard.blade.php`, `AccountantFeeStructuresIndex.blade.php`, `AccountantInvoicesCreate.blade.php`, `AccountantInvoicesIndex.blade.php`, `AccountantInvoicesShow.blade.php`, `AccountantPaymentsCreate.blade.php`, `AccountantReceiptShow.blade.php`.
-- `Auth/`: `AuthForgotPassword.blade.php`, `AuthLogin.blade.php`, `AuthPasswordChange.blade.php`, `AuthResetPassword.blade.php`, `AuthTwoFactorChallenge.blade.php`, `AuthTwoFactorSetup.blade.php`.
+- `Auth/`: `AuthForgotPassword.blade.php`, `AuthLogin.blade.php` (upgraded executive glassmorphic login portal with feature showcase: Separate Access for Admin/Teacher/Student/Guardian, Single-Entry Live Attendance & Marks Sync, and Printable Reports with CSV Download; includes 1-click active role chips and mobile responsive banner), `AuthPasswordChange.blade.php`, `AuthResetPassword.blade.php`, `AuthTwoFactorChallenge.blade.php` (with 1-click demo code autofill), `AuthTwoFactorSetup.blade.php`.
 - `Guardian/`: `ChildHostel.blade.php`, `GuardianAttendance.blade.php`, `GuardianChildSwitch.blade.php`, `GuardianDashboard.blade.php`, `GuardianInvoicesIndex.blade.php`, `GuardianResults.blade.php`.
 - `Layouts/`: `LayoutApp.blade.php`, `LayoutAttendanceTable.blade.php`, `LayoutErrors.blade.php`, `LayoutHead.blade.php`, `LayoutResultsTable.blade.php`, `LayoutStat.blade.php`.
 - `Library/`: `LibraryBookEdit.blade.php`, `LibraryCopiesIndex.blade.php`, `LibraryDashboard.blade.php`, `LibraryFinesIndex.blade.php`, `LibraryLoansIndex.blade.php`, `LibraryMasterIndex.blade.php`.

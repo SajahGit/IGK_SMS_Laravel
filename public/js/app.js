@@ -415,6 +415,7 @@
 
     function enhanceSearchableSelect(select) {
         if (select.closest('[data-international-country], [data-international-phone], [data-nationality-picker], [data-guardian-selector]')) return;
+        if (select.id === 'active-branch' || select.closest('#branchContextForm') || select.hasAttribute('data-no-enhance')) return;
         if (select.dataset.searchableEnhanced) return;
 
         select.dataset.searchableEnhanced = 'true';
@@ -425,7 +426,6 @@
         button.className = 'form-select searchable-select-toggle dropdown-toggle';
         button.setAttribute('data-bs-toggle', 'dropdown');
         button.setAttribute('data-bs-auto-close', 'outside');
-        button.setAttribute('data-bs-display', 'static');
         button.setAttribute('aria-haspopup', 'listbox');
         button.setAttribute('aria-expanded', 'false');
         var menu = document.createElement('div');
@@ -437,7 +437,7 @@
         var search = document.createElement('input');
         search.type = 'search';
         search.className = 'form-control form-control-sm';
-        search.placeholder = 'Search options';
+        search.placeholder = 'Search options...';
         search.setAttribute('aria-label', 'Search options');
         search.dataset.noAutoFilter = 'true';
         searchWrap.appendChild(search);
@@ -451,10 +451,33 @@
         wrapper.appendChild(button);
         wrapper.appendChild(menu);
         select.classList.add('visually-hidden');
-        select.tabIndex = -1;
+
+        function updatePlacement() {
+            var rect = button.getBoundingClientRect();
+            var spaceBelow = window.innerHeight - rect.bottom;
+            if (spaceBelow < 250 && rect.top > 250) {
+                wrapper.classList.add('dropup');
+            } else {
+                wrapper.classList.remove('dropup');
+            }
+        }
+
+        function closeDropdown() {
+            if (window.bootstrap && window.bootstrap.Dropdown) {
+                var inst = window.bootstrap.Dropdown.getInstance(button);
+                if (inst) inst.hide();
+            }
+            menu.classList.remove('show');
+            button.setAttribute('aria-expanded', 'false');
+            wrapper.classList.remove('show');
+        }
 
         function renderOptions() {
             optionsWrap.replaceChildren();
+            var optionCount = select.options.length;
+            // Only display search input if there are more than 5 options
+            searchWrap.style.display = optionCount > 5 ? 'block' : 'none';
+
             Array.from(select.options).forEach(function (option) {
                 var item = document.createElement('button');
                 item.type = 'button';
@@ -465,16 +488,21 @@
                 item.hidden = option.hidden;
                 item.setAttribute('role', 'option');
                 item.setAttribute('aria-selected', option.selected ? 'true' : 'false');
-                item.addEventListener('click', function () {
+                item.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
                     if (select.multiple) {
                         option.selected = !option.selected;
                     } else {
                         select.value = option.value;
                     }
+                    button.classList.remove('is-invalid');
+                    select.setCustomValidity('');
                     select.dispatchEvent(new Event('change', { bubbles: true }));
+                    select.dispatchEvent(new Event('input', { bubbles: true }));
                     syncSelection();
-                    if (!select.multiple && window.bootstrap && window.bootstrap.Dropdown) {
-                        window.bootstrap.Dropdown.getOrCreateInstance(button).hide();
+                    if (!select.multiple) {
+                        closeDropdown();
                     }
                 });
                 optionsWrap.appendChild(item);
@@ -498,6 +526,22 @@
             select.setCustomValidity('');
         }
 
+        // Form submit validation hook for required select fields
+        var form = select.closest('form');
+        if (form) {
+            form.addEventListener('submit', function (e) {
+                if (select.required && !select.disabled && !select.value) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    button.classList.add('is-invalid');
+                    button.focus();
+                    if (window.bootstrap && window.bootstrap.Dropdown) {
+                        window.bootstrap.Dropdown.getOrCreateInstance(button).show();
+                    }
+                }
+            });
+        }
+
         select.addEventListener('invalid', function (event) {
             if (!select.required || select.disabled || select.value) return;
             event.preventDefault();
@@ -505,29 +549,85 @@
             button.focus();
             if (window.bootstrap && window.bootstrap.Dropdown) {
                 window.bootstrap.Dropdown.getOrCreateInstance(button).show();
-                search.focus();
             }
         });
+
+        button.addEventListener('keydown', function (e) {
+            if (e.key === 'ArrowDown' || e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                if (window.bootstrap && window.bootstrap.Dropdown) {
+                    window.bootstrap.Dropdown.getOrCreateInstance(button).show();
+                }
+            }
+        });
+
         search.addEventListener('input', function () {
             var query = search.value.trim().toLocaleLowerCase();
             optionsWrap.querySelectorAll('[role="option"]').forEach(function (item) {
                 item.hidden = query !== '' && !item.textContent.toLocaleLowerCase().includes(query);
             });
         });
+
+        search.addEventListener('keydown', function (e) {
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                var firstVisible = optionsWrap.querySelector('.searchable-select-option:not([hidden])');
+                if (firstVisible) firstVisible.focus();
+            } else if (e.key === 'Escape') {
+                closeDropdown();
+                button.focus();
+            }
+        });
+
+        optionsWrap.addEventListener('keydown', function (e) {
+            var current = document.activeElement;
+            if (!current || !current.classList.contains('searchable-select-option')) return;
+            var visible = Array.from(optionsWrap.querySelectorAll('.searchable-select-option:not([hidden])'));
+            var idx = visible.indexOf(current);
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                if (idx < visible.length - 1) visible[idx + 1].focus();
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                if (idx > 0) {
+                    visible[idx - 1].focus();
+                } else if (searchWrap.style.display !== 'none') {
+                    search.focus();
+                } else {
+                    button.focus();
+                }
+            } else if (e.key === 'Escape') {
+                closeDropdown();
+                button.focus();
+            }
+        });
+
         select.addEventListener('change', syncSelection);
+        select.addEventListener('input', syncSelection);
+        select.addEventListener('igk:refresh', function () {
+            renderOptions();
+            syncSelection();
+        });
+
         new MutationObserver(function () {
             renderOptions();
             syncSelection();
         }).observe(select, { childList: true, subtree: true, attributes: true, attributeFilter: ['disabled', 'hidden', 'label', 'value'] });
-        button.addEventListener('shown.bs.dropdown', function () {
-            search.value = '';
-            search.dispatchEvent(new Event('input'));
-            search.focus();
-        });
+
         button.addEventListener('show.bs.dropdown', function () {
+            updatePlacement();
             renderOptions();
             syncSelection();
         });
+
+        button.addEventListener('shown.bs.dropdown', function () {
+            if (searchWrap.style.display !== 'none') {
+                search.value = '';
+                search.dispatchEvent(new Event('input'));
+                search.focus();
+            }
+        });
+
         renderOptions();
         syncSelection();
     }

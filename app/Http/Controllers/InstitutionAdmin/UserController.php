@@ -9,6 +9,7 @@ use App\Models\Branch;
 use App\Models\User;
 use App\Support\AuditLogger;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
@@ -17,25 +18,48 @@ use Spatie\Permission\Models\Role;
 
 class UserController extends Controller
 {
-    public function index(): View
+    public function index(Request $request): View
     {
         $this->authorize('viewAny', User::class);
 
-        $users = User::with(['roles'])
-            ->when(request()->user()->branch_id && ! request()->user()->isSuperAdmin() && ! request()->user()->isInstitutionAdmin(), fn ($query) => $query->where('branch_id', request()->user()->branch_id))
-            ->when(! request()->user()->isSuperAdmin(), fn ($query) => $query
+        $search = $request->query('search') ?: $request->query('q');
+        $roleFilter = $request->query('role');
+        $branchFilter = $request->query('branch_id');
+        $statusFilter = $request->query('status');
+
+        $users = User::with(['roles', 'branch'])
+            ->when($request->user()->branch_id && ! $request->user()->isSuperAdmin() && ! $request->user()->isInstitutionAdmin(), fn ($query) => $query->where('branch_id', $request->user()->branch_id))
+            ->when(! $request->user()->isSuperAdmin(), fn ($query) => $query
                 ->where('role', '!=', 'super-admin')
                 ->whereDoesntHave('roles', fn ($roles) => $roles->where('name', 'Super Admin')))
+            ->when($search, function ($query, $s) {
+                $query->where(function ($w) use ($s) {
+                    $w->where('name', 'like', "%{$s}%")
+                        ->orWhere('email', 'like', "%{$s}%")
+                        ->orWhere('phone', 'like', "%{$s}%");
+                });
+            })
+            ->when($roleFilter, function ($query, $rf) {
+                $query->where(function ($w) use ($rf) {
+                    $w->where('role', $rf)
+                        ->orWhereHas('roles', fn ($r) => $r->where('name', $rf));
+                });
+            })
+            ->when($branchFilter, fn ($query, $bid) => $query->where('branch_id', $bid))
+            ->when($statusFilter !== null && $statusFilter !== '', function ($query) use ($statusFilter) {
+                $query->where('is_active', (bool) $statusFilter);
+            })
             ->orderBy('name')
-            ->paginate(10)
+            ->paginate(15)
             ->withQueryString();
+
         $roles = Role::whereNotIn('name', ['Student', 'student'])
-            ->when(! request()->user()->isSuperAdmin(), fn ($query) => $query->where('name', '!=', 'Super Admin'))
+            ->when(! $request->user()->isSuperAdmin(), fn ($query) => $query->where('name', '!=', 'Super Admin'))
             ->orderBy('name')
             ->get();
         $branches = Branch::where('is_active', true)->orderBy('name')->get();
 
-        return view('InstitutionAdmin.InstitutionAdminUsersIndex', compact('users', 'roles', 'branches'));
+        return view('InstitutionAdmin.InstitutionAdminUsersIndex', compact('users', 'roles', 'branches', 'search', 'roleFilter', 'branchFilter', 'statusFilter'));
     }
 
     public function create(): View

@@ -26,12 +26,12 @@ class FeeStructureController extends Controller
 
         $classId = $request->query('class_id');
         $programId = $request->query('program_id');
-        $classes = SchoolClass::orderBy('name')->orderBy('section')->get();
+        $classes = SchoolClass::with('branch')->orderBy('name')->orderBy('section')->get();
         $terms = Term::orderBy('sequence')->get();
         $programs = Program::orderBy('name')->get();
         $academicYears = AcademicYear::orderByDesc('start_date')->get();
 
-        $feeStructures = FeeStructure::with(['schoolClass', 'term', 'program', 'academicYear', 'items'])
+        $feeStructures = FeeStructure::with(['schoolClass.branch', 'term', 'program', 'academicYear', 'items'])
             ->when($classId, fn ($q) => $q->where('class_id', $classId))
             ->when($programId, fn ($q) => $q->where('program_id', $programId))
             ->orderByRaw('class_id IS NULL')

@@ -7,6 +7,7 @@ use App\Http\Requests\InstitutionAdmin\StoreStudentRequest;
 use App\Http\Requests\InstitutionAdmin\UpdateStudentRequest;
 use App\Http\Requests\InstitutionAdmin\UploadStudentDocumentRequest;
 use App\Models\AcademicYear;
+use App\Models\Branch;
 use App\Models\ClassSubject;
 use App\Models\Guardian;
 use App\Models\Program;
@@ -15,6 +16,7 @@ use App\Models\SchoolClass;
 use App\Models\Student;
 use App\Models\StudentDocument;
 use App\Models\User;
+use App\Services\BranchTransferService;
 use App\Services\EnrollmentService;
 use App\Support\AuditLogger;
 use Illuminate\Http\RedirectResponse;
@@ -38,7 +40,7 @@ class StudentController extends Controller
         return view('InstitutionAdmin.InstitutionAdminStudentsIndex', [
             'students' => $students,
             'classes' => SchoolClass::orderBy('name')->orderBy('section')->get(),
-            'savedFilters' => SavedFilter::where('user_id', $request->user()->id)
+            'savedFilters' => SavedFilter::where('user_id', auth()->id() ?? $request->user()?->id)
                 ->where('scope', 'students')
                 ->orderBy('name')
                 ->get(),
@@ -92,6 +94,95 @@ class StudentController extends Controller
             ->with('success', "Student {$student->user->name} enrolled successfully. Admission number: {$student->admission_no}.");
     }
 
+    public function show(Student $student): View
+    {
+        abort_unless(auth()->user()->can('students.read') || auth()->user()->isSuperAdmin(), 403);
+
+        $student->load([
+            'user',
+            'class',
+            'branch',
+            'program',
+            'academicYear',
+            'primaryGuardian.user',
+            'guardians.user',
+            'classSubjects.subject',
+            'classSubjects.teacher.user',
+            'classSubjects.term',
+            'documents.uploader',
+            'invoices.payments',
+            'branchTransfers.fromBranch',
+            'branchTransfers.toBranch',
+            'branchTransfers.transferredByUser',
+            'attendance' => fn ($q) => $q->latest('date')->limit(30),
+            'termResults.term',
+        ]);
+
+        $attendanceTotal = $student->attendance()->count();
+        $attendancePresent = $student->attendance()->where('status', 'present')->count();
+        $attendanceLate = $student->attendance()->where('status', 'late')->count();
+        $attendanceAbsent = $student->attendance()->where('status', 'absent')->count();
+
+        $attendanceSummary = [
+            'total' => $attendanceTotal,
+            'present' => $attendancePresent,
+            'late' => $attendanceLate,
+            'absent' => $attendanceAbsent,
+            'percentage' => $attendanceTotal > 0 ? round(($attendancePresent / $attendanceTotal) * 100, 1) : 0,
+        ];
+
+        $totalBilled = $student->invoices->sum('total_amount');
+        $totalPaid = $student->invoices->sum('paid_amount');
+        $invoicesSummary = [
+            'total_billed' => $totalBilled,
+            'total_paid' => $totalPaid,
+            'balance' => $totalBilled - $totalPaid,
+        ];
+
+        $availableBranches = Branch::withoutGlobalScopes()
+            ->where('is_active', true)
+            ->where('id', '!=', $student->branch_id)
+            ->orderBy('name')
+            ->get();
+
+        $branchClasses = SchoolClass::withoutGlobalScopes()
+            ->orderBy('name')
+            ->orderBy('section')
+            ->get();
+
+        return view('InstitutionAdmin.InstitutionAdminStudentsShow', compact(
+            'student',
+            'attendanceSummary',
+            'invoicesSummary',
+            'availableBranches',
+            'branchClasses'
+        ));
+    }
+
+    public function transfer(Request $request, Student $student): RedirectResponse
+    {
+        abort_unless($request->user()->can('students.update') || $request->user()->isSuperAdmin(), 403);
+
+        $data = $request->validate([
+            'to_branch_id' => ['required', 'integer', 'exists:branches,id'],
+            'class_id' => ['nullable', 'integer', 'exists:classes,id'],
+            'transfer_date' => ['required', 'date'],
+            'reason' => ['nullable', 'string', 'max:500'],
+        ]);
+
+        $transferred = BranchTransferService::transferStudent(
+            $student,
+            (int) $data['to_branch_id'],
+            ! empty($data['class_id']) ? (int) $data['class_id'] : null,
+            $data['transfer_date'],
+            $data['reason'] ?? null,
+            (int) $request->user()->id
+        );
+
+        return redirect()->route('admin.students.show', $transferred)
+            ->with('success', "Student {$transferred->user->name} transferred to {$transferred->branch?->name}. Newly assigned admission number: {$transferred->admission_no}.");
+    }
+
     public function edit(Student $student): View
     {
         return view('InstitutionAdmin.InstitutionAdminStudentsEdit', $this->formData() + [
@@ -121,10 +212,14 @@ class StudentController extends Controller
                 $user->password = $data['password'];
                 $user->must_change_password = true;
             }
+            if (! empty($data['branch_id'])) {
+                $user->branch_id = $data['branch_id'];
+            }
             $user->save();
 
             $student->update([
                 'class_id' => $data['class_id'],
+                'branch_id' => $data['branch_id'] ?? $newClass->branch_id ?? $student->branch_id,
                 'program_id' => $data['program_id'] ?? $newClass->program_id,
                 'academic_year_id' => $data['academic_year_id'] ?? $newClass->academic_year_id,
                 'admission_no' => $data['admission_no'],
@@ -240,6 +335,7 @@ class StudentController extends Controller
             'classes' => SchoolClass::withCount('students')->orderBy('name')->orderBy('section')->get()
                 ->sortBy(fn (SchoolClass $schoolClass) => $schoolClass->students_count >= $schoolClass->capacity ? 1 : 0)
                 ->values(),
+            'branches' => Branch::withoutGlobalScopes()->where('is_active', true)->orderBy('name')->get(),
             'guardians' => Guardian::with('user')->get()->sortBy(fn ($g) => $g->user->name),
             'programs' => Program::orderBy('name')->get(),
             'academicYears' => AcademicYear::orderByDesc('start_date')->get(),

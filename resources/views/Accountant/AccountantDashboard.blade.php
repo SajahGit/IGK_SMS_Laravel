@@ -3,7 +3,14 @@
 @section('content')
 <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
     <div>
-        <h3 class="mb-1">Finance Dashboard</h3>
+        <h3 class="mb-1 d-flex flex-wrap align-items-center gap-2">
+            <span>Finance Dashboard</span>
+            @if ($allCampusesSelected ?? false)
+                <span class="badge bg-primary-subtle text-primary border border-primary-subtle fs-6">All Campuses</span>
+            @elseif ($activeBranch ?? null)
+                <span class="badge bg-info-subtle text-info-emphasis border border-info-subtle fs-6">{{ $activeBranch->name }}</span>
+            @endif
+        </h3>
         <p class="text-muted mb-0">Fee billing, collections, receipts, and outstanding balances.</p>
     </div>
     <div class="d-flex gap-2">

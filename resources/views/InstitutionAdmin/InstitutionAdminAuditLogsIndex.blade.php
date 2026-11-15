@@ -97,18 +97,42 @@
                                                 <h5 class="modal-title">Audit Record #{{ $log->id }} - {{ ucwords(str_replace('_', ' ', $log->action)) }}</h5>
                                                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                             </div>
-                                            <div class="modal-body">
-                                                <div class="row g-2">
+                                            <div class="modal-body p-3">
+                                                <div class="row g-3">
                                                     @if ($log->old_values)
                                                         <div class="col-md-6">
-                                                            <div class="fw-semibold text-danger mb-1">Previous Values:</div>
-                                                            <pre class="bg-body-tertiary p-2 rounded small" style="max-height: 300px; overflow-y:auto;">{{ json_encode($log->old_values, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) }}</pre>
+                                                            <div class="fw-semibold text-danger mb-2"><i class="bi bi-arrow-left-circle me-1"></i>Previous Values</div>
+                                                            <div class="table-responsive border rounded">
+                                                                <table class="table table-sm table-striped mb-0">
+                                                                    <thead class="table-light"><tr><th>Attribute</th><th>Value</th></tr></thead>
+                                                                    <tbody>
+                                                                        @foreach ((array) $log->old_values as $k => $v)
+                                                                            <tr>
+                                                                                <td class="text-muted fw-semibold small">{{ ucwords(str_replace('_', ' ', $k)) }}</td>
+                                                                                <td class="small">{{ is_bool($v) ? ($v ? 'True' : 'False') : (is_array($v) ? json_encode($v) : ($v ?: '—')) }}</td>
+                                                                            </tr>
+                                                                        @endforeach
+                                                                    </tbody>
+                                                                </table>
+                                                            </div>
                                                         </div>
                                                     @endif
                                                     @if ($log->new_values)
                                                         <div class="col-md-{{ $log->old_values ? '6' : '12' }}">
-                                                            <div class="fw-semibold text-success mb-1">New Values / Payload:</div>
-                                                            <pre class="bg-body-tertiary p-2 rounded small" style="max-height: 300px; overflow-y:auto;">{{ json_encode($log->new_values, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) }}</pre>
+                                                            <div class="fw-semibold text-success mb-2"><i class="bi bi-arrow-right-circle me-1"></i>New Values / Changes</div>
+                                                            <div class="table-responsive border rounded">
+                                                                <table class="table table-sm table-striped mb-0">
+                                                                    <thead class="table-light"><tr><th>Attribute</th><th>Value</th></tr></thead>
+                                                                    <tbody>
+                                                                        @foreach ((array) $log->new_values as $k => $v)
+                                                                            <tr>
+                                                                                <td class="text-muted fw-semibold small">{{ ucwords(str_replace('_', ' ', $k)) }}</td>
+                                                                                <td class="small">{{ is_bool($v) ? ($v ? 'True' : 'False') : (is_array($v) ? json_encode($v) : ($v ?: '—')) }}</td>
+                                                                            </tr>
+                                                                        @endforeach
+                                                                    </tbody>
+                                                                </table>
+                                                            </div>
                                                         </div>
                                                     @endif
                                                 </div>

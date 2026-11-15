@@ -51,17 +51,26 @@
     <div class="col-md-6">
         <label class="form-label">Admission number <span class="text-danger">*</span></label>
         <input type="text" name="admission_no" class="form-control" value="{{ old('admission_no', $isEdit ? $student->admission_no : '') }}" placeholder="Auto-generated from academic year and program">
-        <div class="form-text small text-muted">Leave blank to generate the next year/program-specific number.</div>
+        <div class="form-text small text-muted">Leave blank to generate the next branch/program-specific number.</div>
+    </div>
+    <div class="col-md-6">
+        <label class="form-label">Campus / Branch</label>
+        <select name="branch_id" id="student_branch_id" class="form-select">
+            <option value="">Default (Derived from Class / Active Campus)</option>
+            @foreach ($branches ?? [] as $b)
+                <option value="{{ $b->id }}" @selected(old('branch_id', $isEdit ? $student->branch_id : \App\Support\BranchContext::activeBranchId()) == $b->id)>{{ $b->name }} ({{ $b->code }})</option>
+            @endforeach
+        </select>
     </div>
     <div class="col-md-4">
         <label class="form-label">Class & Section <span class="text-danger">*</span></label>
-        <select name="class_id" @class(['form-select', 'is-invalid' => $errors->has('class_id')]) data-searchable-select required>
+        <select name="class_id" id="student_class_id" @class(['form-select', 'is-invalid' => $errors->has('class_id')]) data-searchable-select required>
             <option value="">Select class</option>
             @foreach ($classes as $c)
                 @php
                     $isFull = $c->students_count >= $c->capacity && (!$isEdit || $student->class_id !== $c->id);
                 @endphp
-                <option value="{{ $c->id }}" @selected(old('class_id', $isEdit ? $student->class_id : '') == $c->id) {{ $isFull ? 'disabled' : '' }}>
+                <option value="{{ $c->id }}" data-branch-id="{{ $c->branch_id }}" @selected(old('class_id', $isEdit ? $student->class_id : '') == $c->id) {{ $isFull ? 'disabled' : '' }}>
                     {{ $c->full_name }} ({{ $c->students_count }}/{{ $c->capacity }} enrolled) {{ $isFull ? '— FULL' : '' }}
                 </option>
             @endforeach

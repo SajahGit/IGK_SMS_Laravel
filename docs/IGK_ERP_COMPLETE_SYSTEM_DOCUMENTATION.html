@@ -520,8 +520,8 @@
         </tr>
         <tr>
             <td><strong>Role-Based Portals</strong></td>
-            <td class="text-center"><span class="badge badge-amber">8 User Roles</span></td>
-            <td>Super Admin, Institution Admin, Registrar, Teacher, Accountant, Librarian, Student, Guardian.</td>
+            <td class="text-center"><span class="badge badge-amber">7 Primary Actor Portals</span></td>
+            <td>Super Admin, Institution Admin, Registrar, Teacher, Accountant, Student, Guardian (plus internal Library operations accessible to authorized personnel).</td>
         </tr>
         <tr>
             <td><strong>Role-Guarded Screens</strong></td>
@@ -2878,6 +2878,152 @@ $$\text{CGPA} = \frac{\sum_{i=1}^n (\text{GradePoint}_i \times \text{CreditHours
         <p>Displays security forensic activity log.</p>
     </div>
 </div>
+
+<div class="screen-card">
+    <div class="screen-header">
+        <span class="screen-title">Institutional Users &amp; RBAC Directory (Search &amp; Filters)</span>
+        <span class="screen-path">GET /admin/users &bull; admin.users.index</span>
+    </div>
+    <div class="screen-meta">
+        <div><strong>Controller Action:</strong> <code>App\Http\Controllers\InstitutionAdmin\UserController@index</code></div>
+        <div><strong>Required Permission:</strong> <span class="badge badge-purple">role:admin,registrar</span></div>
+        <div><strong>Blade View Template:</strong> <code>resources/views/InstitutionAdmin/InstitutionAdminUsersIndex.blade.php</code></div>
+        <div><strong>Sidepanel Group:</strong> System &bull; Users</div>
+    </div>
+    <div class="screen-body">
+        <div class="screen-section-title">UI Layout & Data Elements Displayed:</div>
+        <p>Comprehensive user directory displaying User Avatar Initials, Full Name, Email, Phone Number, Assigned System Role (with color-coded badge), Assigned Campus/Branch (or 'All Campuses' badge), and Account Status (Active/Inactive), with total matching user count badge in the footer.</p>
+
+        <div class="screen-section-title">Interactive Elements & Form Inputs:</div>
+        <ul>
+            <li><strong>Full-Text Search Input:</strong> Real-time and keyword search across Name, Email, and Phone number with an integrated clear button.</li>
+            <li><strong>Role Filter Dropdown:</strong> Filters users by specific system role (Super Admin, Institution Admin, Registrar, Teacher, Accountant, Student, Guardian, Librarian).</li>
+            <li><strong>Campus / Branch Filter Dropdown:</strong> Limits list to users assigned to a specific campus (e.g., IGK Main Campus, IGK Kandy Campus) or all campuses.</li>
+            <li><strong>Status Filter Dropdown:</strong> Filters accounts by Active or Inactive status.</li>
+            <li><strong>Filter & Reset Actions:</strong> Quick filter submit button and one-click 'Reset' button restoring default directory view with clean query strings.</li>
+            <li><strong>Pagination Controls:</strong> Bootstrap 5 pagination preserving all active filter criteria via <code>withQueryString()</code>.</li>
+        </ul>
+
+        <div class="screen-section-title">Backend Query & Execution Logic:</div>
+        <ol>
+            <li>Queries <code>User::with(['branch', 'roles'])</code> applying conditional <code>when()</code> clauses for search keywords, role names, branch IDs, and active statuses.</li>
+            <li>Calculates exact matching totals for the result footer via <code>$users->total()</code>.</li>
+        </ol>
+
+        <div class="screen-section-title">Flash Response & Redirect:</div>
+        <p>Renders <code>InstitutionAdminUsersIndex</code> view with filtered user listings and active filter states.</p>
+    </div>
+</div>
+
+<div class="screen-card">
+    <div class="screen-header">
+        <span class="screen-title">Super Admin Salary Deductions Governance</span>
+        <span class="screen-path">GET /admin/salary-deductions &bull; admin.salary-deductions.index</span>
+    </div>
+    <div class="screen-meta">
+        <div><strong>Controller Action:</strong> <code>App\Http\Controllers\SuperAdmin\SalaryDeductionController@index</code></div>
+        <div><strong>Required Permission:</strong> <span class="badge badge-purple">Super Admin Exclusive</span></div>
+        <div><strong>Blade View Template:</strong> <code>resources/views/SuperAdmin/SalaryDeductionsIndex.blade.php</code></div>
+        <div><strong>Sidepanel Group:</strong> System</div>
+    </div>
+    <div class="screen-body">
+        <div class="screen-section-title">UI Layout & Data Elements Displayed:</div>
+        <p>Dedicated executive governance console separated from campus HR operations. Displays global deduction policy controls (Auto Pro-Rata vs Fixed Daily Amount for unpaid leaves), search and employee filters, active staff manual deduction records (Employee ID, Name, Department, Type, Amount, Reason, Effective Month, Status), and creation modals.</p>
+
+        <div class="screen-section-title">Interactive Elements & Form Inputs:</div>
+        <ul>
+            <li>Automatic Deduction Policy Switcher: Pro-Rata (Base / 30) or Fixed Daily Amount (LKR)</li>
+            <li>Add Staff Manual Deduction Modal: Employee selection, deduction type (Advance, Penalty, Damage, Loan, Other), custom amount, effective month, justification notes</li>
+            <li>Delete / Cancel Deduction actions</li>
+        </ul>
+
+        <div class="screen-section-title">Backend Validation Rules:</div>
+        <p><code>employee_id: required|exists:employees,id, amount: required|numeric|min:0.01, type: required|in:manual,advance,penalty,damage,loan,other, payroll_month: required|regex:/^\d{4}-\d{2}$/</code></p>
+
+        <div class="screen-section-title">Database Mutations & Execution Logic:</div>
+        <ol>
+            <li>Inserts or updates records in <code>payroll_deductions</code> with <code>status = 'pending'</code>.</li>
+            <li>Synchronizes system settings for <code>payroll.auto_deduction_mode</code> and <code>payroll.fixed_unpaid_day_rate</code>.</li>
+            <li>When payroll is generated for the target month, automatically links deductions to the generated <code>payroll_entry</code> and marks them <code>applied</code>.</li>
+        </ol>
+
+        <div class="screen-section-title">Flash Response & Redirect:</div>
+        <p>Redirects with success confirmation: &quot;Salary deduction saved successfully&quot;.</p>
+    </div>
+</div>
+
+<div class="screen-card">
+    <div class="screen-header">
+        <span class="screen-title">HR Payroll Run Inspection &amp; Real-Time Net Pay Modal</span>
+        <span class="screen-path">GET /admin/hr/payroll/{id} &bull; admin.hr.payroll.show</span>
+    </div>
+    <div class="screen-meta">
+        <div><strong>Controller Action:</strong> <code>App\Http\Controllers\InstitutionAdmin\HrPayrollController@show</code></div>
+        <div><strong>Required Permission:</strong> <span class="badge badge-purple">payroll.read</span></div>
+        <div><strong>Blade View Template:</strong> <code>resources/views/InstitutionAdmin/HrPayrollShow.blade.php</code></div>
+        <div><strong>Sidepanel Group:</strong> Manage</div>
+    </div>
+    <div class="screen-body">
+        <div class="screen-section-title">UI Layout & Data Elements Displayed:</div>
+        <p>Campus payroll batch manifest showing all generated employee records for the month. Features modern 2-column modal layout (Earnings vs Deductions) with dark-mode immunity, real-time reactive JavaScript Net Pay Calculator (Gross - Deductions = Estimated Net Pay), and 1-click payslip generation links.</p>
+
+        <div class="screen-section-title">Interactive Elements & Form Inputs:</div>
+        <ul>
+            <li>&quot;Deductions &amp; Pay&quot; modal trigger per employee row</li>
+            <li>Allowance input, APIT tax input, notes input</li>
+            <li>Quick-fill reason buttons for Super Admin deductions (Salary Advance, Emergency Loan, Asset Damage, Disciplinary Fine)</li>
+            <li>Direct link to printable A4 portrait Payslip</li>
+        </ul>
+
+        <div class="screen-section-title">Backend Validation Rules:</div>
+        <p><code>allowance: nullable|numeric|min:0, apit_tax: nullable|numeric|min:0, notes: nullable|string|max:500</code></p>
+
+        <div class="screen-section-title">Database Mutations & Execution Logic:</div>
+        <ol>
+            <li>Updates <code>payroll_entries</code> with revised allowance, taxes, and notes.</li>
+            <li>Re-calculates EPF/ETF statutory contributions based on new gross earnings.</li>
+            <li>Re-sums total deductions (Attendance Deductions + Super Admin Deductions + APIT + EPF 8%).</li>
+        </ol>
+
+        <div class="screen-section-title">Flash Response & Redirect:</div>
+        <p>Refreshes payroll summary table with updated totals.</p>
+    </div>
+</div>
+
+<div class="screen-card">
+    <div class="screen-header">
+        <span class="screen-title">Official Night-Mode Immune Printable Payslip</span>
+        <span class="screen-path">GET /admin/hr/payroll/payslip/{entry} &bull; admin.hr.payroll.payslip</span>
+    </div>
+    <div class="screen-meta">
+        <div><strong>Controller Action:</strong> <code>App\Http\Controllers\InstitutionAdmin\HrPayrollController@payslip</code></div>
+        <div><strong>Required Permission:</strong> <span class="badge badge-purple">payroll.read</span></div>
+        <div><strong>Blade View Template:</strong> <code>resources/views/InstitutionAdmin/HrPayrollPayslip.blade.php</code></div>
+        <div><strong>Sidepanel Group:</strong> Manage</div>
+    </div>
+    <div class="screen-body">
+        <div class="screen-section-title">UI Layout & Data Elements Displayed:</div>
+        <p>Official sealed salary slip structured on an isolated <code>.payslip-sheet</code> container. Renders crisp high-contrast dark typography (#0f172a) on white card background, completely immune to system dark mode or nighttime viewing. Includes school crest, employee details, EPF registration number, bank details, itemized earnings, dual-mode deductions (Attendance vs Super Admin), employer statutory contributions (EPF 12%, ETF 3%), net payable words, and authorized signatory seals.</p>
+
+        <div class="screen-section-title">Interactive Elements & Form Inputs:</div>
+        <ul>
+            <li>Print / Download PDF button (triggers <code>window.print()</code> formatted for A4 portrait with headers/navbars auto-hidden)</li>
+            <li>Back to Payroll summary button</li>
+        </ul>
+
+        <div class="screen-section-title">Backend Validation Rules:</div>
+        <p><code>entry: required|exists:payroll_entries,id</code></p>
+
+        <div class="screen-section-title">Database Mutations & Execution Logic:</div>
+        <ol>
+            <li>Eager-loads <code>payrollEntry.employee.user</code> and <code>payrollEntry.payrollRun</code>.</li>
+            <li>Validates campus branch tenancy before rendering.</li>
+        </ol>
+
+        <div class="screen-section-title">Flash Response & Redirect:</div>
+        <p>Renders printable A4 salary voucher.</p>
+    </div>
+</div>
         <h2>5.2 Academic Registrar Portal</h2>
 
 <div class="screen-card">
@@ -3043,6 +3189,44 @@ $$\text{CGPA} = \frac{\sum_{i=1}^n (\text{GradePoint}_i \times \text{CreditHours
 
         <div class="screen-section-title">Flash Response & Redirect:</div>
         <p>Renders teacher dashboard.</p>
+    </div>
+</div>
+
+<div class="screen-card">
+    <div class="screen-header">
+        <span class="screen-title">Teacher Self-Service Profile &amp; Salary Portal</span>
+        <span class="screen-path">GET /teacher/profile &bull; teacher.profile</span>
+    </div>
+    <div class="screen-meta">
+        <div><strong>Controller Action:</strong> <code>App\Http\Controllers\Teacher\ProfileController@show</code></div>
+        <div><strong>Required Permission:</strong> <span class="badge badge-purple">role:teacher</span></div>
+        <div><strong>Blade View Template:</strong> <code>resources/views/Teacher/TeacherProfile.blade.php</code></div>
+        <div><strong>Sidepanel Group:</strong> Overview</div>
+    </div>
+    <div class="screen-body">
+        <div class="screen-section-title">UI Layout & Data Elements Displayed:</div>
+        <p>Comprehensive teacher portal showing personal academic profile, employment details, qualification credentials, assigned branch campus, monthly compensation structure (Fixed Base Salary, Monthly Allowances), live Leave Balance (Annual, Casual, Medical, Unpaid), real-time Attendance Deduction calculations, Super Admin manual deductions, and linked payslip history with official printable payslips.</p>
+
+        <div class="screen-section-title">Interactive Elements & Form Inputs:</div>
+        <ul>
+            <li>Tab switcher (Profile Overview, Academic Timetable, Leave History, Salary &amp; Deductions)</li>
+            <li>Direct link to printable A4 payslips for every issued payroll month</li>
+            <li>Real-time attendance deduction breakdown badge</li>
+        </ul>
+
+        <div class="screen-section-title">Backend Validation Rules:</div>
+        <p><code>auth()->user()->hasRole('teacher')</code></p>
+
+        <div class="screen-section-title">Database Mutations & Execution Logic:</div>
+        <ol>
+            <li>Loads teacher model eager-loading <code>user</code>, <code>department</code>, and <code>branch</code>.</li>
+            <li>Calculates current month approved unpaid leave days and evaluates estimated pro-rata or fixed deduction.</li>
+            <li>Queries <code>payroll_deductions</code> where <code>employee_id</code> matches linked employee.</li>
+            <li>Fetches historical <code>payroll_entries</code> for the teacher.</li>
+        </ol>
+
+        <div class="screen-section-title">Flash Response & Redirect:</div>
+        <p>Renders teacher profile self-service view.</p>
     </div>
 </div>
 
@@ -3248,6 +3432,42 @@ $$\text{CGPA} = \frac{\sum_{i=1}^n (\text{GradePoint}_i \times \text{CreditHours
 
         <div class="screen-section-title">Flash Response & Redirect:</div>
         <p>Displays defaulters list with printable notices.</p>
+    </div>
+</div>
+<div class="screen-card">
+    <div class="screen-header">
+        <span class="screen-title">Multi-Branch Campus Switcher &amp; All-Campuses Financial Operations</span>
+        <span class="screen-path">POST /branch-context &bull; branch-context</span>
+    </div>
+    <div class="screen-meta">
+        <div><strong>Controller Action:</strong> <code>App\Http\Controllers\InstitutionAdmin\BranchController@switchContext</code></div>
+        <div><strong>Required Permission:</strong> <span class="badge badge-purple">role:admin,accountant</span></div>
+        <div><strong>Blade View Template:</strong> Integrated into topbar across <code>LayoutApp.blade.php</code>, <code>AccountantDashboard.blade.php</code>, <code>AccountantInvoicesIndex.blade.php</code></div>
+        <div><strong>Sidepanel Group:</strong> Topbar &bull; Finance</div>
+    </div>
+    <div class="screen-body">
+        <div class="screen-section-title">UI Layout & Data Elements Displayed:</div>
+        <p>Dynamic topbar campus switcher providing Accountants with immediate cross-campus visibility: 'All Campuses' aggregate mode or specific campus context (e.g. IGK Main Campus, IGK Kandy Campus). On all financial listings (Invoices, Record Payment, Fee Structures), students and transactions feature distinct campus badges.</p>
+
+        <div class="screen-section-title">Interactive Elements & Form Inputs:</div>
+        <ul>
+            <li><strong>Active Campus Dropdown:</strong> Dropdown in the main header allowing instant selection between 'All Campuses' and individual active branches.</li>
+            <li><strong>Context Auto-Switch:</strong> On dropdown change, automatically submits to <code>/branch-context</code> and stores active selection in session.</li>
+            <li><strong>Cross-Campus Accounting Suite:</strong> Direct sidebar navigation for Accountants to Chart of Accounts (<code>/admin/accounts</code>), Journal Entries (<code>/admin/journals</code>), Trial Balance (<code>/admin/accounting/trial-balance</code>), General Ledger (<code>/admin/accounting/ledger</code>), Income &amp; Expense (<code>/admin/accounting/income-expense</code>), and Branch Financial Summary (<code>/admin/accounting/branch-summary</code>).</li>
+        </ul>
+
+        <div class="screen-section-title">Backend Validation Rules:</div>
+        <p><code>branch_id: required|integer|exists:branches,id,is_active,1</code> or <code>branch_id: 'all'</code></p>
+
+        <div class="screen-section-title">Database Mutations & Execution Logic:</div>
+        <ol>
+            <li>Validates that user has multi-branch access (Super Admin, Institution Admin, or Accountant).</li>
+            <li>Stores selected branch ID (or <code>'all'</code>) in session key <code>active_branch_id</code>.</li>
+            <li>Global scope <code>BranchOwned</code> automatically widens query to all campuses when <code>active_branch_id === 'all'</code>, or restricts to the selected campus when a specific branch is chosen.</li>
+        </ol>
+
+        <div class="screen-section-title">Flash Response & Redirect:</div>
+        <p>Redirects back with status message confirming active campus context switch.</p>
     </div>
 </div>
         <h2>5.5 Library Information System Portal</h2>
@@ -3917,6 +4137,124 @@ $$\text{CGPA} = \frac{\sum_{i=1}^n (\text{GradePoint}_i \times \text{CreditHours
 
         <div class="screen-section-title">Flash Response & Redirect:</div>
         <p>Displays student running financial ledger statement.</p>
+    </div>
+</div>
+
+        <h2>5.9 Universal Private 1-on-1 Messaging &amp; Confidentiality Suite</h2>
+
+<div class="screen-card">
+    <div class="screen-header">
+        <span class="screen-title">Private Messages Inbox &amp; Conversation Directory</span>
+        <span class="screen-path">GET /messages &bull; messages.index</span>
+    </div>
+    <div class="screen-meta">
+        <div><strong>Controller Action:</strong> <code>App\Http\Controllers\MessageController@index</code></div>
+        <div><strong>Required Permission:</strong> <span class="badge badge-purple">Authenticated Users</span></div>
+        <div><strong>Blade View Template:</strong> <code>resources/views/Messages/Index.blade.php</code></div>
+        <div><strong>Sidepanel Group:</strong> Communication</div>
+    </div>
+    <div class="screen-body">
+        <div class="screen-section-title">UI Layout & Data Elements Displayed:</div>
+        <p>Confidential 1-on-1 inbox directory. Shows only conversations where the authenticated user is an active participant. Displays participant avatar, full name, role badge (Teacher, Student, Admin, Guardian), campus branch, direction badges (<em>&quot;You sent to [Recipient]&quot;</em> vs <em>&quot;Received from [Sender]&quot;</em>), message author snippet, timestamp, and unread message counters.</p>
+
+        <div class="screen-section-title">Interactive Elements & Form Inputs:</div>
+        <ul>
+            <li>Tabs: All Conversations, Unread Only</li>
+            <li>&quot;Compose Message&quot; action button</li>
+            <li>Clickable conversation cards linking to individual secure threads</li>
+        </ul>
+
+        <div class="screen-section-title">Backend Validation Rules:</div>
+        <p><code>tab: nullable|in:all,unread</code></p>
+
+        <div class="screen-section-title">Database Mutations & Execution Logic:</div>
+        <ol>
+            <li>Queries <code>message_conversations</code> filtered strictly by <code>whereHas('participants', user_id = Auth::id())</code>.</li>
+            <li>Calculates unread message count for incoming messages (<code>sender_id != Auth::id() AND read_at IS NULL</code>).</li>
+            <li>Eager-loads latest message with author details to display exact message direction.</li>
+        </ol>
+
+        <div class="screen-section-title">Flash Response & Redirect:</div>
+        <p>Renders private messages directory.</p>
+    </div>
+</div>
+
+<div class="screen-card">
+    <div class="screen-header">
+        <span class="screen-title">Categorized New Message Composer (All Students, Teachers, Admin Staff)</span>
+        <span class="screen-path">GET /messages/create &bull; messages.create</span>
+    </div>
+    <div class="screen-meta">
+        <div><strong>Controller Action:</strong> <code>App\Http\Controllers\MessageController@create</code></div>
+        <div><strong>Required Permission:</strong> <span class="badge badge-purple">Authenticated Users</span></div>
+        <div><strong>Blade View Template:</strong> <code>resources/views/Messages/Create.blade.php</code></div>
+        <div><strong>Sidepanel Group:</strong> Communication</div>
+    </div>
+    <div class="screen-body">
+        <div class="screen-section-title">UI Layout & Data Elements Displayed:</div>
+        <p>Modernized recipient composer featuring all active institutional users grouped into 4 distinct categories: <strong>Administrative Staff</strong> (Super Admin, Campus Admin, Registrar, Accountant), <strong>Teachers &amp; Academic Faculty</strong>, <strong>Students</strong> (with Class &amp; Admission Numbers), and <strong>Guardians &amp; Parents</strong>. Features live role filter pills, instant real-time JavaScript search filtering, character counters, and strict input validation.</p>
+
+        <div class="screen-section-title">Interactive Elements & Form Inputs:</div>
+        <ul>
+            <li>Role Category Filter Pills: All Members, Admin Staff, Teachers, Students, Guardians</li>
+            <li>Live search input filtering across name, role, class, department, and admission number</li>
+            <li>Grouped <code>&lt;select id=&quot;recipient_id&quot;&gt;</code> with formatted <code>&lt;optgroup&gt;</code>s</li>
+            <li>Subject input (max 120 chars, regex requiring letters)</li>
+            <li>Body textarea (min 5, max 2000 chars, regex requiring letters)</li>
+        </ul>
+
+        <div class="screen-section-title">Backend Validation Rules:</div>
+        <p><code>recipient_id: required|exists:users,id|not_in:auth_id, subject: nullable|string|max:120|regex:/[A-Za-z]/, body: required|string|min:5|max:2000|regex:/[A-Za-z]/</code></p>
+
+        <div class="screen-section-title">Database Mutations & Execution Logic:</div>
+        <ol>
+            <li>Computes deterministic pairwise key: <code>sha256(min(sender, recipient) : max(sender, recipient))</code>.</li>
+            <li>Finds or creates 1-on-1 thread in <code>message_conversations</code>.</li>
+            <li>Synchronizes strictly the sender and recipient IDs into <code>message_participants</code>.</li>
+            <li>Persists message payload in <code>school_messages</code> with <code>sender_id = Auth::id()</code>.</li>
+            <li>Dispatches <code>SchoolMessageReceived</code> notification containing sender name and role exclusively to the recipient.</li>
+            <li>Writes security audit log without logging sensitive message body text.</li>
+        </ol>
+
+        <div class="screen-section-title">Flash Response & Redirect:</div>
+        <p>Redirects to <code>messages.show</code> with success banner: &quot;Message sent successfully.&quot;</p>
+    </div>
+</div>
+
+<div class="screen-card">
+    <div class="screen-header">
+        <span class="screen-title">Confidential 1-on-1 Conversation Thread</span>
+        <span class="screen-path">GET /messages/{conversation} &bull; messages.show</span>
+    </div>
+    <div class="screen-meta">
+        <div><strong>Controller Action:</strong> <code>App\Http\Controllers\MessageController@show</code></div>
+        <div><strong>Required Permission:</strong> <span class="badge badge-purple">Conversation Participant Only (403 Forbidden for non-participants)</span></div>
+        <div><strong>Blade View Template:</strong> <code>resources/views/Messages/Show.blade.php</code></div>
+        <div><strong>Sidepanel Group:</strong> Communication</div>
+    </div>
+    <div class="screen-body">
+        <div class="screen-section-title">UI Layout & Data Elements Displayed:</div>
+        <p>Full 1-on-1 conversation stream with strict confidentiality safeguards. Features participant profile banner (Name, Role badge, Branch, Email), end-to-end privacy badge, right-aligned outgoing messages (with <em>&quot;You (Role) &bull; Sent to [Recipient]&quot;</em> and Read/Delivered receipts), left-aligned incoming messages (with <em>&quot;[Sender] (Role) &bull; Sent to You&quot;</em>), and inline reply composer.</p>
+
+        <div class="screen-section-title">Interactive Elements & Form Inputs:</div>
+        <ul>
+            <li>Reply textarea with real-time character counter (max 10,000 chars)</li>
+            <li>Send Reply button (triggers <code>POST /messages/{id}/replies</code>)</li>
+            <li>Back to Inbox navigation button</li>
+        </ul>
+
+        <div class="screen-section-title">Backend Validation Rules:</div>
+        <p><code>body: required|string|max:10000|regex:/[A-Za-z]/</code></p>
+
+        <div class="screen-section-title">Database Mutations & Execution Logic:</div>
+        <ol>
+            <li><strong>Confidentiality Invariant:</strong> Asserts <code>conversation.participants</code> includes <code>Auth::id()</code>. If false, immediately halts execution with <code>403 Forbidden</code>.</li>
+            <li>Automatically marks all incoming unread messages as read (<code>read_at = now()</code>).</li>
+            <li>Inserts new reply record in <code>school_messages</code> and dispatches notification to the other participant.</li>
+        </ol>
+
+        <div class="screen-section-title">Flash Response & Redirect:</div>
+        <p>Reloads thread with newly appended message.</p>
     </div>
 </div>
 
@@ -5334,6 +5672,242 @@ $$\text{CGPA} = \frac{\sum_{i=1}^n (\text{GradePoint}_i \times \text{CreditHours
                     <li><code>employee_id REFERENCES employees(id) ON DELETE CASCADE</code></li>
             </ul>
     </div>
+
+<div class="screen-card">
+    <div class="screen-header">
+        <span class="screen-title">Table: <code>payroll_deductions</code></span>
+        <span class="badge badge-blue">HR &amp; Deductions Governance</span>
+    </div>
+    <p><strong>Table Purpose:</strong> Stores itemized Super Admin manual salary subtractions (advances, penalties, loans, damage recoveries) and calculated attendance deductions, directly mapped to payroll runs and employee profiles.</p>
+    <table>
+        <thead>
+            <tr>
+                <th style="width: 22%;">Column Name</th>
+                <th style="width: 18%;">SQL Data Type</th>
+                <th style="width: 10%;" class="text-center">Nullable</th>
+                <th style="width: 15%;">Default Value</th>
+                <th style="width: 35%;">Key Constraints & Description</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code>id</code></td>
+                <td><code>bigint unsigned</code></td>
+                <td class="text-center"><span class="badge badge-green">NO</span></td>
+                <td><em>NULL</em></td>
+                <td>PRIMARY KEY, Auto-increment</td>
+            </tr>
+            <tr>
+                <td><code>payroll_entry_id</code></td>
+                <td><code>bigint unsigned</code></td>
+                <td class="text-center"><span class="badge badge-amber">YES</span></td>
+                <td><em>NULL</em></td>
+                <td>FOREIGN KEY referencing payroll_entries(id) ON DELETE SET NULL</td>
+            </tr>
+            <tr>
+                <td><code>employee_id</code></td>
+                <td><code>bigint unsigned</code></td>
+                <td class="text-center"><span class="badge badge-green">NO</span></td>
+                <td><em>NULL</em></td>
+                <td>FOREIGN KEY referencing employees(id) ON DELETE CASCADE</td>
+            </tr>
+            <tr>
+                <td><code>payroll_month</code></td>
+                <td><code>varchar(7)</code></td>
+                <td class="text-center"><span class="badge badge-amber">YES</span></td>
+                <td><em>NULL</em></td>
+                <td>Target payroll period (YYYY-MM format)</td>
+            </tr>
+            <tr>
+                <td><code>effective_date</code></td>
+                <td><code>date</code></td>
+                <td class="text-center"><span class="badge badge-amber">YES</span></td>
+                <td><em>NULL</em></td>
+                <td>Effective transaction date</td>
+            </tr>
+            <tr>
+                <td><code>type</code></td>
+                <td><code>varchar(40)</code></td>
+                <td class="text-center"><span class="badge badge-green">NO</span></td>
+                <td><code>manual</code></td>
+                <td>Deduction category: leave_unpaid, manual, advance, penalty, other</td>
+            </tr>
+            <tr>
+                <td><code>amount</code></td>
+                <td><code>decimal(12,2)</code></td>
+                <td class="text-center"><span class="badge badge-green">NO</span></td>
+                <td><code>0.00</code></td>
+                <td>Monetary subtraction value in LKR</td>
+            </tr>
+            <tr>
+                <td><code>days</code></td>
+                <td><code>smallint unsigned</code></td>
+                <td class="text-center"><span class="badge badge-green">NO</span></td>
+                <td><code>0</code></td>
+                <td>Calculated unpaid absent days for attendance basis</td>
+            </tr>
+            <tr>
+                <td><code>reason</code></td>
+                <td><code>varchar(255)</code></td>
+                <td class="text-center"><span class="badge badge-amber">YES</span></td>
+                <td><em>NULL</em></td>
+                <td>Official stated reason or justification</td>
+            </tr>
+            <tr>
+                <td><code>notes</code></td>
+                <td><code>text</code></td>
+                <td class="text-center"><span class="badge badge-amber">YES</span></td>
+                <td><em>NULL</em></td>
+                <td>Auditor and calculation notes</td>
+            </tr>
+            <tr>
+                <td><code>status</code></td>
+                <td><code>varchar(30)</code></td>
+                <td class="text-center"><span class="badge badge-green">NO</span></td>
+                <td><code>pending</code></td>
+                <td>Processing state: pending, applied, cancelled</td>
+            </tr>
+            <tr>
+                <td><code>created_by</code></td>
+                <td><code>bigint unsigned</code></td>
+                <td class="text-center"><span class="badge badge-amber">YES</span></td>
+                <td><em>NULL</em></td>
+                <td>FOREIGN KEY referencing users(id) ON DELETE SET NULL</td>
+            </tr>
+            <tr>
+                <td><code>created_at</code></td>
+                <td><code>timestamp</code></td>
+                <td class="text-center"><span class="badge badge-amber">YES</span></td>
+                <td><em>NULL</em></td>
+                <td>Creation timestamp</td>
+            </tr>
+            <tr>
+                <td><code>updated_at</code></td>
+                <td><code>timestamp</code></td>
+                <td class="text-center"><span class="badge badge-amber">YES</span></td>
+                <td><em>NULL</em></td>
+                <td>Update timestamp</td>
+            </tr>
+        </tbody>
+    </table>
+    <p><strong>Foreign Key Linkages:</strong></p>
+    <ul>
+        <li><code>employee_id REFERENCES employees(id) ON DELETE CASCADE</code></li>
+        <li><code>payroll_entry_id REFERENCES payroll_entries(id) ON DELETE SET NULL</code></li>
+        <li><code>created_by REFERENCES users(id) ON DELETE SET NULL</code></li>
+    </ul>
+</div>
+
+<div class="screen-card">
+    <div class="screen-header">
+        <span class="screen-title">Table: <code>branch_transfers</code></span>
+        <span class="badge badge-blue">Multi-Campus Governance</span>
+    </div>
+    <p><strong>Table Purpose:</strong> Complete audit register for student, teacher, and staff campus transfers across multi-branch institutional networks.</p>
+    <table>
+        <thead>
+            <tr>
+                <th style="width: 22%;">Column Name</th>
+                <th style="width: 18%;">SQL Data Type</th>
+                <th style="width: 10%;" class="text-center">Nullable</th>
+                <th style="width: 15%;">Default Value</th>
+                <th style="width: 35%;">Key Constraints & Description</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code>id</code></td>
+                <td><code>bigint unsigned</code></td>
+                <td class="text-center"><span class="badge badge-green">NO</span></td>
+                <td><em>NULL</em></td>
+                <td>PRIMARY KEY, Auto-increment</td>
+            </tr>
+            <tr>
+                <td><code>person_id</code></td>
+                <td><code>bigint unsigned</code></td>
+                <td class="text-center"><span class="badge badge-green">NO</span></td>
+                <td><em>NULL</em></td>
+                <td>Foreign entity ID (Student, Teacher, or Employee)</td>
+            </tr>
+            <tr>
+                <td><code>person_category</code></td>
+                <td><code>varchar(30)</code></td>
+                <td class="text-center"><span class="badge badge-green">NO</span></td>
+                <td><em>NULL</em></td>
+                <td>Entity category: student, teacher, employee</td>
+            </tr>
+            <tr>
+                <td><code>from_branch_id</code></td>
+                <td><code>bigint unsigned</code></td>
+                <td class="text-center"><span class="badge badge-amber">YES</span></td>
+                <td><em>NULL</em></td>
+                <td>FOREIGN KEY referencing branches(id) ON DELETE SET NULL</td>
+            </tr>
+            <tr>
+                <td><code>to_branch_id</code></td>
+                <td><code>bigint unsigned</code></td>
+                <td class="text-center"><span class="badge badge-green">NO</span></td>
+                <td><em>NULL</em></td>
+                <td>FOREIGN KEY referencing branches(id) ON DELETE CASCADE</td>
+            </tr>
+            <tr>
+                <td><code>previous_admission_no</code></td>
+                <td><code>varchar(60)</code></td>
+                <td class="text-center"><span class="badge badge-amber">YES</span></td>
+                <td><em>NULL</em></td>
+                <td>Original campus admission number</td>
+            </tr>
+            <tr>
+                <td><code>new_admission_no</code></td>
+                <td><code>varchar(60)</code></td>
+                <td class="text-center"><span class="badge badge-amber">YES</span></td>
+                <td><em>NULL</em></td>
+                <td>New reallocated campus admission number</td>
+            </tr>
+            <tr>
+                <td><code>transfer_date</code></td>
+                <td><code>date</code></td>
+                <td class="text-center"><span class="badge badge-green">NO</span></td>
+                <td><em>NULL</em></td>
+                <td>Official effective transfer date</td>
+            </tr>
+            <tr>
+                <td><code>reason</code></td>
+                <td><code>text</code></td>
+                <td class="text-center"><span class="badge badge-amber">YES</span></td>
+                <td><em>NULL</em></td>
+                <td>Transfer justification / parent relocation notes</td>
+            </tr>
+            <tr>
+                <td><code>transferred_by</code></td>
+                <td><code>bigint unsigned</code></td>
+                <td class="text-center"><span class="badge badge-amber">YES</span></td>
+                <td><em>NULL</em></td>
+                <td>FOREIGN KEY referencing users(id) ON DELETE SET NULL</td>
+            </tr>
+            <tr>
+                <td><code>created_at</code></td>
+                <td><code>timestamp</code></td>
+                <td class="text-center"><span class="badge badge-amber">YES</span></td>
+                <td><em>NULL</em></td>
+                <td>Creation timestamp</td>
+            </tr>
+            <tr>
+                <td><code>updated_at</code></td>
+                <td><code>timestamp</code></td>
+                <td class="text-center"><span class="badge badge-amber">YES</span></td>
+                <td><em>NULL</em></td>
+                <td>Update timestamp</td>
+            </tr>
+        </tbody>
+    </table>
+    <p><strong>Foreign Key Linkages:</strong></p>
+    <ul>
+        <li><code>from_branch_id REFERENCES branches(id) ON DELETE SET NULL</code></li>
+        <li><code>to_branch_id REFERENCES branches(id) ON DELETE CASCADE</code></li>
+        <li><code>transferred_by REFERENCES users(id) ON DELETE SET NULL</code></li>
+    </ul>
+</div>
 <div class="screen-card">
     <div class="screen-header">
         <span class="screen-title">Table: <code>library_loans</code></span>
@@ -5994,60 +6568,67 @@ gunzip < /backups/sms_backup_20261112_000000.sql.gz | mysql -u root -p igk_schoo
 </ul>
 
 <h3>10.4 Verified Modular Engineering Deliverables & Team Distribution Packages</h3>
-<p>To eliminate developer environment drift, circular dependencies, and runtime errors, the entire codebase has been packaged into 5 independent, fully-isolated, verified ZIP distributions stored under <code>docs/packages/</code> and <code>G:\FINAL_SYSTEM\TEAM-Divide\</code>. Every package includes its dedicated modules, route manifests, migrations, and core multi-campus tenant isolation foundations (<code>Branch.php</code>, <code>BranchOwned.php</code>, <code>ResolveBranchContext.php</code>, <code>BranchIsolationServiceProvider.php</code>):</p>
+<p>To eliminate developer environment drift, circular dependencies, and runtime errors, the entire codebase has been packaged into 5 independent, fully-isolated, verified engineering packages plus 1 Core Shared Foundation package, stored under <code>docs/TEAM/packages/</code> and mirrored to <code>documents/TEAM/packages/</code>. Every package is completely autonomous and unzips directly into Sir's repository root with relative paths intact:</p>
 
 <table>
     <thead>
         <tr>
-            <th style="width: 15%;">Package Archive</th>
-            <th style="width: 20%;">Engineer / Role</th>
-            <th style="width: 12%;" class="text-center">Files Count</th>
-            <th style="width: 38%;">Delivered Module Domains</th>
-            <th style="width: 15%;" class="text-center">Verification Status</th>
+            <th style="width: 18%;">Package Archive</th>
+            <th style="width: 18%;">Engineer / Role</th>
+            <th style="width: 12%;" class="text-center">Items Count</th>
+            <th style="width: 40%;">Delivered Engineering Domains</th>
+            <th style="width: 12%;" class="text-center">Status</th>
         </tr>
     </thead>
     <tbody>
         <tr>
-            <td><code>01_Alass_TL.zip</code></td>
+            <td><code>ALASS_ADMIN_PACKAGE.zip</code></td>
             <td><strong>Alass</strong><br><span class="badge badge-blue">Team Leader</span></td>
-            <td class="text-center"><strong>139 files</strong></td>
-            <td>Shared Core Base, Bootstrap & Providers, Spatie RBAC, HR & Payroll (EPF/ETF), Staff Biometrics, Fee Invoicing, CSV Bulk Imports, 2FA, Base Migrations.</td>
+            <td class="text-center"><strong>71 items</strong></td>
+            <td>Super Admin & Institution Admin desks, Multi-Campus Branch Switching, Users directory & RBAC security, HR & statutory payroll processing (EPF/ETF), Super Admin salary deductions console, system settings, forensic audit trail, and private multi-role messaging.</td>
             <td class="text-center"><span class="badge badge-green">VERIFIED 100%</span></td>
         </tr>
         <tr>
-            <td><code>02_Shilfa.zip</code></td>
-            <td><strong>Shilfa</strong><br><span class="badge badge-purple">Core Engineer</span></td>
-            <td class="text-center"><strong>71 files</strong></td>
-            <td>Multi-Branch Tenant Isolation, Double-Entry General Ledger, Chart of Accounts, Academic Years/Terms, Curricula, Classes & Subjects, PayHere Gateway.</td>
-            <td class="text-center"><span class="badge badge-green">VERIFIED 100%</span></td>
-        </tr>
-        <tr>
-            <td><code>03_Rajiya.zip</code></td>
-            <td><strong>Rajiya</strong><br><span class="badge badge-green">Core Engineer</span></td>
-            <td class="text-center"><strong>65 files</strong></td>
-            <td>Student Information System (SIS), Elective Registration, Counter Cashiering & Receipts, Inventory & Stock Movement, Procurement & POs, Fleet Transport.</td>
-            <td class="text-center"><span class="badge badge-green">VERIFIED 100%</span></td>
-        </tr>
-        <tr>
-            <td><code>04_Sumaiya.zip</code></td>
+            <td><code>SUMAIYA_TEACHER_PACKAGE.zip</code></td>
             <td><strong>Sumaiya</strong><br><span class="badge badge-amber">Core Engineer</span></td>
-            <td class="text-center"><strong>76 files</strong></td>
-            <td>Teacher Portal, Timetable Scheduling & Clash Detector Engine, Examinations Engine, Marks Entry Console, Batch GPA Generator, School Messaging & SMS Digest.</td>
+            <td class="text-center"><strong>57 items</strong></td>
+            <td>Teacher desk portal, faculty self-service, class-subject allocation, automated timetable clash detector, daily attendance roll call, biometric sync endpoints, exam paper configuration, marks boundary validation, and batch GPA publishing.</td>
             <td class="text-center"><span class="badge badge-green">VERIFIED 100%</span></td>
         </tr>
         <tr>
-            <td><code>05_Hasfa.zip</code></td>
+            <td><code>RAJIYA_STUDENT_PACKAGE.zip</code></td>
+            <td><strong>Rajiya</strong><br><span class="badge badge-green">Core Engineer</span></td>
+            <td class="text-center"><strong>103 items</strong></td>
+            <td>Admissions registration & document onboarding, Student master profiles & SIS portal, multi-child Guardian portal & family context switcher, academic catalog (Departments, Programs, Curricula, Classes), student campus transfers, transcripts, hostels, transport, and cafeteria.</td>
+            <td class="text-center"><span class="badge badge-green">VERIFIED 100%</span></td>
+        </tr>
+        <tr>
+            <td><code>HASFA_REPORTS_PACKAGE.zip</code></td>
             <td><strong>Hasfa</strong><br><span class="badge badge-purple">Core Engineer</span></td>
-            <td class="text-center"><strong>60 files</strong></td>
-            <td>Library Catalog & Circulation (Loans/Fines), Learning Management System (LMS Courses & Submissions), Hostel Management, The 11 Master Statutory Reports Suite.</td>
+            <td class="text-center"><strong>37 items</strong></td>
+            <td>The 11 Core Operational & Statutory Reports Suite (Enrollment, Attendance, Results, Performance, Financial, Defaulters), real-time memory-safe CSV streaming engine, pixel-perfect DomPDF generation, Library Information System & circulation desk, and LMS modules.</td>
+            <td class="text-center"><span class="badge badge-green">VERIFIED 100%</span></td>
+        </tr>
+        <tr>
+            <td><code>SHILFA_FINANCE_PACKAGE.zip</code></td>
+            <td><strong>Shilfa</strong><br><span class="badge badge-purple">Core Engineer</span></td>
+            <td class="text-center"><strong>68 items</strong></td>
+            <td>Fee structures catalog & billing rules, cohort student invoicing engine, counter cashier payments & printable official receipts, PayHere online gateway integration, double-entry general ledger (Chart of Accounts, Journal entries, Trial Balance, Ledger, Income & Expense, Branch Summary), and Procurement supply chain.</td>
+            <td class="text-center"><span class="badge badge-green">VERIFIED 100%</span></td>
+        </tr>
+        <tr>
+            <td><code>CORE_SHARED_SYSTEM_PACKAGE.zip</code></td>
+            <td><strong>All Team</strong><br><span class="badge badge-blue">Foundation</span></td>
+            <td class="text-center"><strong>20 items</strong></td>
+            <td>Base Laravel 12 kernel, application bootstrap, shared <code>LayoutApp</code> views, <code>glass.css</code>, <code>app.js</code>, <code>User</code> model, <code>BranchOwned</code> global tenant scope, all 61 database schema migrations, and master seeders.</td>
             <td class="text-center"><span class="badge badge-green">VERIFIED 100%</span></td>
         </tr>
     </tbody>
 </table>
 
 <div class="callout callout-success">
-    <div class="callout-title">Architectural Certification & Dependency Integrity Guarantee</div>
-    All 5 distribution packages have been verified through automated unpack and schema analysis (<code>verify_packages.php</code>). Every package contains autonomous migrations and the core Branch Eloquent scope so that individual team members can build, test, and execute their modules without encountering missing class or missing table errors.
+    <div class="callout-title">Architectural Certification & Git Fork Invariant Guarantee</div>
+    All 6 distribution packages have been verified through automated packaging with zero missing files. Detailed individual markdown guides, test verification commands, and step-by-step Fork Git GUI instructions are documented in <code>docs/TEAM/</code> and mirrored in <code>documents/TEAM/</code> for immediate deployment.
 </div>
 
 </body>

@@ -29,7 +29,7 @@ class InvoiceController extends Controller
 
         $classes = SchoolClass::orderBy('name')->orderBy('section')->get();
 
-        $invoices = Invoice::with(['student.user', 'student.class', 'term'])
+        $invoices = Invoice::with(['student.user', 'student.class', 'term', 'branch'])
             ->when($status, fn ($q) => $q->where('status', $status))
             ->when($classId, fn ($q) => $q->whereHas('student', fn ($s) => $s->where('class_id', $classId)))
             ->when($search, function ($query, $s) {

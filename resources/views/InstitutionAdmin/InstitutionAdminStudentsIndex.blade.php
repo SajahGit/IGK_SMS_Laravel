@@ -51,12 +51,13 @@
             <tbody>
             @forelse ($students as $s)
                 <tr>
-                    <td>{{ $s->admission_no }}</td>
-                    <td>{{ $s->user->name }}</td>
+                    <td><a href="{{ route('admin.students.show', $s) }}" class="fw-semibold text-primary text-decoration-none"><i class="bi bi-person-badge me-1"></i>{{ $s->admission_no }}</a></td>
+                    <td><a href="{{ route('admin.students.show', $s) }}" class="text-body fw-medium text-decoration-none">{{ $s->user->name }}</a></td>
                     <td>{{ $s->user->email }}</td>
                     <td>{{ $s->class?->full_name ?? 'Unassigned' }}</td>
                     <td>{{ $s->primaryGuardian->first()?->user?->name ?? '-' }}</td>
                     <td class="text-end">
+                        <a href="{{ route('admin.students.show', $s) }}" class="btn btn-sm btn-outline-info" title="View Student Profile"><i class="bi bi-eye me-1"></i>View</a>
                         <a href="{{ route('admin.students.edit', $s) }}" class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil-square me-1"></i>Edit</a>
                         <form method="POST" action="{{ route('admin.students.destroy', $s) }}" class="d-inline" onsubmit="return confirm('Delete this student and all attendance and results?')">
                             @csrf @method('DELETE')

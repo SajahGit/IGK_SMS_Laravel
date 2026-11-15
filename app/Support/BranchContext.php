@@ -18,6 +18,11 @@ class BranchContext
         return $user !== null && ($user->isSuperAdmin() || $user->isInstitutionAdmin());
     }
 
+    public static function canAccessAllBranches(?User $user): bool
+    {
+        return $user !== null && ($user->isSuperAdmin() || $user->isInstitutionAdmin() || $user->isAccountant());
+    }
+
     public static function activeBranchId(?User $user = null): ?int
     {
         $user ??= Auth::user();
@@ -25,7 +30,7 @@ class BranchContext
             return null;
         }
 
-        if (self::isGlobalAdmin($user)) {
+        if (self::canAccessAllBranches($user)) {
             $selected = session()->get('active_branch_id');
             if ($selected === 'all') {
                 return null;

@@ -26,7 +26,7 @@ class HrPayrollController extends Controller
     {
         $this->authorize('hr.read');
         $employees = Employee::query()
-            ->with(['user', 'teacher.user', 'department'])
+            ->with(['user', 'teacher.user', 'department', 'branch', 'branchTransfers.fromBranch', 'branchTransfers.toBranch'])
             ->when($request->filled('search'), fn ($query) => $query->where(function ($nested) use ($request) {
                 $nested->where('employee_no', 'like', '%'.$request->string('search').'%')
                     ->orWhere('job_title', 'like', '%'.$request->string('search').'%')
@@ -37,7 +37,9 @@ class HrPayrollController extends Controller
             ->paginate(15)
             ->withQueryString();
 
-        return view('InstitutionAdmin.HrEmployeesIndex', compact('employees'));
+        $branches = Branch::withoutGlobalScopes()->where('is_active', true)->orderBy('name')->get();
+
+        return view('InstitutionAdmin.HrEmployeesIndex', compact('employees', 'branches'));
     }
 
     public function employeeCreate(): View
@@ -162,19 +164,71 @@ class HrPayrollController extends Controller
         $this->authorize('payroll.update');
         $data = $request->validate([
             'allowance' => ['required', 'numeric', 'min:0', 'max:9999999999.99', 'regex:/^\d+(\.\d{1,2})?$/'],
-            'deduction' => ['required', 'numeric', 'min:0', 'max:9999999999.99', 'regex:/^\d+(\.\d{1,2})?$/'],
+            'deduction' => ['nullable', 'numeric', 'min:0', 'max:9999999999.99', 'regex:/^\d+(\.\d{1,2})?$/'],
+            'manual_deduction' => ['nullable', 'numeric', 'min:0', 'max:9999999999.99', 'regex:/^\d+(\.\d{1,2})?$/'],
+            'manual_deduction_reason' => ['nullable', 'string', 'max:255'],
             'apit_deduction' => ['nullable', 'numeric', 'min:0', 'max:9999999999.99', 'regex:/^\d+(\.\d{1,2})?$/'],
             'notes' => ['nullable', 'string', 'max:2000'],
         ]);
+
+        $isSuperAdmin = (bool) $request->user()?->isSuperAdmin();
+        $manualDeduction = $isSuperAdmin && $request->filled('manual_deduction')
+            ? (string) $request->input('manual_deduction')
+            : (string) $payrollEntry->manual_deduction;
+        $manualReason = $isSuperAdmin
+            ? $request->input('manual_deduction_reason', $payrollEntry->manual_deduction_reason)
+            : $payrollEntry->manual_deduction_reason;
+        $deduction = $request->input('deduction') !== null ? (string) $request->input('deduction') : (string) $payrollEntry->deduction;
+
         HrPayrollService::updateEntry(
             $payrollEntry,
-            $data['allowance'],
-            $data['deduction'],
+            (string) $data['allowance'],
+            $deduction,
             $data['notes'] ?? null,
-            $data['apit_deduction'] ?? null
+            $data['apit_deduction'] ?? null,
+            $manualDeduction,
+            $manualReason,
+            (int) $request->user()->id
         );
 
         return redirect()->route('admin.hr.payroll.show', $payrollEntry->payroll_run_id)->with('success', 'Payroll entry updated.');
+    }
+
+    public function payslip(PayrollEntry $payrollEntry): View
+    {
+        $this->authorize('payroll.read');
+        $payrollEntry->load([
+            'run',
+            'employee.user',
+            'employee.teacher.user',
+            'employee.department',
+            'employee.branch',
+            'deductions',
+        ]);
+
+        return view('InstitutionAdmin.HrPayrollPayslip', compact('payrollEntry'));
+    }
+
+    public function employeeTransfer(Request $request, Employee $employee): RedirectResponse
+    {
+        $this->authorize('hr.update');
+
+        $data = $request->validate([
+            'to_branch_id' => ['required', 'integer', 'exists:branches,id'],
+            'transfer_date' => ['required', 'date'],
+            'reason' => ['nullable', 'string', 'max:500'],
+        ]);
+
+        $transferred = \App\Services\BranchTransferService::transferEmployee(
+            $employee,
+            (int) $data['to_branch_id'],
+            $data['transfer_date'],
+            $data['reason'] ?? null,
+            (int) $request->user()->id
+        );
+
+        return redirect()->route('admin.hr.employees.index')
+            ->with('success', "Employee {$transferred->employee_no} successfully transferred to {$transferred->branch?->name}.");
     }
 
     public function payrollApprove(Request $request, PayrollRun $payrollRun): RedirectResponse

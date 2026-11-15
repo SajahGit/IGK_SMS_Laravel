@@ -51,22 +51,26 @@ class EnrollmentService
 
             $admissionNo = ! empty($data['admission_no'])
                 ? $data['admission_no']
-                : AdmissionNumberGenerator::next((int) $programId, (int) $academicYearId);
+                : AdmissionNumberGenerator::next((int) $programId, (int) $academicYearId, (int) ($data['branch_id'] ?? $schoolClass->branch_id));
 
-            if (! preg_match('/^\d{4}-[A-Z]{2,6}-\d{4}$/', $admissionNo)) {
+            if (! preg_match('/^(?:\d{4}-[A-Z]{2,6}-\d{4}|ADM-[A-Z0-9]{1,10}-\d{3,6})$/i', $admissionNo)) {
                 throw ValidationException::withMessages([
-                    'admission_no' => 'Admission numbers must use the YYYY-PROGRAM-#### format.',
+                    'admission_no' => 'Admission numbers must use the YYYY-PROGRAM-#### or ADM-BRANCH-### format.',
                 ]);
             }
 
-            $expectedPrefix = AdmissionNumberGenerator::prefix((int) $programId, (int) $academicYearId);
-            if (strncmp($admissionNo, $expectedPrefix, strlen($expectedPrefix)) !== 0) {
-                throw ValidationException::withMessages([
-                    'admission_no' => 'The admission number must match the selected academic year and program.',
-                ]);
+            if (str_starts_with(strtoupper($admissionNo), 'ADM-')) {
+                // Branch format validated
+            } else {
+                $expectedPrefix = AdmissionNumberGenerator::prefix((int) $programId, (int) $academicYearId);
+                if (strncmp($admissionNo, $expectedPrefix, strlen($expectedPrefix)) !== 0) {
+                    throw ValidationException::withMessages([
+                        'admission_no' => 'The admission number must match the selected academic year and program.',
+                    ]);
+                }
             }
 
-            if (Student::where('admission_no', $admissionNo)->exists()) {
+            if (Student::withoutGlobalScopes()->where('admission_no', $admissionNo)->exists()) {
                 throw ValidationException::withMessages([
                     'admission_no' => 'Admission number already exists.',
                 ]);
@@ -89,7 +93,7 @@ class EnrollmentService
                     'email' => $data['email'],
                     'password' => $data['password'],
                     'role' => 'student',
-                    'branch_id' => $schoolClass->branch_id,
+                    'branch_id' => $data['branch_id'] ?? $schoolClass->branch_id,
                     'is_active' => true,
                     'must_change_password' => true,
                 ]);
@@ -102,7 +106,7 @@ class EnrollmentService
             $student = Student::create([
                 'user_id' => $user->id,
                 'class_id' => $schoolClass->id,
-                'branch_id' => $schoolClass->branch_id,
+                'branch_id' => $data['branch_id'] ?? $schoolClass->branch_id,
                 'program_id' => $programId,
                 'academic_year_id' => $academicYearId,
                 'guardian_id' => $data['primary_guardian_id'] ?? $data['guardian_id'] ?? null,

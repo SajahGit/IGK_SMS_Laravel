@@ -17,7 +17,11 @@ class ProgramController extends Controller
     {
         $this->authorize('viewAny', Program::class);
 
-        $programs = Program::with('department')->orderBy('name')->paginate(10)->withQueryString();
+        $programs = Program::with('department')
+            ->withCount(['students', 'subjects', 'classes'])
+            ->orderBy('name')
+            ->paginate(10)
+            ->withQueryString();
 
         return view('InstitutionAdmin.InstitutionAdminProgramsIndex', compact('programs'));
     }

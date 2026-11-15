@@ -6,6 +6,7 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\PasswordChangeController;
 use App\Http\Controllers\Auth\ResetPasswordController;
 use App\Http\Controllers\Auth\TwoFactorController;
+use App\Http\Controllers\InstitutionAdmin\BranchController;
 use App\Http\Controllers\MessageController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\Student\PayHereController;
@@ -77,11 +78,16 @@ Route::middleware('auth')->group(function () {
     Route::post('/messages/{conversation}/replies', [MessageController::class, 'storeReply'])
         ->middleware('throttle:30,1')
         ->name('messages.replies.store');
+
+    Route::post('/branch-context', [BranchController::class, 'switchContext'])->name('branch-context');
 });
 
 // ---- Each module has its own route file (one owner per file) ----
 Route::middleware(['auth', 'role:admin,registrar'])->prefix('admin')->name('admin.')
     ->group(base_path('routes/modules/admin.php'));
+
+Route::middleware(['auth', 'role:admin,accountant'])->prefix('admin')->name('admin.')
+    ->group(base_path('routes/accounting.php'));
 
 Route::middleware(['auth', 'role:teacher'])->prefix('teacher')->name('teacher.')
     ->group(base_path('routes/teacher.php'));

@@ -17,7 +17,7 @@ class Branch extends Model
     {
         static::addGlobalScope('assigned-branch', function (Builder $builder): void {
             $user = auth()->user();
-            if (! $user || $user->isParent() || BranchContext::isGlobalAdmin($user)) {
+            if (! $user || $user->isParent() || BranchContext::canAccessAllBranches($user)) {
                 return;
             }
 

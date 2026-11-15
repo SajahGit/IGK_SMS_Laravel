@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Branch;
 use App\Rules\ValidInternationalPhone;
 use App\Support\AuditLogger;
+use App\Support\BranchContext;
 use App\Support\InternationalPhoneNumber;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -23,10 +24,10 @@ class BranchController extends Controller
 
     public function switchContext(Request $request): RedirectResponse
     {
-        abort_unless($request->user()->isSuperAdmin() || $request->user()->isInstitutionAdmin(), 403);
+        abort_unless(BranchContext::canAccessAllBranches($request->user()), 403);
 
         if ($request->input('branch_id') === 'all') {
-            abort_unless($request->user()->isSuperAdmin() || $request->user()->isInstitutionAdmin(), 403);
+            abort_unless(BranchContext::canAccessAllBranches($request->user()), 403);
             $request->session()->put('active_branch_id', 'all');
             $request->session()->put('branch_context_initialized', true);
 

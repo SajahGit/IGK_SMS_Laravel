@@ -434,7 +434,7 @@ class RoleLoginVerificationTest extends TestCase
         $this->get(route('login'))
             ->assertSee('data-email="superadmin@school.test" data-password="password"', false);
         $this->get(route('login'))
-            ->assertSee('data-email="librarian@school.test" data-password="password"', false);
+            ->assertDontSee('data-email="librarian@school.test" data-password="password"', false);
 
         // Parent must NOT be a demo login role
         $this->assertFalse(Role::where('name', 'Parent')->exists());

@@ -73,7 +73,12 @@
                                 {{ $fee->program?->name ?? '—' }}
                                 <div class="small text-muted">{{ $fee->academicYear?->name ?? 'All Academic Years' }}</div>
                             @else
-                                {{ $fee->schoolClass?->full_name }}
+                                <div class="d-flex flex-wrap align-items-center gap-1">
+                                    <span>{{ $fee->schoolClass?->full_name }}</span>
+                                    @if ($fee->schoolClass?->branch)
+                                        <span class="badge bg-body-secondary text-secondary border small">{{ $fee->schoolClass->branch->name }}</span>
+                                    @endif
+                                </div>
                                 <div class="small text-muted">{{ $fee->term ? $fee->term->name : 'All Terms (General)' }}</div>
                             @endif
                         </td>

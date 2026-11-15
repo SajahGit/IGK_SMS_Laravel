@@ -101,7 +101,15 @@ class EnrollmentRegisterReportController extends Controller
                 $studentList .= ($studentList ? ', ' : '').'and '.($studentCount - $students->count()).' more';
             }
 
+            $studentsData = $students->map(fn ($student) => [
+                'id' => $student->id,
+                'admission_no' => $student->admission_no,
+                'name' => $student->user->name,
+                'status' => $student->pivot?->status ?? 'enrolled',
+            ])->values()->all();
+
             return [
+                'class_subject_id' => $classSubject->id,
                 'term' => $classSubject->term?->name ?? 'Legacy offering',
                 'program' => $classSubject->schoolClass->program?->name ?? '—',
                 'subject' => $classSubject->subject->name.' ('.$classSubject->subject->code.')',
@@ -109,6 +117,7 @@ class EnrollmentRegisterReportController extends Controller
                 'teacher' => $classSubject->teacher?->user?->name ?? '—',
                 'student_count' => $studentCount ?? $students->count(),
                 'student_list' => $studentList ?: '—',
+                'students_data' => $studentsData,
             ];
         });
 

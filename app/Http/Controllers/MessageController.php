@@ -17,32 +17,59 @@ use Illuminate\View\View;
 
 class MessageController extends Controller
 {
-    public function index(): View
+    public function index(Request $request): View
     {
         $userId = Auth::id();
-        $conversations = MessageConversation::query()
-            ->whereHas('participants', fn (Builder $query) => $query->where('users.id', $userId))
-            ->with(['participants:id,name,role', 'messages' => fn ($query) => $query->latest()->limit(1)])
+        $tab = $request->query('tab', 'all');
+
+        $query = MessageConversation::query()
+            ->whereHas('participants', fn (Builder $q) => $q->where('users.id', $userId))
+            ->with([
+                'participants' => fn ($q) => $q->select('users.id', 'users.name', 'users.role', 'users.email', 'users.branch_id')->with('branch:id,name,code'),
+                'messages' => fn ($q) => $q->with('sender:id,name,role')->latest()->limit(1),
+            ])
             ->withCount([
-                'messages as unread_messages_count' => fn (Builder $query) => $query
+                'messages as unread_messages_count' => fn (Builder $q) => $q
                     ->where('sender_id', '!=', $userId)
                     ->whereNull('read_at'),
-            ])
-            ->orderByDesc('last_message_at')
-            ->paginate(15);
+            ]);
 
-        return view('Messages.Index', compact('conversations'));
+        if ($tab === 'unread') {
+            $query->having('unread_messages_count', '>', 0);
+        }
+
+        $conversations = $query->orderByDesc('last_message_at')->paginate(15)->withQueryString();
+
+        return view('Messages.Index', compact('conversations', 'tab'));
     }
 
-    public function create(): View
+    public function create(Request $request): View
     {
+        $currentUserId = Auth::id();
+        $selectedRecipientId = $request->query('recipient_id');
+
         $recipients = User::query()
             ->where('is_active', true)
-            ->whereKeyNot(Auth::id())
+            ->whereKeyNot($currentUserId)
+            ->with([
+                'branch:id,name,code',
+                'teacher:id,user_id,department_id,branch_id',
+                'teacher.department:id,name',
+                'student:id,user_id,admission_no,class_id,branch_id',
+                'student.class:id,name,section',
+            ])
             ->orderBy('name')
-            ->get(['id', 'name', 'role']);
+            ->get(['id', 'name', 'email', 'role', 'branch_id']);
 
-        return view('Messages.Create', compact('recipients'));
+        $staffRoles = ['super-admin', 'super admin', 'admin', 'institution admin', 'registrar', 'accountant'];
+        $groupedRecipients = [
+            'staff' => $recipients->filter(fn ($u) => in_array(strtolower($u->role), $staffRoles, true)),
+            'teachers' => $recipients->filter(fn ($u) => strtolower($u->role) === 'teacher'),
+            'students' => $recipients->filter(fn ($u) => strtolower($u->role) === 'student'),
+            'guardians' => $recipients->filter(fn ($u) => in_array(strtolower($u->role), ['parent', 'guardian'], true)),
+        ];
+
+        return view('Messages.Create', compact('recipients', 'groupedRecipients', 'selectedRecipientId'));
     }
 
     public function store(Request $request): RedirectResponse
@@ -58,7 +85,8 @@ class MessageController extends Controller
             'body' => ['required', 'string', 'min:5', 'max:2000', 'regex:/[A-Za-z]/'],
         ]);
 
-        $senderId = Auth::id();
+        $sender = Auth::user();
+        $senderId = $sender->id;
         $recipient = User::query()->where('is_active', true)->findOrFail($data['recipient_id']);
         $pairKey = hash('sha256', min($senderId, $recipient->id).':'.max($senderId, $recipient->id));
 
@@ -71,6 +99,11 @@ class MessageController extends Controller
                     'last_message_at' => now(),
                 ]
             );
+
+            if (! empty($data['subject'])) {
+                $conversation->update(['subject' => $data['subject']]);
+            }
+
             $conversation->participants()->syncWithoutDetaching([
                 $senderId => ['joined_at' => now()],
                 $recipient->id => ['joined_at' => now()],
@@ -87,13 +120,14 @@ class MessageController extends Controller
         });
 
         $recipient->notify(new SchoolMessageReceived($conversation));
+
         AuditLogger::log('message_sent', $conversation, null, [
             'conversation_id' => $conversation->id,
             'sender_id' => $senderId,
             'recipient_id' => $recipient->id,
         ]);
 
-        return redirect()->route('messages.show', $conversation)->with('success', 'Message sent.');
+        return redirect()->route('messages.show', $conversation)->with('success', 'Message sent successfully.');
     }
 
     public function show(MessageConversation $conversation): View
@@ -103,7 +137,11 @@ class MessageController extends Controller
             ->where('sender_id', '!=', Auth::id())
             ->whereNull('read_at')
             ->update(['read_at' => now()]);
-        $conversation->load(['participants:id,name,role', 'messages.sender:id,name,role']);
+
+        $conversation->load([
+            'participants' => fn ($query) => $query->select('users.id', 'users.name', 'users.role', 'users.email', 'users.branch_id')->with('branch:id,name,code'),
+            'messages.sender:id,name,role',
+        ]);
 
         return view('Messages.Show', compact('conversation'));
     }
@@ -112,34 +150,46 @@ class MessageController extends Controller
     {
         $conversation = $this->accessibleConversation($conversation);
         $data = $request->validate([
-            'body' => ['required', 'string', 'max:10000'],
+            'body' => ['required', 'string', 'max:10000', 'regex:/[A-Za-z]/'],
         ]);
+
+        $sender = Auth::user();
         $recipient = $conversation->participants()
-            ->where('users.id', '!=', Auth::id())
+            ->where('users.id', '!=', $sender->id)
             ->where('users.is_active', true)
             ->firstOrFail();
 
         $message = $conversation->messages()->create([
-            'sender_id' => Auth::id(),
+            'sender_id' => $sender->id,
             'body' => $data['body'],
             'delivered_at' => now(),
         ]);
+
         $conversation->update(['last_message_at' => $message->created_at]);
         $recipient->notify(new SchoolMessageReceived($conversation));
+
         AuditLogger::log('message_sent', $conversation, null, [
             'conversation_id' => $conversation->id,
-            'sender_id' => Auth::id(),
+            'sender_id' => $sender->id,
             'recipient_id' => $recipient->id,
         ]);
 
-        return redirect()->route('messages.show', $conversation)->with('success', 'Reply sent.');
+        return redirect()->route('messages.show', $conversation)->with('success', 'Reply sent successfully.');
     }
 
+    /**
+     * Strict confidentiality enforcement: Only the sender and designated recipient can access the conversation.
+     */
     private function accessibleConversation(MessageConversation $conversation): MessageConversation
     {
-        return MessageConversation::query()
-            ->whereKey($conversation->id)
-            ->whereHas('participants', fn (Builder $query) => $query->where('users.id', Auth::id()))
-            ->firstOrFail();
+        $isParticipant = $conversation->participants()
+            ->where('users.id', Auth::id())
+            ->exists();
+
+        if (! $isParticipant) {
+            abort(403, 'Unauthorized. Private messages can only be viewed by the sender and designated recipient.');
+        }
+
+        return $conversation;
     }
 }

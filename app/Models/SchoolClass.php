@@ -57,6 +57,11 @@ class SchoolClass extends Model
         return $this->belongsTo(AcademicYear::class);
     }
 
+    public function branch(): BelongsTo
+    {
+        return $this->belongsTo(Branch::class, 'branch_id')->withoutGlobalScopes();
+    }
+
     public function getFullNameAttribute(): string
     {
         return $this->name.' - '.$this->section;

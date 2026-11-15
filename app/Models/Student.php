@@ -116,6 +116,18 @@ class Student extends Model
         return $this->hasMany(StudentTransportAssignment::class);
     }
 
+    public function branch(): BelongsTo
+    {
+        return $this->belongsTo(Branch::class, 'branch_id')->withoutGlobalScopes();
+    }
+
+    public function branchTransfers(): HasMany
+    {
+        return $this->hasMany(BranchTransfer::class, 'person_id')
+            ->where('person_category', 'student')
+            ->latest('transfer_date');
+    }
+
     public function hostelAssignments(): HasMany
     {
         return $this->hasMany(HostelAssignment::class);

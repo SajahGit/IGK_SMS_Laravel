@@ -5,8 +5,11 @@ namespace App\Services;
 use App\Models\Account;
 use App\Models\Employee;
 use App\Models\LeaveRequest;
+use App\Models\PayrollDeduction;
 use App\Models\PayrollEntry;
 use App\Models\PayrollRun;
+use App\Models\Setting;
+use App\Models\StaffAttendance;
 use App\Support\AuditLogger;
 use App\Support\Money;
 use Carbon\Carbon;
@@ -103,27 +106,129 @@ class HrPayrollService
                 'generated_by' => $actorId,
             ]);
             foreach ($employees as $employee) {
+                // Calculate approved unpaid leave days in the period
+                $autoDeductionEnabled = (bool) Setting::get('payroll.auto_deduction_enabled', true);
+                $autoDeductionMode = (string) Setting::get('payroll.auto_deduction_mode', 'pro_rata');
+                $fixedDailyRate = (float) Setting::get('payroll.auto_deduction_fixed_amount', 2000.00);
+
+                $unpaidDays = 0;
+                $leaveDeduction = 0.00;
+                $leaveDeductionStr = '0.00';
+                $dailyRate = 0.00;
+
+                if ($autoDeductionEnabled) {
+                    $unpaidLeaves = LeaveRequest::query()
+                        ->where('employee_id', $employee->id)
+                        ->where('status', 'approved')
+                        ->whereIn('leave_type', ['unpaid', 'unpaid_leave', 'loss_of_pay', 'lop'])
+                        ->whereDate('start_date', '<=', $periodEnd)
+                        ->whereDate('end_date', '>=', $periodStart)
+                        ->get();
+
+                    foreach ($unpaidLeaves as $leave) {
+                        $leaveStart = Carbon::parse(max($leave->start_date->toDateString(), $periodStart));
+                        $leaveEnd = Carbon::parse(min($leave->end_date->toDateString(), $periodEnd));
+                        $days = $leaveStart->diffInDays($leaveEnd) + 1;
+                        $unpaidDays += (int) $days;
+                    }
+
+                    if ($employee->teacher_id) {
+                        $absentAttendanceCount = StaffAttendance::query()
+                            ->where('teacher_id', $employee->teacher_id)
+                            ->whereDate('attendance_date', '>=', $periodStart)
+                            ->whereDate('attendance_date', '<=', $periodEnd)
+                            ->where('notes', 'like', '%absent%')
+                            ->count();
+                        if ($absentAttendanceCount > 0 && $unpaidDays === 0) {
+                            $unpaidDays += $absentAttendanceCount;
+                        }
+                    }
+
+                    if ($autoDeductionMode === 'fixed_amount') {
+                        $dailyRate = $fixedDailyRate;
+                    } else {
+                        $dailyRate = round(((float) $employee->base_salary) / 30, 2);
+                    }
+
+                    $leaveDeduction = round($dailyRate * $unpaidDays, 2);
+                    $leaveDeductionStr = sprintf('%.2f', $leaveDeduction);
+                }
+
                 $statutory = app(SriLankaPayrollCalculator::class)->calculate(
                     (string) $employee->base_salary,
                     '0.00',
                     $employee->apit_mode,
                     $periodStart
                 );
-                PayrollEntry::create([
+
+                $periodMonth = Carbon::parse($periodStart)->format('Y-m');
+                $pendingDeductions = PayrollDeduction::where('employee_id', $employee->id)
+                    ->where(function ($q) use ($periodMonth, $periodStart, $periodEnd) {
+                        $q->where('payroll_month', $periodMonth)
+                            ->orWhere(function ($sub) use ($periodStart, $periodEnd) {
+                                $sub->whereNotNull('effective_date')
+                                    ->whereBetween('effective_date', [$periodStart, $periodEnd]);
+                            });
+                    })
+                    ->where('status', 'pending')
+                    ->get();
+
+                $manualDeductionTotal = (float) $pendingDeductions->sum('amount');
+                $manualDeductionStr = sprintf('%.2f', $manualDeductionTotal);
+                $manualReasons = $pendingDeductions->pluck('reason')->filter()->implode('; ');
+
+                $allDeductions = Money::add(
+                    Money::add($statutory['employee_epf'], $statutory['apit_deduction']),
+                    Money::add($leaveDeductionStr, $manualDeductionStr)
+                );
+
+                $netPay = Money::comp($statutory['gross_pay'], $allDeductions) > 0
+                    ? Money::sub($statutory['gross_pay'], $allDeductions)
+                    : '0.00';
+
+                $entry = PayrollEntry::create([
                     'payroll_run_id' => $run->id,
                     'employee_id' => $employee->id,
                     'base_salary' => $employee->base_salary,
                     'allowance' => '0.00',
-                    'deduction' => '0.00',
+                    'deduction' => Money::add($leaveDeductionStr, $manualDeductionStr),
+                    'unpaid_leave_days' => $unpaidDays,
+                    'leave_deduction' => $leaveDeductionStr,
+                    'manual_deduction' => $manualDeductionStr,
+                    'manual_deduction_reason' => $manualReasons ?: null,
                     'employee_epf' => $statutory['employee_epf'],
                     'employer_epf' => $statutory['employer_epf'],
                     'employer_etf' => $statutory['employer_etf'],
                     'apit_deduction' => $statutory['apit_deduction'],
-                    'net_pay' => Money::sub(
-                        Money::sub($statutory['gross_pay'], $statutory['employee_epf']),
-                        $statutory['apit_deduction']
-                    ),
+                    'net_pay' => $netPay,
                 ]);
+
+                foreach ($pendingDeductions as $pDed) {
+                    $pDed->update([
+                        'payroll_entry_id' => $entry->id,
+                        'status' => 'applied',
+                    ]);
+                }
+
+                if ($unpaidDays > 0 && $leaveDeduction > 0) {
+                    $rateDescription = $autoDeductionMode === 'fixed_amount'
+                        ? 'Super Admin configured fixed rate of Rs. '.number_format($dailyRate, 2).' / day'
+                        : 'pro-rata rate of Rs. '.number_format($dailyRate, 2).' / day (monthly base salary Rs. '.number_format((float) $employee->base_salary, 2).')';
+
+                    PayrollDeduction::create([
+                        'payroll_entry_id' => $entry->id,
+                        'employee_id' => $employee->id,
+                        'type' => 'leave_unpaid',
+                        'amount' => $leaveDeduction,
+                        'days' => $unpaidDays,
+                        'reason' => "Automatic attendance deduction ({$unpaidDays} unpaid day".($unpaidDays > 1 ? 's' : '').')',
+                        'notes' => "Calculated automatically from attendance/unpaid leaves at {$rateDescription}",
+                        'payroll_month' => $periodMonth,
+                        'effective_date' => $periodEnd,
+                        'status' => 'applied',
+                        'created_by' => $actorId,
+                    ]);
+                }
             }
             AuditLogger::log('generated_payroll', $run, null, [
                 'period_start' => $periodStart,
@@ -140,14 +245,18 @@ class HrPayrollService
         string $allowance,
         string $deduction,
         ?string $notes,
-        ?string $apitDeduction = null
+        ?string $apitDeduction = null,
+        ?string $manualDeduction = null,
+        ?string $manualDeductionReason = null,
+        ?int $actorId = null
     ): void {
         if (! Money::hasValidScale($allowance) || ! Money::hasValidScale($deduction)
-            || ($apitDeduction !== null && ! Money::hasValidScale($apitDeduction))) {
+            || ($apitDeduction !== null && ! Money::hasValidScale($apitDeduction))
+            || ($manualDeduction !== null && ! Money::hasValidScale($manualDeduction))) {
             throw ValidationException::withMessages(['allowance' => 'Payroll amounts must be valid with up to two decimal places.']);
         }
 
-        DB::transaction(function () use ($entry, $allowance, $deduction, $notes, $apitDeduction) {
+        DB::transaction(function () use ($entry, $allowance, $deduction, $notes, $apitDeduction, $manualDeduction, $manualDeductionReason, $actorId) {
             $locked = PayrollEntry::query()->lockForUpdate()->with(['run', 'employee'])->findOrFail($entry->id);
             if ($locked->run->status !== 'draft') {
                 throw ValidationException::withMessages(['payroll' => 'Only draft payroll entries can be changed.']);
@@ -159,8 +268,18 @@ class HrPayrollService
                 $locked->employee->apit_mode,
                 $locked->run->period_start->toDateString()
             );
+
+            // Compute total deduction
+            $finalManualDeduction = $manualDeduction !== null
+                ? sprintf('%.2f', (float) $manualDeduction)
+                : (string) $locked->manual_deduction;
+
+            $computedDeduction = $manualDeduction !== null
+                ? Money::add((string) $locked->leave_deduction, $finalManualDeduction)
+                : $deduction;
+
             $apit = $apitDeduction ?? $statutory['apit_deduction'];
-            $totalDeductions = Money::add(Money::add($statutory['employee_epf'], $apit), $deduction);
+            $totalDeductions = Money::add(Money::add($statutory['employee_epf'], $apit), $computedDeduction);
             if (Money::comp($totalDeductions, $statutory['gross_pay']) > 0) {
                 throw ValidationException::withMessages(['deduction' => 'Total employee EPF, APIT and other deductions cannot exceed gross pay.']);
             }
@@ -168,7 +287,9 @@ class HrPayrollService
             $before = $locked->toArray();
             $locked->update([
                 'allowance' => $allowance,
-                'deduction' => $deduction,
+                'deduction' => $computedDeduction,
+                'manual_deduction' => $finalManualDeduction,
+                'manual_deduction_reason' => $manualDeductionReason ?? $locked->manual_deduction_reason,
                 'employee_epf' => $statutory['employee_epf'],
                 'employer_epf' => $statutory['employer_epf'],
                 'employer_etf' => $statutory['employer_etf'],
@@ -176,6 +297,20 @@ class HrPayrollService
                 'net_pay' => Money::sub($statutory['gross_pay'], $totalDeductions),
                 'notes' => $notes,
             ]);
+
+            if ($manualDeduction !== null && (float) $manualDeduction > 0) {
+                PayrollDeduction::create([
+                    'payroll_entry_id' => $locked->id,
+                    'employee_id' => $locked->employee_id,
+                    'type' => 'manual',
+                    'amount' => (float) $finalManualDeduction,
+                    'days' => 0,
+                    'reason' => $manualDeductionReason ?: 'Manual administrative deduction',
+                    'notes' => $notes,
+                    'created_by' => $actorId,
+                ]);
+            }
+
             AuditLogger::log('updated_payroll_entry', $locked, $before, $locked->fresh()->toArray());
         });
     }

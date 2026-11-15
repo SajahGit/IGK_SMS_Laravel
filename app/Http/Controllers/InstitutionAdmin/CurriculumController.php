@@ -30,7 +30,16 @@ class CurriculumController extends Controller
 
         $programs = Program::where('is_active', true)->with('department')->orderBy('name')->get();
 
-        return view('InstitutionAdmin.InstitutionAdminCurriculaIndex', compact('curricula', 'programs', 'programId'));
+        $curriculumAuditLogs = \App\Models\AuditLog::with('user')
+            ->where(function ($q) {
+                $q->where('subject_type', 'like', '%Curriculum%')
+                    ->orWhereIn('action', ['created_curriculum', 'updated_curriculum', 'deleted_curriculum']);
+            })
+            ->latest('created_at')
+            ->limit(20)
+            ->get();
+
+        return view('InstitutionAdmin.InstitutionAdminCurriculaIndex', compact('curricula', 'programs', 'programId', 'curriculumAuditLogs'));
     }
 
     public function create(): View

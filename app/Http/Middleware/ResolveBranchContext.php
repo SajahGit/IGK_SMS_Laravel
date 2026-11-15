@@ -15,7 +15,7 @@ class ResolveBranchContext
     {
         $user = $request->user();
 
-        if (! BranchContext::isGlobalAdmin($user)) {
+        if (! BranchContext::canAccessAllBranches($user)) {
             View::share('branchContextOptions', collect());
 
             return $next($request);
@@ -27,7 +27,7 @@ class ResolveBranchContext
             ->orderBy('name')
             ->get();
 
-        if (BranchContext::isGlobalAdmin($user) && ! $request->session()->get('branch_context_initialized')) {
+        if (BranchContext::canAccessAllBranches($user) && ! $request->session()->get('branch_context_initialized')) {
             $request->session()->put('active_branch_id', 'all');
             $request->session()->put('branch_context_initialized', true);
         }

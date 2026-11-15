@@ -32,7 +32,9 @@ class TwoFactorController extends Controller
             return redirect()->route('two-factor.setup');
         }
 
-        return view('Auth.AuthTwoFactorChallenge');
+        return view('Auth.AuthTwoFactorChallenge', [
+            'demoCode' => $this->localDemoSetupCode($user),
+        ]);
     }
 
     public function verifyChallenge(Request $request, Google2FA $google2fa): RedirectResponse
@@ -67,6 +69,11 @@ class TwoFactorController extends Controller
                 if ($counter !== false) {
                     $lockedUser->forceFill(['two_factor_last_used_at' => $counter])->save();
 
+                    return ['valid' => true, 'recovery' => false];
+                }
+
+                $demoSetupCode = $this->localDemoSetupCode($lockedUser);
+                if ($demoSetupCode !== null && hash_equals($demoSetupCode, $code)) {
                     return ['valid' => true, 'recovery' => false];
                 }
             }

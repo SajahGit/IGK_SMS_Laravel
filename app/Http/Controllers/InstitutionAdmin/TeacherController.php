@@ -3,11 +3,14 @@
 namespace App\Http\Controllers\InstitutionAdmin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Branch;
 use App\Models\Department;
 use App\Models\Teacher;
 use App\Models\User;
 use App\Rules\ValidInternationalPhone;
 use App\Rules\ValidPersonName;
+use App\Services\BranchTransferService;
+use App\Support\BranchContext;
 use App\Support\InternationalPhoneNumber;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -18,9 +21,15 @@ class TeacherController extends Controller
 {
     public function index(Request $request)
     {
+        $branches = Branch::where('is_active', true)->orderBy('name')->get();
+        $departments = Department::orderBy('name')->get();
+
         $teachers = Teacher::with([
             'user',
             'department',
+            'branch',
+            'branchTransfers.fromBranch',
+            'branchTransfers.toBranch',
             'classSubjects' => fn ($query) => $query->whereHas('schoolClass')->whereHas('subject'),
             'classSubjects.schoolClass',
             'classSubjects.subject',
@@ -28,16 +37,20 @@ class TeacherController extends Controller
             ->when($request->q, fn ($query, $s) => $query->whereHas('user', fn ($u) => $u->where('name', 'like', "%{$s}%")))
             ->when($request->filled('status'), fn ($query) => $query->where('status', $request->input('status')))
             ->when($request->filled('department_id'), fn ($query) => $query->where('department_id', $request->integer('department_id')))
+            ->when($request->filled('branch_id'), fn ($query) => $query->where('branch_id', $request->integer('branch_id')))
             ->latest()
             ->paginate(10)
             ->withQueryString();
 
-        return view('InstitutionAdmin.InstitutionAdminTeachersIndex', compact('teachers'));
+        return view('InstitutionAdmin.InstitutionAdminTeachersIndex', compact('teachers', 'branches', 'departments'));
     }
 
     public function create()
     {
-        return view('InstitutionAdmin.InstitutionAdminTeachersCreate', ['departments' => Department::orderBy('name')->get()]);
+        return view('InstitutionAdmin.InstitutionAdminTeachersCreate', [
+            'departments' => Department::orderBy('name')->get(),
+            'branches' => Branch::where('is_active', true)->orderBy('name')->get(),
+        ]);
     }
 
     public function store(Request $request)
@@ -49,33 +62,40 @@ class TeacherController extends Controller
             'password' => ['required', 'string', Password::defaults()],
             'phone' => ['nullable', 'string', 'max:20', Rule::unique('teachers', 'phone'), new ValidInternationalPhone($request->input('phone_region'))],
             'department_id' => 'nullable|exists:departments,id',
+            'branch_id' => ['nullable', 'exists:branches,id'],
             'status' => 'required|in:active,inactive,on_leave',
         ]);
 
         DB::transaction(function () use ($data) {
+            $branchId = $data['branch_id'] ?? BranchContext::activeBranchId();
+
             $user = User::create([
                 'name' => $data['name'],
                 'email' => $data['email'],
                 'password' => $data['password'],
                 'role' => 'teacher',
+                'branch_id' => $branchId,
                 'must_change_password' => true,
             ]);
+
             Teacher::create([
                 'user_id' => $user->id,
+                'branch_id' => $branchId,
                 'phone' => $data['phone'] ?? null,
                 'department_id' => $data['department_id'] ?? null,
                 'status' => $data['status'],
             ]);
         });
 
-        return redirect()->route('admin.teachers.index')->with('success', 'Teacher created successfully.');
+        return redirect()->route('admin.teachers.index')->with('success', 'Teacher created successfully with campus assignment.');
     }
 
     public function edit(Teacher $teacher)
     {
         return view('InstitutionAdmin.InstitutionAdminTeachersEdit', [
-            'teacher' => $teacher->load('user'),
+            'teacher' => $teacher->load('user', 'branch'),
             'departments' => Department::orderBy('name')->get(),
+            'branches' => Branch::where('is_active', true)->orderBy('name')->get(),
         ]);
     }
 
@@ -88,26 +108,59 @@ class TeacherController extends Controller
             'password' => ['nullable', 'string', Password::defaults()],
             'phone' => ['nullable', 'string', 'max:20', Rule::unique('teachers', 'phone')->ignore($teacher), new ValidInternationalPhone($request->input('phone_region'))],
             'department_id' => 'nullable|exists:departments,id',
+            'branch_id' => ['nullable', 'exists:branches,id'],
             'status' => 'required|in:active,inactive,on_leave',
         ]);
 
         DB::transaction(function () use ($data, $teacher) {
+            $branchId = $data['branch_id'] ?? $teacher->branch_id;
+
             $user = $teacher->user;
             $user->name = $data['name'];
             $user->email = $data['email'];
+            if ($branchId) {
+                $user->branch_id = $branchId;
+            }
             if (! empty($data['password'])) {
                 $user->password = $data['password'];
                 $user->must_change_password = true;
             }
             $user->save();
+
             $teacher->update([
                 'phone' => $data['phone'] ?? null,
                 'department_id' => $data['department_id'] ?? null,
+                'branch_id' => $branchId,
                 'status' => $data['status'],
             ]);
         });
 
         return redirect()->route('admin.teachers.index')->with('success', 'Teacher updated successfully.');
+    }
+
+    public function show(Teacher $teacher)
+    {
+        return app(\App\Http\Controllers\Teacher\ProfileController::class)->renderProfileView($teacher, false);
+    }
+
+    public function transfer(Request $request, Teacher $teacher)
+    {
+        abort_unless($request->user()->can('staff.update') || $request->user()->isSuperAdmin(), 403);
+        $data = $request->validate([
+            'to_branch_id' => ['required', 'integer', 'exists:branches,id'],
+            'transfer_date' => ['required', 'date'],
+            'reason' => ['nullable', 'string', 'max:500'],
+        ]);
+
+        BranchTransferService::transferTeacher(
+            $teacher,
+            (int) $data['to_branch_id'],
+            $data['transfer_date'],
+            $data['reason'] ?? null,
+            $request->user()->id
+        );
+
+        return back()->with('success', 'Teacher transferred to new campus successfully.');
     }
 
     public function destroy(Teacher $teacher)

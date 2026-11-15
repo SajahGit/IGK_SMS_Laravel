@@ -3,6 +3,7 @@
 namespace App\Support;
 
 use App\Models\AcademicYear;
+use App\Models\Branch;
 use App\Models\Program;
 use App\Models\Student;
 use Illuminate\Support\Facades\DB;
@@ -10,22 +11,91 @@ use Illuminate\Validation\ValidationException;
 
 class AdmissionNumberGenerator
 {
-    public static function next(int $programId, int $academicYearId): string
+    public static function next(int $programId, int $academicYearId, ?int $branchId = null): string
     {
-        return DB::transaction(function () use ($programId, $academicYearId) {
+        return DB::transaction(function () use ($programId, $academicYearId, $branchId) {
             $program = Program::whereKey($programId)->lockForUpdate()->firstOrFail();
             $academicYear = AcademicYear::whereKey($academicYearId)->lockForUpdate()->firstOrFail();
             $prefix = self::formatPrefix($program, $academicYear);
-            $numbers = Student::where('admission_no', 'like', $prefix.'%')
-                ->lockForUpdate()
-                ->pluck('admission_no');
+
+            $query = Student::withoutGlobalScopes()->where('admission_no', 'like', $prefix.'%');
+            $numbers = $query->lockForUpdate()->pluck('admission_no');
             $maxNumber = $numbers->map(function ($number) use ($prefix) {
                 $suffix = substr((string) $number, strlen($prefix));
 
                 return ctype_digit($suffix) ? (int) $suffix : 0;
             })->max() ?? 0;
 
-            return $prefix.str_pad((string) ($maxNumber + 1), 4, '0', STR_PAD_LEFT);
+            // Also check transfer history so numbers never collide
+            $transferNumbers = DB::table('branch_transfers')
+                ->where('new_admission_no', 'like', $prefix.'%')
+                ->pluck('new_admission_no');
+            $maxTransfer = $transferNumbers->map(function ($number) use ($prefix) {
+                $suffix = substr((string) $number, strlen($prefix));
+
+                return ctype_digit($suffix) ? (int) $suffix : 0;
+            })->max() ?? 0;
+
+            $maxSeq = max($maxNumber, $maxTransfer);
+
+            return $prefix.str_pad((string) ($maxSeq + 1), 4, '0', STR_PAD_LEFT);
+        });
+    }
+
+    /**
+     * Generate safe branch-specific admission number sequence for registration or transfer.
+     */
+    public static function nextForBranch(int $branchId, ?int $programId = null, ?int $academicYearId = null): string
+    {
+        return DB::transaction(function () use ($branchId, $programId, $academicYearId) {
+            $branch = Branch::withoutGlobalScopes()->whereKey($branchId)->lockForUpdate()->firstOrFail();
+            $branchCode = strtoupper(preg_replace('/[^A-Z0-9]/', '', (string) ($branch->code ?: 'BR'.$branch->id)));
+
+            // If academic year & program exist and branch has matching format, check program prefix
+            if ($programId && $academicYearId) {
+                $program = Program::whereKey($programId)->lockForUpdate()->first();
+                $academicYear = AcademicYear::whereKey($academicYearId)->lockForUpdate()->first();
+                if ($program && $academicYear) {
+                    $normCode = self::normalizedProgramCode(strtoupper((string) $program->code));
+                    if ($normCode) {
+                        $prefix = $academicYear->start_date->format('Y')."-{$normCode}-";
+                        $hasExisting = Student::withoutGlobalScopes()
+                            ->where('branch_id', $branchId)
+                            ->where('admission_no', 'like', $prefix.'%')
+                            ->exists();
+
+                        if ($hasExisting) {
+                            return self::next($programId, $academicYearId, $branchId);
+                        }
+                    }
+                }
+            }
+
+            // Standard branch-specific admission prefix: ADM-{BRANCH}-
+            $prefix = "ADM-{$branchCode}-";
+            $numbers = Student::withoutGlobalScopes()
+                ->where('admission_no', 'like', $prefix.'%')
+                ->lockForUpdate()
+                ->pluck('admission_no');
+
+            $maxNumber = $numbers->map(function ($number) use ($prefix) {
+                $suffix = substr((string) $number, strlen($prefix));
+
+                return ctype_digit($suffix) ? (int) $suffix : 0;
+            })->max() ?? 0;
+
+            $transferNumbers = DB::table('branch_transfers')
+                ->where('new_admission_no', 'like', $prefix.'%')
+                ->pluck('new_admission_no');
+            $maxTransfer = $transferNumbers->map(function ($number) use ($prefix) {
+                $suffix = substr((string) $number, strlen($prefix));
+
+                return ctype_digit($suffix) ? (int) $suffix : 0;
+            })->max() ?? 0;
+
+            $maxSeq = max($maxNumber, $maxTransfer);
+
+            return $prefix.str_pad((string) ($maxSeq + 1), 3, '0', STR_PAD_LEFT);
         });
     }
 

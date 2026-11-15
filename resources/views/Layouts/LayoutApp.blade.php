@@ -17,7 +17,7 @@
                 ['Students', 'admin.students.index', 'admin.students.*', 'people-fill'],
                 ['Teachers', 'admin.teachers.index', 'admin.teachers.*', 'person-workspace'],
                 ['Staff Attendance', 'admin.staff-attendance.index', 'admin.staff-attendance.*', 'person-check-fill'],
-                ['HR Employees', 'admin.hr.employees.index', 'admin.hr.*', 'person-vcard'],
+                ['HR Employees', 'admin.hr.employees.index', 'admin.hr.employees.*', 'person-vcard'],
                 ['Leave Management', 'admin.hr.leaves.index', 'admin.hr.leaves.*', 'calendar2-minus'],
                 ['Payroll', 'admin.hr.payroll.index', 'admin.hr.payroll.*', 'cash-coin'],
                 ['Transport', 'admin.transport.index', 'admin.transport.*', 'bus-front-fill'],
@@ -65,21 +65,24 @@
                 ['Audit Trail', 'admin.audit-logs.index', 'admin.audit-logs.*', 'clock-history'],
             ],
             'Reports' => [
-                ['Student Report', 'reports.students', 'reports.students*', 'file-earmark-person'],
-                ['Enrollment Register', 'reports.enrollment', 'reports.enrollment*', 'people-fill'],
-                ['Attendance Report', 'reports.attendance', 'reports.attendance*', 'calendar2-check'],
-                ['Attendance Summary', 'reports.attendance-summary', 'reports.attendance-summary*', 'calendar2-range'],
-                ['Class Attendance Summary', 'reports.class-attendance', 'reports.class-attendance*', 'bar-chart-line'],
-                ['Result Report', 'reports.results', 'reports.results*', 'trophy'],
-                ['Class Result Summary', 'reports.class-result', 'reports.class-result*', 'award'],
-                ['Subject Performance', 'reports.subject-performance', 'reports.subject-performance*', 'graph-up'],
-                ['Fee Collection', 'reports.fee-collection', 'reports.fee-collection*', 'cash-coin'],
-                ['Defaulters List', 'reports.defaulters', 'reports.defaulters*', 'exclamation-octagon'],
-                ['Student Ledger', 'reports.student-ledger', 'reports.student-ledger*', 'journal-text'],
+                ['Student Report', 'reports.students', 'reports.students', 'file-earmark-person'],
+                ['Enrollment Register', 'reports.enrollment', 'reports.enrollment', 'people-fill'],
+                ['Attendance Report', 'reports.attendance', 'reports.attendance', 'calendar2-check'],
+                ['Attendance Summary', 'reports.attendance-summary', 'reports.attendance-summary', 'calendar2-range'],
+                ['Class Attendance Summary', 'reports.class-attendance', 'reports.class-attendance', 'bar-chart-line'],
+                ['Result Report', 'reports.results', 'reports.results', 'trophy'],
+                ['Class Result Summary', 'reports.class-result', 'reports.class-result', 'award'],
+                ['Subject Performance', 'reports.subject-performance', 'reports.subject-performance', 'graph-up'],
+                ['Fee Collection', 'reports.fee-collection', 'reports.fee-collection', 'cash-coin'],
+                ['Defaulters List', 'reports.defaulters', 'reports.defaulters', 'exclamation-octagon'],
+                ['Student Ledger', 'reports.student-ledger', 'reports.student-ledger', 'journal-text'],
             ],
         ],
         'teacher' => [
-            'Overview' => [['Dashboard', 'teacher.dashboard', 'teacher.dashboard', 'grid-1x2-fill']],
+            'Overview' => [
+                ['Dashboard', 'teacher.dashboard', 'teacher.dashboard', 'grid-1x2-fill'],
+                ['My Profile & Salary', 'teacher.profile', 'teacher.profile*', 'person-badge'],
+            ],
             'Teaching' => [
                 ['My Classes', 'teacher.classes.index', 'teacher.classes.*', 'easel2-fill'],
                 ['Learning Management', 'teacher.lms.index', 'teacher.lms.*', 'book-half'],
@@ -104,6 +107,14 @@
                 ['Invoices & Billing', 'accountant.invoices.index', 'accountant.invoices.*', 'receipt'],
                 ['Record Payment', 'accountant.payments.create', 'accountant.payments.*', 'credit-card'],
             ],
+            'Accounting & Ledgers' => [
+                ['Branch Summary', 'admin.accounting.branch-summary', 'admin.accounting.branch-summary', 'buildings'],
+                ['Chart of Accounts', 'admin.accounts.index', 'admin.accounts.*', 'diagram-2'],
+                ['Journal Entries', 'admin.journals.index', 'admin.journals.*', 'journal-richtext'],
+                ['Trial Balance', 'admin.accounting.trial-balance', 'admin.accounting.trial-balance', 'calculator'],
+                ['General Ledger', 'admin.accounting.ledger', 'admin.accounting.ledger', 'journal-text'],
+                ['Income & Expense', 'admin.accounting.income-expense', 'admin.accounting.income-expense', 'clipboard-data'],
+            ],
             'Reports' => [
                 ['Fee Collection', 'accountant.reports.fee-collection', 'accountant.reports.fee-collection*', 'cash-coin'],
                 ['Defaulters List', 'accountant.reports.defaulters', 'accountant.reports.defaulters*', 'exclamation-octagon'],
@@ -115,10 +126,10 @@
                 ['Dashboard', 'registrar.dashboard', 'registrar.dashboard', 'grid-1x2-fill'],
             ],
             'Academic administration' => [
-                ['Students', 'admin.students.index', 'admin.students.*', 'people-fill'],
+                ['Students', 'admin.students.index', 'admin.students.index', 'people-fill'],
                 ['Add Student', 'admin.students.create', 'admin.students.create', 'person-plus-fill'],
                 ['Guardians', 'admin.guardians.index', 'admin.guardians.*', 'person-hearts'],
-                ['Classes', 'admin.classes.index', 'admin.classes.*', 'building'],
+                ['Classes', 'admin.classes.index', 'admin.classes.index', 'building'],
                 ['Create Class', 'admin.classes.create', 'admin.classes.create', 'building-add'],
                 ['Teachers', 'admin.teachers.index', 'admin.teachers.*', 'person-workspace'],
                 ['Bulk Import', 'admin.imports.index', 'admin.imports.*', 'file-earmark-arrow-up'],
@@ -184,6 +195,7 @@
     $menu = $menus[$menuRole] ?? [];
     $menu['Communication'][] = ['Private Messages', 'messages.index', 'messages.*', 'envelope'];
     if ($user->isSuperAdmin()) {
+        $menu['System'][] = ['Salary Deductions', 'admin.salary-deductions.index', 'admin.salary-deductions.*', 'scissors'];
         $menu['System'][] = ['Roles & Permissions', 'admin.roles.index', 'admin.roles.*', 'shield-lock-fill'];
     }
     $initial = strtoupper(mb_substr($user->name, 0, 1));
@@ -205,7 +217,7 @@
                 @foreach ($items as [$label, $route, $pattern, $icon])
                     @php
                         $permission = match (true) {
-                            str_starts_with($route, 'messages.') => null,
+                            str_starts_with($route, 'messages.') || str_starts_with($route, 'admin.salary-deductions.') || str_starts_with($route, 'teacher.profile') => null,
                             str_starts_with($route, 'reports.') => str_contains($route, 'attendance') ? 'reports.attendance' : (in_array($route, ['reports.fee-collection', 'reports.defaulters', 'reports.student-ledger'], true) ? 'reports.financial' : 'reports.academic'),
                             str_starts_with($route, 'admin.imports.') => 'imports.create',
                             str_starts_with($route, 'admin.staff-attendance.') => 'staff_attendance.read',
@@ -279,18 +291,17 @@
                 <div class="topbar-sub">{{ $user->role === 'parent' ? 'Guardian' : $user->role }} portal</div>
             </div>
             @if (($branchContextOptions ?? collect())->isNotEmpty())
-                <form method="POST" action="{{ route('admin.branch-context') }}" class="d-flex align-items-center gap-1">
+                <form method="POST" action="{{ route('branch-context') }}" class="d-flex align-items-center gap-1" id="branchContextForm">
                     @csrf
                     <label class="visually-hidden" for="active-branch">Active campus</label>
-                    <select class="form-select form-select-sm" id="active-branch" name="branch_id">
-                        @if (\App\Support\BranchContext::isGlobalAdmin($user))
+                    <select class="form-select form-select-sm" id="active-branch" name="branch_id" onchange="this.form.submit()" title="Active campus">
+                        @if (\App\Support\BranchContext::canAccessAllBranches($user))
                             <option value="all" @selected($allCampusesSelected ?? false)>All campuses</option>
                         @endif
                         @foreach ($branchContextOptions as $branchOption)
                             <option value="{{ $branchOption->id }}" @selected(($activeBranch?->id ?? null) === $branchOption->id)>{{ $branchOption->name }}</option>
                         @endforeach
                     </select>
-                    <button class="btn btn-sm btn-outline-secondary">Switch campus</button>
                 </form>
             @endif
             <span class="topbar-date"><i class="bi bi-calendar3 me-1"></i><time data-live-date data-timezone="{{ config('app.timezone') }}">{{ now()->format('D, d M Y') }}</time></span>
@@ -346,12 +357,14 @@
             @if ($activeAnnouncements->isNotEmpty())
                 <div class="mb-4 no-print">
                     @foreach ($activeAnnouncements as $announcement)
-                        <div class="alert alert-info d-flex align-items-start gap-2 shadow-sm border-0 mb-2">
-                            <i class="bi bi-megaphone-fill fs-5 mt-1 text-primary"></i>
+                        <div class="alert alert-info d-flex align-items-start gap-3 shadow-sm mb-2 p-3">
+                            <i class="bi bi-megaphone-fill fs-4 mt-1 text-primary flex-shrink-0"></i>
                             <div class="flex-grow-1">
-                                <strong class="d-block">{{ $announcement->title }}</strong>
-                                <div class="small">{{ $announcement->body }}</div>
-                                <small class="text-muted">{{ $announcement->published_at->diffForHumans() }}</small>
+                                <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-1">
+                                    <strong class="text-body fw-bold fs-6">{{ $announcement->title }}</strong>
+                                    <span class="badge bg-body-secondary text-body-secondary small"><i class="bi bi-clock me-1"></i>{{ $announcement->published_at->diffForHumans() }}</span>
+                                </div>
+                                <div class="small text-body" style="line-height: 1.5;">{{ $announcement->body }}</div>
                             </div>
                         </div>
                     @endforeach
@@ -366,6 +379,6 @@
 </div>
 
 <script defer src="{{ asset('vendor/bootstrap/bootstrap.bundle.min.js') }}"></script>
-<script src="{{ asset('js/app.js') }}"></script>
+<script defer src="{{ asset('js/app.js') }}"></script>
 </body>
 </html>

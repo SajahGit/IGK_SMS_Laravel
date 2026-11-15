@@ -59,10 +59,16 @@ Setting up an academic year, catalogue, classes, users/roles, fee structures, ex
 
 ## 6. Users and Roles (RBAC)
 
-1. Go to **Admin > Roles** to manage the six SOP roles (Super Admin, Institution Admin, Registrar, Teacher, Accountant, Student).
-2. Go to **Admin > Users** to create users and assign roles.
-3. Users can be deactivated; deactivated users cannot log in.
-4. Permissions are managed via Spatie Laravel Permission.
+1. Go to **Admin > Roles** to manage the SOP roles (Super Admin, Institution Admin, Registrar, Teacher, Accountant, Student, Guardian, Librarian).
+2. Go to **Admin > Users** to create and manage system user accounts.
+3. **Search & Filter Directory:**
+   - **Full-Text Search:** Instantly filters by user name, email address, or phone number.
+   - **Role Filter:** Filter user list by specific system role (e.g., Accountant, Teacher, Student).
+   - **Campus / Branch Filter:** Filter by assigned campus or view cross-campus staff.
+   - **Status Filter:** Toggle between Active and Inactive users.
+   - **Count & Pagination:** Total matching users are summarized in the table footer with query-string preservation across pagination pages.
+4. Users can be deactivated; deactivated users cannot log in.
+5. Permissions are managed via Spatie Laravel Permission.
 
 ---
 
@@ -155,14 +161,57 @@ Setting up an academic year, catalogue, classes, users/roles, fee structures, ex
 
 ---
 
+---
+
+## 16. Multi-Branch Campus Operations & Transfers
+
+1. **Campus Isolation**:
+   - Each branch operates with isolated classes, sections, and admissions enforced by the `BranchOwned` global scope.
+2. **Student & Teacher Branch Assignment**:
+   - Assign home campuses on student admission and teacher registration forms.
+   - When transferring campuses, go to **Admin > Transfers** or the student/teacher edit page.
+   - The system reassigns the branch and logs an immutable transfer history entry in `branch_transfers` with timestamp, originating campus, destination campus, and authorizer ID.
+
+---
+
+## 17. Dedicated Super Admin Salary Deductions Console
+
+1. **Strict Security Isolation**:
+   - Access is restricted exclusively to **Super Admin** via `/admin/salary-deductions`.
+   - Branch-level HR and accountants cannot manipulate base salary deductions.
+2. **Automatic Attendance Deductions Policy**:
+   - Super Admin can configure how absent days and unpaid leaves are penalized:
+     - **Dynamic Pro-Rata**: Deducts `(Base Salary / 30) * Unpaid Days`.
+     - **Fixed Daily Penalty**: Deducts a flat amount (e.g. Rs. 2,000 / day) regardless of base salary.
+   - Policy settings are updated dynamically and take effect immediately in the next payroll run.
+3. **Manual Custom / Wished Amount Deductions**:
+   - Super Admin can click **New Deduction** to record any custom amount for any staff member.
+   - Select reason/category: Salary Advance, Loan Repayment, Property Damage, Disciplinary Fine, or Other.
+   - Pending deductions are automatically aggregated and marked `applied` when monthly payroll is generated.
+4. **Transparency**:
+   - Every deduction created appears itemized with its calculation basis in the affected staff member's personal portal (`/teacher/profile`).
+
+---
+
+## 18. HR Payroll Generation & Official Payslips
+
+1. Go to **Institution Admin > HR Payroll**.
+2. Create or generate a monthly payroll run for the selected branch.
+3. The payroll engine evaluates employee earnings, applies Sri Lankan statutory formulas (EPF 8%/12%, ETF 3%, progressive APIT), and calculates dual-mode deductions.
+4. View payslips (`/admin/hr/payroll/payslip/{entry}`):
+   - Fully immune to night/dark mode: uses scoped `.payslip-sheet` with high-contrast text and clean borders.
+   - Instant A4 portrait physical printing via **Print Payslip** button.
+
+---
+
 ## Role Summary
 
 | Role | Can Do |
 |---|---|
-| Super Admin | Full access including roles/permissions, user management |
-| Institution Admin | Broad admin access, no role management |
-| Registrar | Academic focus, limited finance write (read-only invoices/payments) |
-| Teacher | Assigned classes only, attendance, marks entry (until locked) |
-| Accountant | Finance only (fee structures, invoices, payments) |
+| Super Admin | Full system governance, dedicated Salary Deductions console, policy configuration, payment reversals |
+| Institution Admin | Campus operations, classes, teachers, student admissions, HR payroll generation |
+| Registrar | Academic admissions, enrollment registers, dynamic class/section allocations |
+| Teacher | Assigned classes, student attendance, marks entry, self-service profile & payslip portal |
+| Accountant | Finance only (fee structures, invoices, payments, receipts) |
 | Student | Own data only (results, invoices, report card) |
 | Parent | Linked children only |

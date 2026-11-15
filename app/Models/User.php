@@ -106,7 +106,7 @@ class User extends Authenticatable
 
     public function isAccountant(): bool
     {
-        return strtolower($this->role) === 'accountant';
+        return $this->hasRole('Accountant') || strtolower($this->role) === 'accountant';
     }
 
     public function isParent(): bool

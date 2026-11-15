@@ -52,4 +52,9 @@ class Program extends Model
     {
         return $this->hasMany(Student::class);
     }
+
+    public function classes(): HasMany
+    {
+        return $this->hasMany(SchoolClass::class, 'program_id');
+    }
 }

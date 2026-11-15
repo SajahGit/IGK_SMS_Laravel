@@ -91,6 +91,11 @@ class Invoice extends Model
         return $query->whereNotIn('status', ['cancelled', 'draft']);
     }
 
+    public function branch(): BelongsTo
+    {
+        return $this->belongsTo(Branch::class, 'branch_id')->withoutGlobalScopes();
+    }
+
     public function payments(): HasMany
     {
         return $this->hasMany(Payment::class);

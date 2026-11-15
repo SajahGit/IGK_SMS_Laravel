@@ -6,10 +6,13 @@ use App\Http\Controllers\Teacher\DashboardController;
 use App\Http\Controllers\Teacher\ExamController;
 use App\Http\Controllers\Teacher\LmsController;
 use App\Http\Controllers\Teacher\MarkController;
+use App\Http\Controllers\Teacher\ProfileController;
 use App\Http\Controllers\Teacher\TimetableController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+Route::get('/profile', [ProfileController::class, 'show'])->name('profile');
+Route::get('/payslips/{payrollEntry}', [ProfileController::class, 'payslip'])->name('payslip');
 
 Route::get('/timetable', [TimetableController::class, 'index'])->name('timetable.index');
 

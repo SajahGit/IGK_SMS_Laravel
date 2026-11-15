@@ -26,10 +26,10 @@ class PaymentController extends Controller
         $selectedInvoice = null;
 
         if ($invoiceId) {
-            $selectedInvoice = Invoice::with(['student.user', 'student.class', 'term'])->findOrFail($invoiceId);
+            $selectedInvoice = Invoice::with(['student.user', 'student.class', 'term', 'branch'])->findOrFail($invoiceId);
         }
 
-        $pendingInvoices = Invoice::with(['student.user', 'student.class'])
+        $pendingInvoices = Invoice::with(['student.user', 'student.class', 'branch'])
             ->where('balance', '>', 0)
             ->whereNotIn('status', ['cancelled', 'draft'])
             ->orderByDesc('id')

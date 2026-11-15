@@ -13,6 +13,10 @@ class PayrollEntry extends Model
         'base_salary',
         'allowance',
         'deduction',
+        'unpaid_leave_days',
+        'leave_deduction',
+        'manual_deduction',
+        'manual_deduction_reason',
         'employee_epf',
         'employer_epf',
         'employer_etf',
@@ -27,6 +31,9 @@ class PayrollEntry extends Model
             'base_salary' => 'decimal:2',
             'allowance' => 'decimal:2',
             'deduction' => 'decimal:2',
+            'unpaid_leave_days' => 'integer',
+            'leave_deduction' => 'decimal:2',
+            'manual_deduction' => 'decimal:2',
             'employee_epf' => 'decimal:2',
             'employer_epf' => 'decimal:2',
             'employer_etf' => 'decimal:2',
@@ -35,13 +42,18 @@ class PayrollEntry extends Model
         ];
     }
 
+    public function deductions(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(PayrollDeduction::class);
+    }
+
     public function run(): BelongsTo
     {
-        return $this->belongsTo(PayrollRun::class, 'payroll_run_id');
+        return $this->belongsTo(PayrollRun::class, 'payroll_run_id')->withoutGlobalScopes();
     }
 
     public function employee(): BelongsTo
     {
-        return $this->belongsTo(Employee::class);
+        return $this->belongsTo(Employee::class)->withoutGlobalScopes();
     }
 }

@@ -7,10 +7,13 @@ use App\Http\Controllers\InstitutionAdmin\CashflowEntryController;
 use App\Http\Controllers\InstitutionAdmin\JournalEntryController;
 use Illuminate\Support\Facades\Route;
 
-// Loaded from routes/modules/admin.php (prefix admin., role admin/registrar); restricted to admins here.
+// Branches management restricted to admin; context switcher and accounting tools available to admin & accountant.
 Route::middleware('role:admin')->group(function () {
-    Route::post('branch-context', [BranchController::class, 'switchContext'])->name('branch-context');
     Route::resource('branches', BranchController::class)->except(['show']);
+});
+
+Route::middleware('role:admin,accountant')->group(function () {
+    Route::post('branch-context', [BranchController::class, 'switchContext'])->name('branch-context');
     Route::resource('accounts', AccountController::class)->except(['show']);
 
     Route::post('journals/auto-post', [JournalEntryController::class, 'sync'])->name('journals.sync');

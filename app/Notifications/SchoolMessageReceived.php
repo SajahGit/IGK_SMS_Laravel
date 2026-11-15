@@ -5,6 +5,7 @@ namespace App\Notifications;
 use App\Models\MessageConversation;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Notification;
+use Illuminate\Support\Str;
 
 class SchoolMessageReceived extends Notification
 {
@@ -19,9 +20,13 @@ class SchoolMessageReceived extends Notification
 
     public function toDatabase(object $notifiable): array
     {
+        $latestMessage = $this->conversation->messages()->with('sender:id,name,role')->latest()->first();
+        $senderName = $latestMessage?->sender?->name ?? 'School Member';
+        $senderRole = ucfirst(str_replace('-', ' ', $latestMessage?->sender?->role ?? 'User'));
+
         return [
-            'title' => 'New private message',
-            'body' => 'You received a new message.',
+            'title' => 'Private message from ' . $senderName . ' (' . $senderRole . ')',
+            'body' => Str::limit($latestMessage?->body ?? 'You received a new private message.', 90),
             'url' => route('messages.show', $this->conversation),
         ];
     }

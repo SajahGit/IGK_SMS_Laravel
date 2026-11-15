@@ -132,7 +132,12 @@
                             </a>
                         </td>
                         <td>
-                            <div class="fw-semibold">{{ $inv->student->user->name }}</div>
+                            <div class="fw-semibold d-flex flex-wrap align-items-center gap-1">
+                                <span>{{ $inv->student->user->name }}</span>
+                                @if ($inv->branch)
+                                    <span class="badge bg-body-secondary text-secondary border small">{{ $inv->branch->name }}</span>
+                                @endif
+                            </div>
                             <small class="text-muted">{{ $inv->student->class?->full_name ?? 'Unassigned' }} &middot; Adm: {{ $inv->student->admission_no }}</small>
                         </td>
                         <td>{{ $inv->term ? $inv->term->name : 'General' }}</td>

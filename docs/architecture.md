@@ -47,17 +47,62 @@ tests/
 
 ---
 
-## The 7 Services and Their Invariants
+## Core Business Services and Their Invariants
 
 | Service | Responsibility | Key Invariants |
 |---|---|---|
-| `EnrollmentService` | Creates student + user, enforces class capacity, rejects duplicate admission numbers, drops/restores students | Capacity enforced; unique admission no.; drop removes enrollment record |
+| `EnrollmentService` | Creates student + user, enforces class capacity, rejects duplicate admission numbers, drops/restores students | Capacity enforced; unique admission no. with campus prefix; drop removes enrollment record |
+| `BranchTransferService` | Orchestrates student & teacher branch transfers, campus reassignments, and audit trails | Logs `from_branch_id`, `to_branch_id`, `transferred_by`, effective date, and status (`transferred`); maintains unorphaned teacher class assignments |
+| `HrPayrollService` | Generates branch payroll runs, calculates Sri Lankan statutory items (EPF, ETF, APIT), executes dual-mode deductions | EPF 8%/12%, ETF 3%, progressive APIT; calculates automatic attendance deductions (unpaid leave + absent days) via pro-rata or fixed daily penalty; applies pending Super Admin manual deductions |
 | `AttendanceSessionService` | Creates attendance sessions and records, enforces 48h edit window | Records editable only within 48h; clash detection for timetable |
 | `MarksEntryService` | Saves/upserts marks, rejects when published, marks absent | Marks locked after publish; absent flag supported |
 | `GradingService` | Calculates grades per paper, term GPA | Grade scale boundaries; absent = 0; null marks excluded from GPA; no results = null GPA |
 | `ResultPublicationService` | Publishes/unpublishes results, locks marks | Only authorized can publish; locking enforced |
 | `InvoiceService` | Generates invoices (idempotent, sequential numbering) | Unique sequential invoice numbers; idempotent generation |
 | `PaymentService` | Records payments, receipts, reversals | Overpayment rejected (422); balance restored on reversal; no double reversal; receipt numbers gapless and unique |
+
+---
+
+## Multi-Branch Campus Architecture
+
+1. **Campus Scoping & Isolation**:
+   - Primary entities (`ClassModel`, `Section`, `Admission`, `PayrollRun`) use the `BranchOwned` global scope to enforce strict tenant isolation per physical campus.
+   - Cross-branch access is permitted only for Super Administrators and authorized institution-level directors.
+2. **Student & Faculty Campus Assignment**:
+   - `students.branch_id` and `teachers.branch_id` map each individual to their home campus.
+   - When transferring campuses, `BranchTransferService` updates the home branch and logs an immutable audit trail in `branch_transfers`.
+
+---
+
+## Dual-Mode Salary Deduction Architecture
+
+1. **Automatic Attendance Deductions**:
+   - Evaluates staff attendance records (`staff_attendance.status = 'absent'`) and approved unpaid leave requests (`LeaveRequest.type = 'unpaid'`).
+   - Supported Modes (Governed by Super Admin in `settings` table):
+     - `pro_rata`: `(base_salary / 30) * unpaid_days`
+     - `fixed_amount`: `Setting::get('payroll.auto_deduction_fixed_amount', 2000.00) * unpaid_days`
+   - Automatically generates itemized `PayrollDeduction` record (`type = 'leave_unpaid'`) detailing day count and formula basis.
+2. **Manual Custom / Wished Amount Deductions**:
+   - Super Admin can assign a custom deduction of any desired amount (`amount`) to any employee.
+   - Categorized by type: `advance`, `loan`, `damage`, `disciplinary_fine`, `other`.
+   - Stored with `pending` status until the monthly `HrPayrollService::generatePayroll()` execution absorbs it into the payroll run and transitions status to `applied`.
+3. **Super Admin Exclusivity & Connected Transparency**:
+   - Dedicated controller: `App\Http\Controllers\SuperAdmin\SalaryDeductionController`.
+   - Route: `/admin/salary-deductions` (Super Admin exclusive).
+   - Removed from branch accountant view to prevent unauthorized tampering.
+   - Full visibility on `/teacher/profile`: Staff members can inspect itemized deductions (both attendance and manual) on their personal portal and payslips.
+
+---
+
+## UI/UX, Dark Mode & Print Architecture
+
+1. **Dark Mode Immunity**:
+   - The application employs a glassmorphic theme supporting `data-bs-theme="dark"`.
+   - Payslips and formal reports are wrapped in scoped container classes (`.payslip-sheet`) with explicit `#0f172a` typography and white backgrounds to prevent white-text-on-white-box collisions.
+2. **A4 Portrait Physical Print Engine**:
+   - Scoped `@page { size: A4 portrait; margin: 10mm 12mm; }` media queries.
+   - Automatically hides navigation headers, action buttons, sidebars, and flash toasts during printing.
+   - Output renders clean, high-contrast, official printed slips.
 
 ---
 

@@ -16,7 +16,6 @@
 | Registrar | `registrar@school.test` |
 | Teacher | `teacher@school.test` |
 | Accountant | `accountant@school.test` |
-| Librarian | `librarian@school.test` |
 | Student | `student@school.test` |
 | Guardian | `guardian@school.test` |
 

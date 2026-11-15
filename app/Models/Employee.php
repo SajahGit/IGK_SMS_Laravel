@@ -55,6 +55,23 @@ class Employee extends Model
         return $this->hasMany(LeaveRequest::class);
     }
 
+    public function branch(): BelongsTo
+    {
+        return $this->belongsTo(Branch::class, 'branch_id')->withoutGlobalScopes();
+    }
+
+    public function branchTransfers(): HasMany
+    {
+        return $this->hasMany(BranchTransfer::class, 'person_id')
+            ->where('person_category', 'employee')
+            ->latest('transfer_date');
+    }
+
+    public function payrollDeductions(): HasMany
+    {
+        return $this->hasMany(PayrollDeduction::class);
+    }
+
     public function payrollEntries(): HasMany
     {
         return $this->hasMany(PayrollEntry::class);
