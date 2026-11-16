@@ -22,6 +22,7 @@ class CsvStreamer
     {
         return response()->streamDownload(function () use ($headers, $rows, $mapRow) {
             $out = fopen('php://output', 'w');
+            fwrite($out, "\xEF\xBB\xBF");
             fputcsv($out, $headers);
 
             foreach ($rows as $row) {

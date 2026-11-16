@@ -5,7 +5,7 @@
 <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
     <div>
         <h3 class="mb-0">Subject Academic Performance Report</h3>
-        <small class="text-muted">R8 &middot; Weighted subject results, pass rate and grade distribution.</small>
+        <small class="text-muted">R8 · Weighted subject results, pass rate and grade distribution.</small>
     </div>
     <div class="d-flex gap-2 no-print">
         <button type="button" class="btn btn-outline-secondary" onclick="window.print()">
@@ -169,7 +169,7 @@
                                                 <h5 class="modal-title mb-0" id="gradeModalLabel{{ $s['subject']->id }}">
                                                     <i class="bi bi-bar-chart-steps text-primary me-2"></i>{{ $s['subject']->name }} &mdash; Grade Breakdown
                                                 </h5>
-                                                <span class="text-muted small">Code: <code>{{ $s['subject']->code }}</code> &middot; Credit Hours: {{ $s['subject']->credit_hours }}</span>
+                                                <span class="text-muted small">Code: <code>{{ $s['subject']->code }}</code> · Credit Hours: {{ $s['subject']->credit_hours }}</span>
                                             </div>
                                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                         </div>

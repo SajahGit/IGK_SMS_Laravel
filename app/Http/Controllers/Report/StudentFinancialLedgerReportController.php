@@ -101,6 +101,7 @@ class StudentFinancialLedgerReportController extends Controller
 
         return response()->streamDownload(function () use ($events) {
             $out = fopen('php://output', 'w');
+            fwrite($out, "\xEF\xBB\xBF");
             fputcsv($out, ['Date', 'Description', 'Type', 'Charge', 'Payment', 'Currency', 'Running Balance']);
             $balances = [];
             foreach ($events as $event) {
@@ -109,10 +110,10 @@ class StudentFinancialLedgerReportController extends Controller
                 if ($event['type'] === 'charge') {
                     $balances[$currency] = Money::add($balances[$currency], $event['amount']);
                     $charge = $event['amount'];
-                    $payment = '—';
+                    $payment = '';
                 } else {
                     $balances[$currency] = Money::sub($balances[$currency], $event['amount']);
-                    $charge = '—';
+                    $charge = '';
                     $payment = $event['amount'];
                 }
 

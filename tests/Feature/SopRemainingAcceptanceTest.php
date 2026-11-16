@@ -221,6 +221,7 @@ class SopRemainingAcceptanceTest extends TestCase
         $csv = $this->get(route('reports.class-attendance.csv', $filters))
             ->assertOk()
             ->streamedContent();
+        $csv = preg_replace('/^\xEF\xBB\xBF/', '', $csv);
         $rows = array_map('str_getcsv', explode("\n", trim($csv)));
         $this->assertSame('1', $rows[1][4]);
     }

@@ -7,15 +7,17 @@
         <h3 class="mb-0">Fee Collection & Revenue Report</h3>
         <small class="text-muted">R9 · Receipt-level collections filtered by date, term, program and method.</small>
     </div>
-    <div class="d-flex gap-2">
-        <button type="button" class="btn btn-outline-secondary" onclick="window.print()">
-            <i class="bi bi-printer me-1"></i> Print
-        </button>
-        <a href="{{ route($reportRoutePrefix.'.pdf', ['report' => 'fee-collection'] + request()->query()) }}" class="btn btn-outline-danger"><i class="bi bi-filetype-pdf me-1"></i>Download PDF</a>
-        <a href="{{ route($reportRoutePrefix.'.fee-collection.csv', request()->query()) }}" class="btn btn-outline-success">
-            <i class="bi bi-file-earmark-spreadsheet me-1"></i> Download CSV
-        </a>
-    </div>
+    @unless ($pdfExport ?? false)
+        <div class="d-flex gap-2">
+            <button type="button" class="btn btn-outline-secondary" onclick="window.print()">
+                <i class="bi bi-printer me-1"></i> Print
+            </button>
+            <a href="{{ route($reportRoutePrefix.'.pdf', ['report' => 'fee-collection'] + request()->query()) }}" class="btn btn-outline-danger"><i class="bi bi-filetype-pdf me-1"></i>Download PDF</a>
+            <a href="{{ route($reportRoutePrefix.'.fee-collection.csv', request()->query()) }}" class="btn btn-outline-success">
+                <i class="bi bi-file-earmark-spreadsheet me-1"></i> Download CSV
+            </a>
+        </div>
+    @endunless
 </div>
 
 <div class="row g-3 mb-4">
@@ -92,18 +94,18 @@
 
 <div class="card shadow-sm border-0">
     <div class="table-responsive">
-        <table class="table table-hover mb-0 align-middle">
+        <table class="table table-hover mb-0 align-middle" style="min-width: 1200px">
             <thead class="table-light">
                 <tr>
-                    <th>Receipt No</th>
-                    <th class="print-nowrap">Date</th>
-                    <th class="print-nowrap">Term</th>
-                    <th>Program</th>
-                    <th class="print-nowrap">Invoice No</th>
+                    <th class="text-nowrap" style="min-width: 130px">Receipt No</th>
+                    <th class="text-nowrap" style="min-width: 110px">Date</th>
+                    <th class="text-nowrap" style="min-width: 100px">Term</th>
+                    <th style="min-width: 180px">Program</th>
+                    <th class="text-nowrap" style="min-width: 140px">Invoice No</th>
                     <th>Student Details</th>
-                    <th class="print-nowrap">Class</th>
-                    <th class="print-nowrap">Amount (invoice currency)</th>
-                    <th>Method</th>
+                    <th class="text-nowrap" style="min-width: 130px">Class</th>
+                    <th class="text-nowrap" style="min-width: 170px">Amount (invoice currency)</th>
+                    <th class="text-nowrap" style="min-width: 120px">Method</th>
                     <th>Reference</th>
                     <th>Cashier</th>
                     <th>Status</th>
@@ -112,22 +114,22 @@
             <tbody>
                 @forelse ($payments as $p)
                     <tr class="{{ $p->isReversed() ? 'opacity-50 text-decoration-line-through' : '' }}">
-                        <td>
+                        <td class="text-nowrap">
                             <a href="{{ route($financeRoutePrefix.'.receipt.show', $p) }}" class="fw-bold">
                                 <code>{{ $p->receipt_no }}</code>
                             </a>
                         </td>
-                        <td class="print-nowrap">{{ $p->paid_at->format('d M Y') }}</td>
-                        <td class="print-nowrap">{{ $p->invoice->term?->name ?? '—' }}</td>
-                        <td>{{ $p->invoice->student->program?->name ?? $p->invoice->student->class?->program?->name ?? '—' }}</td>
-                        <td class="print-nowrap"><code>{{ $p->invoice->invoice_no }}</code></td>
+                        <td class="text-nowrap print-nowrap">{{ $p->paid_at->format('d M Y') }}</td>
+                        <td class="text-nowrap print-nowrap">{{ $p->invoice->term?->name ?? '—' }}</td>
+                        <td style="min-width: 180px">{{ $p->invoice->student->program?->name ?? $p->invoice->student->class?->program?->name ?? '—' }}</td>
+                        <td class="text-nowrap print-nowrap"><code>{{ $p->invoice->invoice_no }}</code></td>
                         <td>
                             <div class="fw-semibold">{{ $p->invoice->student->user->name }}</div>
                             <small class="text-muted">Adm: {{ $p->invoice->student->admission_no }}</small>
                         </td>
-                        <td class="print-nowrap">{{ $p->invoice->student->class?->full_name ?? '—' }}</td>
-                        <td class="print-nowrap fw-bold text-success">{{ \App\Support\Money::format($p->amount, $p->currency.' ') }}</td>
-                        <td>{{ ucwords(str_replace('_', ' ', $p->method)) }}</td>
+                        <td class="text-nowrap print-nowrap">{{ $p->invoice->student->class?->full_name ?? '—' }}</td>
+                        <td class="text-nowrap print-nowrap fw-bold text-success">{{ \App\Support\Money::format($p->amount, $p->currency.' ') }}</td>
+                        <td class="text-nowrap">{{ ucwords(str_replace('_', ' ', $p->method)) }}</td>
                         <td>{{ $p->reference ?: '—' }}</td>
                         <td>{{ $p->receiver?->name ?: 'System' }}</td>
                         <td>

@@ -31,7 +31,7 @@
 @endif
 
 @if ($exam)
-    <p class="text-muted">R6 · {{ $exam->name }} &middot; {{ $exam->class?->full_name ?? 'Unassigned' }} &middot; {{ $exam->subject->name }} &middot; Maximum marks: {{ $exam->max_marks }}</p>
+    <p class="text-muted">R6 · {{ $exam->name }} · {{ $exam->class?->full_name ?? 'Unassigned' }} · {{ $exam->subject->name }} · Maximum marks: {{ $exam->max_marks }}</p>
 
     <div class="row g-3 mb-3">
         @foreach ([['Students', $stats['count'], 'people-fill', 'indigo'], ['Average', $stats['average'], 'bar-chart-fill', 'cyan'],

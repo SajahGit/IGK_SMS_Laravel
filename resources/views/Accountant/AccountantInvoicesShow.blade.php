@@ -8,7 +8,7 @@
             <h3 class="mb-0">Invoice <code>{{ $invoice->invoice_no }}</code></h3>
             {!! $invoice->status_badge !!}
         </div>
-        <small class="text-muted">{{ $invoice->isDraft() ? 'Draft dated' : 'Issued on' }} {{ $invoice->issue_date->format('d M Y') }} &middot; Due by {{ $invoice->due_date->format('d M Y') }}</small>
+        <small class="text-muted">{{ $invoice->isDraft() ? 'Draft dated' : 'Issued on' }} {{ $invoice->issue_date->format('d M Y') }} · Due by {{ $invoice->due_date->format('d M Y') }}</small>
     </div>
     <div class="d-flex gap-2">
         <a href="{{ route($financeRoutePrefix.'.invoices.pdf', $invoice) }}" class="btn btn-outline-primary">

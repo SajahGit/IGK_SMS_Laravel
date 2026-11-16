@@ -7,15 +7,17 @@
         <h3 class="mb-0">Fee Defaulters & Outstanding Balances</h3>
         <small class="text-muted">R10 · Term/program/section, overdue-only and minimum-balance filters.</small>
     </div>
-    <div class="d-flex gap-2">
-        <button type="button" class="btn btn-outline-secondary" onclick="window.print()">
-            <i class="bi bi-printer me-1"></i> Print
-        </button>
-        <a href="{{ route($reportRoutePrefix.'.pdf', ['report' => 'defaulters'] + request()->query()) }}" class="btn btn-outline-danger"><i class="bi bi-filetype-pdf me-1"></i>Download PDF</a>
-        <a href="{{ route($reportRoutePrefix.'.defaulters.csv', request()->query()) }}" class="btn btn-outline-success">
-            <i class="bi bi-file-earmark-spreadsheet me-1"></i> Download CSV
-        </a>
-    </div>
+    @unless ($pdfExport ?? false)
+        <div class="d-flex gap-2">
+            <button type="button" class="btn btn-outline-secondary" onclick="window.print()">
+                <i class="bi bi-printer me-1"></i> Print
+            </button>
+            <a href="{{ route($reportRoutePrefix.'.pdf', ['report' => 'defaulters'] + request()->query()) }}" class="btn btn-outline-danger"><i class="bi bi-filetype-pdf me-1"></i>Download PDF</a>
+            <a href="{{ route($reportRoutePrefix.'.defaulters.csv', request()->query()) }}" class="btn btn-outline-success">
+                <i class="bi bi-file-earmark-spreadsheet me-1"></i> Download CSV
+            </a>
+        </div>
+    @endunless
 </div>
 
 <div class="row g-3 mb-4">
@@ -96,19 +98,19 @@
 
 <div class="card shadow-sm border-0">
     <div class="table-responsive">
-        <table class="table table-hover mb-0 align-middle">
+        <table class="table table-hover mb-0 align-middle" style="min-width: 1200px">
             <thead class="table-light">
                 <tr>
-                    <th class="print-nowrap">Invoice No</th>
-                    <th class="print-nowrap">Term</th>
-                    <th>Program</th>
+                    <th class="text-nowrap" style="min-width: 140px">Invoice No</th>
+                    <th class="text-nowrap" style="min-width: 100px">Term</th>
+                    <th style="min-width: 180px">Program</th>
                     <th>Student Name</th>
-                    <th class="print-nowrap">Class</th>
+                    <th class="text-nowrap" style="min-width: 130px">Class</th>
                     <th>Guardian / Contact</th>
-                    <th class="print-nowrap">Due Date</th>
-                    <th class="print-nowrap">Total Billed</th>
-                    <th class="print-nowrap">Amount Paid</th>
-                    <th class="print-nowrap">Balance Due</th>
+                    <th class="text-nowrap" style="min-width: 110px">Due Date</th>
+                    <th class="text-nowrap" style="min-width: 140px">Total Billed</th>
+                    <th class="text-nowrap" style="min-width: 140px">Amount Paid</th>
+                    <th class="text-nowrap" style="min-width: 140px">Balance Due</th>
                     <th>Days Overdue</th>
                 </tr>
             </thead>
@@ -118,27 +120,27 @@
                         $daysOverdue = today()->gt($inv->due_date) ? abs((int) today()->diffInDays($inv->due_date)) : 0;
                     @endphp
                     <tr>
-                        <td>
+                        <td class="text-nowrap">
                             <a href="{{ route($financeRoutePrefix.'.invoices.show', $inv) }}" class="fw-bold">
                                 <code>{{ $inv->invoice_no }}</code>
                             </a>
                         </td>
-                        <td class="print-nowrap">{{ $inv->term?->name ?? '—' }}</td>
-                        <td>{{ $inv->student->program?->name ?? $inv->student->class?->program?->name ?? '—' }}</td>
+                        <td class="text-nowrap">{{ $inv->term?->name ?? '—' }}</td>
+                        <td style="min-width: 180px">{{ $inv->student->program?->name ?? $inv->student->class?->program?->name ?? '—' }}</td>
                         <td>
                             <div class="fw-semibold">{{ $inv->student->user->name }}</div>
                             <small class="text-muted"><code>{{ $inv->student->admission_no }}</code></small>
                         </td>
-                        <td class="print-nowrap">{{ $inv->student->class?->full_name ?? '—' }}</td>
+                        <td class="text-nowrap">{{ $inv->student->class?->full_name ?? '—' }}</td>
                         <td>
                             @php $primaryGuardian = $inv->student->guardians->firstWhere('pivot.is_primary', true) ?? $inv->student->guardians->first(); @endphp
                             <div>{{ $primaryGuardian?->user?->name ?: '—' }}</div>
                             <small class="text-muted"><i class="bi bi-telephone me-1"></i>{{ $primaryGuardian?->phone ?: 'No phone' }}</small>
                         </td>
-                        <td class="print-nowrap">{{ $inv->due_date->format('d M Y') }}</td>
-                        <td class="print-nowrap">{{ \App\Support\Money::format($inv->total, $inv->currency.' ') }}</td>
-                        <td class="print-nowrap text-success">{{ \App\Support\Money::format($inv->amount_paid, $inv->currency.' ') }}</td>
-                        <td class="print-nowrap fw-bold text-danger">{{ \App\Support\Money::format($inv->balance, $inv->currency.' ') }}</td>
+                        <td class="text-nowrap">{{ $inv->due_date->format('d M Y') }}</td>
+                        <td class="text-nowrap">{{ \App\Support\Money::format($inv->total, $inv->currency.' ') }}</td>
+                        <td class="text-nowrap text-success">{{ \App\Support\Money::format($inv->amount_paid, $inv->currency.' ') }}</td>
+                        <td class="text-nowrap fw-bold text-danger">{{ \App\Support\Money::format($inv->balance, $inv->currency.' ') }}</td>
                         <td>
                             @if ($daysOverdue > 0)
                                 <span class="badge bg-danger">{{ $daysOverdue }} days overdue</span>

@@ -138,7 +138,7 @@
                                     <span class="badge bg-body-secondary text-secondary border small">{{ $inv->branch->name }}</span>
                                 @endif
                             </div>
-                            <small class="text-muted">{{ $inv->student->class?->full_name ?? 'Unassigned' }} &middot; Adm: {{ $inv->student->admission_no }}</small>
+                            <small class="text-muted">{{ $inv->student->class?->full_name ?? 'Unassigned' }} · Adm: {{ $inv->student->admission_no }}</small>
                         </td>
                         <td>{{ $inv->term ? $inv->term->name : 'General' }}</td>
                         <td>

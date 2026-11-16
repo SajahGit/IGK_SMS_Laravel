@@ -29,13 +29,13 @@
                         <select name="invoice_id" id="invoice_id" class="form-select" required>
                             @if ($selectedInvoice)
                                 <option value="{{ $selectedInvoice->id }}" data-balance="{{ $selectedInvoice->balance }}" data-currency="{{ $selectedInvoice->currency }}" selected>
-                                    {{ $selectedInvoice->invoice_no }} &middot; {{ $selectedInvoice->student->user->name }} ({{ $selectedInvoice->student->class?->full_name ?? 'Unassigned' }}{{ $selectedInvoice->branch ? ' &middot; '.$selectedInvoice->branch->name : '' }}) &middot; Due: {{ \App\Support\Money::format($selectedInvoice->balance, $selectedInvoice->currency.' ') }}
+                                    {{ $selectedInvoice->invoice_no }} · {{ $selectedInvoice->student->user->name }} ({{ $selectedInvoice->student->class?->full_name ?? 'Unassigned' }}{{ $selectedInvoice->branch ? ' · '.$selectedInvoice->branch->name : '' }}) · Due: {{ \App\Support\Money::format($selectedInvoice->balance, $selectedInvoice->currency.' ') }}
                                 </option>
                             @else
                                 <option value="">Select Invoice with Pending Balance</option>
                                 @foreach ($pendingInvoices as $inv)
                                     <option value="{{ $inv->id }}" data-balance="{{ $inv->balance }}" data-currency="{{ $inv->currency }}" @selected(old('invoice_id') == $inv->id)>
-                                        {{ $inv->invoice_no }} &middot; {{ $inv->student->user->name }} ({{ $inv->student->class?->full_name ?? 'Unassigned' }}{{ $inv->branch ? ' &middot; '.$inv->branch->name : '' }}) &middot; Due: {{ \App\Support\Money::format($inv->balance, $inv->currency.' ') }}
+                                        {{ $inv->invoice_no }} · {{ $inv->student->user->name }} ({{ $inv->student->class?->full_name ?? 'Unassigned' }}{{ $inv->branch ? ' · '.$inv->branch->name : '' }}) · Due: {{ \App\Support\Money::format($inv->balance, $inv->currency.' ') }}
                                     </option>
                                 @endforeach
                             @endif

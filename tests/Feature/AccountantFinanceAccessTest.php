@@ -47,6 +47,18 @@ class AccountantFinanceAccessTest extends TestCase
         $this->get(route('accountant.payments.create'))->assertOk();
     }
 
+    public function test_record_payment_invoice_dropdown_uses_a_unicode_middle_dot(): void
+    {
+        $student = $this->createStudentInvoice();
+        $invoice = $student->invoices()->firstOrFail();
+
+        $this->actingAs($this->accountant)
+            ->get(route('accountant.payments.create', ['invoice_id' => $invoice->id]))
+            ->assertOk()
+            ->assertSee('·')
+            ->assertDontSee('&middot;');
+    }
+
     public function test_accountant_dashboard_notification_dropdown_handles_unread_notifications(): void
     {
         $this->accountant->notify(new class extends Notification

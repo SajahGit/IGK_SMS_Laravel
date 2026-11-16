@@ -2,6 +2,8 @@
 
 namespace Tests\Feature;
 
+use App\Http\Controllers\Report\DefaultersReportController;
+use App\Http\Controllers\Report\FeeCollectionReportController;
 use App\Http\Controllers\Report\StudentReportController;
 use App\Models\AcademicYear;
 use App\Models\Attendance;
@@ -33,7 +35,12 @@ class ReportsParityTest extends TestCase
 
     private function csvHeader($response): array
     {
-        return str_getcsv(strtok(trim($response->streamedContent()), "\r\n"));
+        return str_getcsv(strtok(trim($this->csvContent($response)), "\r\n"));
+    }
+
+    private function csvContent($response): string
+    {
+        return preg_replace('/^\xEF\xBB\xBF/', '', $response->streamedContent());
     }
 
     private function seedAndAdmin(): User
@@ -221,7 +228,7 @@ class ReportsParityTest extends TestCase
         ]);
 
         $response = $this->get(route('reports.results.csv', ['exam_id' => $exam->id]))->assertOk();
-        $csvRows = array_map('str_getcsv', explode("\n", trim($response->streamedContent())));
+        $csvRows = array_map('str_getcsv', explode("\n", trim($this->csvContent($response))));
 
         $this->assertSame([
             'Rank', 'Admission No', 'Name', 'Marks', 'Maximum', 'Percentage', 'Grade', 'Absent',
@@ -362,7 +369,7 @@ class ReportsParityTest extends TestCase
         $resp = $this->get(route('reports.class-result.csv', ['term_id' => $term->id]));
         $resp->assertStatus(200);
         $this->assertStringContainsString('text/csv', $resp->headers->get('Content-Type'));
-        $csvRows = array_map('str_getcsv', explode("\n", trim($resp->streamedContent())));
+        $csvRows = array_map('str_getcsv', explode("\n", trim($this->csvContent($resp))));
         $this->assertSame('Rank in section', $csvRows[0][0]);
         $this->assertSame('1', $csvRows[1][0]);
         $this->assertSame('1', $csvRows[2][0]);
@@ -407,6 +414,10 @@ class ReportsParityTest extends TestCase
         $resp = $this->get(route('reports.student-ledger.csv', ['student_id' => $student->id]));
         $resp->assertStatus(200);
         $this->assertStringContainsString('text/csv', $resp->headers->get('Content-Type'));
+        $csv = $resp->streamedContent();
+        $this->assertStringStartsWith("\xEF\xBB\xBF", $csv);
+        $this->assertStringNotContainsString('—', $csv);
+        $this->assertStringNotContainsString('â€”', $csv);
 
         $this->get(route('reports.student-ledger', ['student_id' => $student->id]))
             ->assertStatus(200)
@@ -416,6 +427,11 @@ class ReportsParityTest extends TestCase
             ['Date', 'Description', 'Type', 'Charge', 'Payment', 'Currency', 'Running Balance'],
             $this->csvHeader($resp)
         );
+        $rows = array_map('str_getcsv', explode("\n", trim($this->csvContent($resp))));
+        $this->assertSame('10000.00', $rows[1][3]);
+        $this->assertSame('', $rows[1][4]);
+        $this->assertSame('', $rows[2][3]);
+        $this->assertSame('4000.00', $rows[2][4]);
     }
 
     public function test_r11_financial_ledger_requires_financial_permission(): void
@@ -574,6 +590,7 @@ class ReportsParityTest extends TestCase
         $this->actingAs($this->seedAndAdmin());
 
         $feeCollection = $this->get(route('reports.fee-collection.csv'))->assertOk();
+        $this->assertStringStartsWith("\xEF\xBB\xBF", $feeCollection->streamedContent());
         $this->assertSame([
             'Receipt No', 'Date', 'Term', 'Program', 'Invoice No', 'Student Details', 'Class',
             'Amount', 'Currency', 'Method', 'Reference', 'Cashier', 'Status',
@@ -584,6 +601,27 @@ class ReportsParityTest extends TestCase
             'Invoice No', 'Term', 'Program', 'Student Name', 'Class', 'Parent / Contact',
             'Due Date', 'Total Billed', 'Amount Paid', 'Balance Due', 'Currency', 'Days Overdue',
         ], $this->csvHeader($defaulters));
+    }
+
+    public function test_fee_collection_and_defaulters_pdf_views_omit_web_actions_and_limit_notice(): void
+    {
+        $admin = $this->seedAndAdmin();
+        $this->actingAs($admin);
+        $request = Request::create('/reports/fee-collection');
+        $request->setUserResolver(fn () => $admin);
+
+        foreach ([
+            app(FeeCollectionReportController::class),
+            app(DefaultersReportController::class),
+        ] as $controller) {
+            $view = $controller->index($request);
+            $html = $view->with('pdfExport', true)->render();
+
+            $this->assertStringNotContainsString('Download CSV', $html);
+            $this->assertStringNotContainsString('Download PDF', $html);
+            $this->assertStringNotContainsString('Print', $html);
+            $this->assertStringNotContainsString('Showing first 500 records', $html);
+        }
     }
 
     public function test_student_ledger_is_limited_to_the_signed_in_student(): void
