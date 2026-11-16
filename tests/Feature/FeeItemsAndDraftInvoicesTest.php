@@ -3,8 +3,11 @@
 namespace Tests\Feature;
 
 use App\Events\InvoiceIssued;
+use App\Models\AcademicYear;
+use App\Models\Department;
 use App\Models\FeeStructure;
 use App\Models\Invoice;
+use App\Models\Program;
 use App\Models\User;
 use App\Services\InvoiceService;
 use App\Services\PaymentService;
@@ -123,6 +126,89 @@ class FeeItemsAndDraftInvoicesTest extends TestCase
             ->assertSessionHasNoErrors();
 
         $this->assertSame(0, $fee->items()->count());
+    }
+
+    public function test_invoice_for_another_fee_does_not_lock_a_new_program_wide_structure(): void
+    {
+        $year = AcademicYear::create([
+            'name' => '2026',
+            'start_date' => '2026-01-01',
+            'end_date' => '2026-12-31',
+            'is_current' => true,
+        ]);
+        $department = Department::create(['name' => 'Science', 'code' => 'SCI', 'is_active' => true]);
+        $program = Program::create([
+            'department_id' => $department->id,
+            'name' => 'Science Programme',
+            'code' => 'SCI',
+            'is_active' => true,
+        ]);
+        $class = $this->makeClass();
+        $class->update(['program_id' => $program->id, 'academic_year_id' => $year->id]);
+        $student = $this->makeStudentIn($class);
+        $student->update(['program_id' => $program->id, 'academic_year_id' => $year->id]);
+
+        $invoicedFee = FeeStructure::factory()->create([
+            'class_id' => $class->id,
+            'name' => 'Existing fee',
+            'amount' => '100.00',
+        ]);
+        InvoiceService::generateForStudent(
+            $student,
+            null,
+            '2026-01-10',
+            '2026-02-10',
+            collect([$invoicedFee])
+        );
+
+        $newFee = FeeStructure::create([
+            'program_id' => $program->id,
+            'academic_year_id' => $year->id,
+            'name' => 'New program-wide fee',
+            'amount' => '100.00',
+        ]);
+
+        $this->assertFalse($newFee->isReferencedByInvoices());
+
+        $this->actingAs($this->accountant)
+            ->post(route('accountant.fee-structures.items.store', $newFee), [
+                'name' => 'Mandatory item', 'amount' => '40.00', 'is_mandatory' => '1',
+            ])
+            ->assertSessionHasNoErrors();
+        $this->assertSame('40.00', (string) $newFee->fresh()->amount);
+
+        $optionalItem = $newFee->items()->create([
+            'name' => 'Optional item',
+            'amount' => '5.00',
+            'is_mandatory' => false,
+        ]);
+        $newFee->syncAmountFromItems();
+        $this->assertSame('40.00', (string) $newFee->fresh()->amount);
+
+        $this->actingAs($this->accountant)
+            ->delete(route('accountant.fee-items.destroy', $newFee->items()->where('is_mandatory', true)->first()))
+            ->assertSessionHasNoErrors();
+        $this->assertSame('0.00', (string) $newFee->fresh()->amount);
+
+        $this->actingAs($this->accountant)
+            ->delete(route('accountant.fee-items.destroy', $optionalItem))
+            ->assertSessionHasNoErrors();
+        $this->assertSame(0, $newFee->items()->count());
+
+        $this->actingAs($this->accountant)
+            ->put(route('accountant.fee-structures.update', $newFee), [
+                'program_id' => $program->id,
+                'academic_year_id' => $year->id,
+                'name' => 'Updated program-wide fee',
+                'amount' => '100.00',
+                'is_active' => true,
+            ])
+            ->assertSessionHasNoErrors();
+
+        $this->actingAs($this->accountant)
+            ->delete(route('accountant.fee-structures.destroy', $newFee))
+            ->assertSessionHasNoErrors();
+        $this->assertNull(FeeStructure::find($newFee->id));
     }
 
     public function test_items_cannot_change_once_an_invoice_exists(): void

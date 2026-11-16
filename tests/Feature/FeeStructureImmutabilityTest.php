@@ -79,7 +79,7 @@ class FeeStructureImmutabilityTest extends TestCase
         $user = User::create(['name' => 'S1', 'email' => 's1@s.t', 'password' => 'password', 'role' => 'student']);
         $student = Student::create(['user_id' => $user->id, 'class_id' => $class->id, 'admission_no' => 'ADM900']);
 
-        Invoice::create([
+        $invoice = Invoice::create([
             'student_id' => $student->id,
             'term_id' => $fee->term_id,
             'invoice_no' => 'INV-2026-9001',
@@ -89,6 +89,11 @@ class FeeStructureImmutabilityTest extends TestCase
             'amount_paid' => '0.00',
             'balance' => '5000.00',
             'status' => 'issued',
+        ]);
+        $invoice->items()->create([
+            'fee_structure_id' => $fee->id,
+            'description' => $fee->name,
+            'amount' => $fee->amount,
         ]);
 
         $this->actingAs($this->accountant)

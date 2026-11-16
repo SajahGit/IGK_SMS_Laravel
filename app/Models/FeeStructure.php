@@ -179,43 +179,18 @@ class FeeStructure extends Model
     /**
      * SOP §11: "Cannot edit once invoices reference it - version by creating a new structure."
      *
-     * Referenced = a non-cancelled invoice line was built from it, or a non-cancelled invoice
-     * already exists for a student of this class for the same term.
+     * Only invoice lines tied to this structure or one of its fee items count as references.
      */
     public function isReferencedByInvoices(): bool
     {
-        if ($this->class_id) {
-            $byClassAndTerm = Invoice::where('status', '!=', 'cancelled')
-                ->whereHas('student', fn ($q) => $q->where('class_id', $this->class_id))
-                ->when(
-                    $this->term_id,
-                    fn ($q) => $q->where('term_id', $this->term_id),
-                    fn ($q) => $q->whereNull('term_id')
-                )
-                ->exists();
-
-            if ($byClassAndTerm) {
-                return true;
-            }
+        if (! $this->exists || $this->getKey() === null) {
+            return false;
         }
 
-        // SOP-exact (program-wide) scope: any non-cancelled invoice for a student of
-        // this program, in this academic year, is a reference. Only applies to a
-        // program-wide structure (class_id null) — a legacy class-based structure
-        // also carries an auto-derived program_id, but that must not widen its own
-        // immutability check to every other class in the same program.
-        if ($this->isProgramWide() && $this->program_id) {
-            $byProgramAndYear = Invoice::where('status', '!=', 'cancelled')
-                ->whereHas('student', fn ($q) => $q->where('program_id', $this->program_id)
-                    ->when($this->academic_year_id, fn ($qq) => $qq->where('academic_year_id', $this->academic_year_id)))
-                ->exists();
-
-            if ($byProgramAndYear) {
-                return true;
-            }
-        }
-
-        return InvoiceItem::where('fee_structure_id', $this->id)
+        return InvoiceItem::where(function ($query) {
+            $query->where('fee_structure_id', $this->id)
+                ->orWhereIn('fee_item_id', $this->items()->select('id'));
+        })
             ->whereHas('invoice', fn ($q) => $q->where('status', '!=', 'cancelled'))
             ->exists();
     }
