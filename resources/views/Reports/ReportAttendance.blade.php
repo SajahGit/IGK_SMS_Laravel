@@ -54,7 +54,7 @@
         @forelse ($rows as $row)
             <tr>
                 <td class="print-nowrap">{{ $row['session']->date->format('d M Y') }}</td>
-                <td class="print-nowrap">{{ $row['session']->schoolClass->full_name }}</td>
+                <td class="print-nowrap">{{ $row['session']->schoolClass?->full_name ?? 'Unassigned' }}</td>
                 <td>{{ $row['session']->classSubject?->subject?->name ?? $row['session']->session_label }}</td>
                 <td>{{ $row['session']->classSubject?->teacher?->user?->name ?? '—' }}</td>
                 <td class="print-nowrap">{{ $row['record']->student->admission_no }}</td>

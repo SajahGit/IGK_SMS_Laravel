@@ -111,7 +111,7 @@
                     @php($key = $result->term_id.':'.$result->class_id.':'.$result->student_id)
                     <tr>
                         <td><span class="fw-semibold">{{ $result->student->user->name }}</span><br><code>{{ $result->student->admission_no }}</code></td>
-                        <td>{{ $result->schoolClass->full_name }}</td>
+                        <td>{{ $result->schoolClass?->full_name ?? 'Unassigned' }}</td>
                         <td>
                             @foreach ($subjectResults->get($key, collect()) as $subjectResult)
                                 <span class="badge text-bg-light border me-1 mb-1">

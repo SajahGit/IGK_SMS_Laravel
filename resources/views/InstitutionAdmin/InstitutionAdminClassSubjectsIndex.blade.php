@@ -53,10 +53,10 @@
         <tbody>
         @forelse ($assignments as $a)
             <tr>
-                <td>{{ $a->schoolClass->full_name }}</td>
+                <td>{{ $a->schoolClass?->full_name ?? 'Unassigned' }}</td>
                 <td>{{ $a->term?->name ?? 'Legacy (not term-specific)' }}</td>
-                <td>{{ $a->subject->name }}</td>
-                <td>{{ $a->teacher->user->name }}</td>
+                <td>{{ $a->subject?->name ?? 'Unassigned' }}</td>
+                <td>{{ $a->teacher?->user?->name ?? 'Unassigned' }}</td>
                 <td class="text-end">
                     <form method="POST" action="{{ route('admin.class-subjects.destroy', $a) }}" class="d-inline" onsubmit="return confirm('Remove this assignment?')">
                         @csrf @method('DELETE')
