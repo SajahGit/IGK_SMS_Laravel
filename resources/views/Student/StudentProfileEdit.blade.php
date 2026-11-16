@@ -16,16 +16,16 @@
                 <label class="form-label">Phone</label>
                 <x-international-phone-input name="phone" :value="$student->phone" />
             </div>
-            <div class="col-md-6">
-                <label class="form-label">New password (leave blank to keep)</label>
-                <input type="password" name="password" class="form-control" minlength="8" maxlength="32">
-            </div>
-            <div class="col-md-6">
-                <label class="form-label">Confirm new password</label>
-                <input type="password" name="password_confirmation" class="form-control" minlength="8" maxlength="32">
+            <div class="col-12">
+                <div class="alert alert-light border small text-muted d-flex align-items-center mb-0">
+                    <i class="bi bi-shield-lock me-2 text-primary fs-5"></i>
+                    <div>
+                        <strong>Password Policy:</strong> Student passwords can only be changed or reset by the School Administrator. If you need a new password, please contact the school office.
+                    </div>
+                </div>
             </div>
         </div>
-        <p class="text-muted small mt-3 mb-0">Class, admission number and date of birth can only be changed by the admin.</p>
+        <p class="text-muted small mt-3 mb-0">Password, class, admission number and date of birth can only be changed by the administrator.</p>
         <div class="mt-3">
             <button class="btn btn-primary"><i class="bi bi-check2-circle me-1"></i>Save</button>
             <a href="{{ route('student.profile') }}" class="btn btn-outline-secondary">Cancel</a>

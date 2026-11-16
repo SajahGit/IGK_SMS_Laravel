@@ -224,7 +224,7 @@ class StudentController extends Controller
             $user->email = $data['email'];
             if (! empty($data['password'])) {
                 $user->password = $data['password'];
-                $user->must_change_password = true;
+                $user->must_change_password = false;
             }
             if (! empty($data['branch_id'])) {
                 $user->branch_id = $data['branch_id'];

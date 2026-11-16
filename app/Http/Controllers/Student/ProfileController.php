@@ -42,21 +42,21 @@ class ProfileController extends Controller
 
     public function update(Request $request)
     {
+        if ($request->filled('password')) {
+            return back()->withErrors(['password' => 'Students cannot change their password. Only the school administrator can change student passwords.']);
+        }
+
         $student = $this->student();
 
         InternationalPhoneNumber::normalizeRequest($request);
         $data = $request->validate([
             'name' => ['required', 'string', 'max:100', new ValidPersonName],
             'phone' => ['nullable', 'string', 'max:20', Rule::unique('students', 'phone')->ignore($student), new ValidInternationalPhone($request->input('phone_region'))],
-            'password' => ['nullable', Password::defaults(), 'confirmed'],
         ]);
 
-        // Only these fields can be changed by the student (not class, admission no or dob).
+        // Only these fields can be changed by the student (not class, admission no, dob, or password).
         $user = $student->user;
         $user->name = $data['name'];
-        if (! empty($data['password'])) {
-            $user->password = $data['password'];
-        }
         $user->save();
 
         $oldProfile = ['phone' => $student->phone];

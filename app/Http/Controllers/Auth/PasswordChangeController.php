@@ -11,14 +11,25 @@ use Illuminate\View\View;
 
 class PasswordChangeController extends Controller
 {
-    public function showChangeForm(): View
+    public function showChangeForm(): View|RedirectResponse
     {
+        $user = auth()->user();
+        if ($user && ($user->hasRole('Student') || $user->role === 'student') && ! $user->must_change_password) {
+            return redirect()->route('student.dashboard')
+                ->with('error', 'Students cannot change their password. Only the school administrator can change student passwords.');
+        }
+
         return view('Auth.AuthPasswordChange');
     }
 
     public function update(PasswordChangeRequest $request): RedirectResponse
     {
         $user = $request->user();
+
+        if ($user && ($user->hasRole('Student') || $user->role === 'student') && ! $user->must_change_password) {
+            return redirect()->route('student.dashboard')
+                ->with('error', 'Students cannot change their password. Only the school administrator can change student passwords.');
+        }
 
         $user->update([
             'password' => Hash::make($request->password),

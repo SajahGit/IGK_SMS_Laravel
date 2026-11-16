@@ -29,6 +29,13 @@ class ResetPasswordController extends Controller
             'password' => ['required', 'confirmed', PasswordRule::defaults()],
         ]);
 
+        $user = User::where('email', $request->email)->first();
+        if ($user && ($user->hasRole('Student') || $user->role === 'student')) {
+            return redirect()->route('login')->withErrors([
+                'email' => 'Student passwords can only be changed by the school administrator.',
+            ]);
+        }
+
         $status = Password::reset(
             $request->only('email', 'password', 'password_confirmation', 'token'),
             function (User $user, string $password): void {
