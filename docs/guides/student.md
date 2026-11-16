@@ -13,7 +13,7 @@ Students and guardians access their dedicated, secure portals with Role-Based Ac
 - **Student Portal**: `/student/dashboard`
 - **Guardian Portal**: `/guardian/dashboard`
 - **Credentials**: School-issued email (e.g. `student@school.com` / `parent@school.com`) and password.
-- **First-Time Login**: Mandatory password update upon first authentication.
+- **Password Administration**: Under institutional policy, student passwords are managed exclusively by the School Administrator to ensure data integrity and prevent lockout. Students cannot change passwords self-service.
 - **Two-Factor Authentication (2FA)**: Optional/enforced TOTP authenticator setup for enhanced account protection.
 
 ---
