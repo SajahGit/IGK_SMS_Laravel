@@ -13,8 +13,16 @@ class ExamController extends Controller
 {
     public function index()
     {
+        $teacher = auth()->user()->teacher;
+        $classIds = SchoolHelper::teacherClassIds($teacher);
+
         $exams = Exam::with(['class', 'subject'])->withCount('results')
-            ->where('created_by', auth()->id())
+            ->where(function ($query) use ($classIds) {
+                $query->where('created_by', auth()->id());
+                if ($classIds->isNotEmpty()) {
+                    $query->orWhereIn('class_id', $classIds);
+                }
+            })
             ->orderByDesc('exam_date')
             ->paginate(10);
 
@@ -26,17 +34,20 @@ class ExamController extends Controller
         $teacher = auth()->user()->teacher;
         $currentTermId = Term::where('is_current', true)->value('id');
 
-        $assignments = $teacher && $teacher->status === 'active'
-            ? ClassSubject::with(['schoolClass', 'subject', 'term'])
-                ->where('teacher_id', $teacher->id)
-                ->where(function ($terms) use ($currentTermId) {
-                    $terms->whereNull('term_id');
-                    if ($currentTermId) {
-                        $terms->orWhere('term_id', $currentTermId);
-                    }
-                })
-                ->get()
-            : collect();
+        $query = ClassSubject::with(['schoolClass', 'subject', 'term'])
+            ->where('teacher_id', $teacher?->id)
+            ->whereHas('schoolClass')
+            ->whereHas('subject');
+
+        if ($currentTermId) {
+            $currentTermAssignments = (clone $query)->where(function ($terms) use ($currentTermId) {
+                $terms->whereNull('term_id')->orWhere('term_id', $currentTermId);
+            })->get();
+
+            $assignments = $currentTermAssignments->isNotEmpty() ? $currentTermAssignments : $query->get();
+        } else {
+            $assignments = $query->get();
+        }
 
         return view('Teacher.TeacherExamsCreate', compact('assignments'));
     }

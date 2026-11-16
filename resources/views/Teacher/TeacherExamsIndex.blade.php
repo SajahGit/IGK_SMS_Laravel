@@ -13,7 +13,7 @@
             <tr>
                 <td>{{ $e->name }}</td>
                 <td>{{ $e->class?->full_name ?? 'Unassigned' }}</td>
-                <td>{{ $e->subject->name }}</td>
+                <td>{{ $e->subject?->name ?? 'Unassigned' }}</td>
                 <td>{{ $e->exam_date->format('d M Y') }}</td>
                 <td>{{ $e->max_marks }}</td>
                 <td>{{ $e->results_count }}</td>

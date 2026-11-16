@@ -104,18 +104,22 @@ class SchoolHelper
             return collect();
         }
 
-        $currentTermId = Term::where('is_current', true)->value('id');
+        $query = ClassSubject::where('teacher_id', $teacher->id)
+            ->whereHas('teacher', fn ($q) => $q->where('status', 'active'))
+            ->whereHas('schoolClass');
 
-        return ClassSubject::where('teacher_id', $teacher->id)
-            ->whereHas('teacher', fn ($query) => $query->where('status', 'active'))
-            ->whereHas('schoolClass')
-            ->where(function ($query) use ($currentTermId) {
-                $query->whereNull('term_id');
-                if ($currentTermId) {
-                    $query->orWhere('term_id', $currentTermId);
-                }
-            })
-            ->pluck('class_id')->unique()->values();
+        $currentTermId = Term::where('is_current', true)->value('id');
+        if ($currentTermId) {
+            $currentTermClasses = (clone $query)->where(function ($q) use ($currentTermId) {
+                $q->whereNull('term_id')->orWhere('term_id', $currentTermId);
+            })->pluck('class_id')->unique()->values();
+
+            if ($currentTermClasses->isNotEmpty()) {
+                return $currentTermClasses;
+            }
+        }
+
+        return $query->pluck('class_id')->unique()->values();
     }
 
     /** 403 unless the teacher teaches this class. */

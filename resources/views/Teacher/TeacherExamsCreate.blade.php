@@ -15,11 +15,15 @@
                 <label class="form-label">Class and subject</label>
                 <select name="assignment" class="form-select" required>
                     <option value="">Select</option>
-                    @foreach ($assignments as $a)
-                        <option value="{{ $a->id }}" @selected(old('assignment') == $a->id)>
-                            {{ $a->schoolClass->full_name }} - {{ $a->subject->name }} ({{ $a->term?->name ?? 'Legacy offering' }})
-                        </option>
-                    @endforeach
+                    @forelse ($assignments as $a)
+                        @if ($a->schoolClass && $a->subject)
+                            <option value="{{ $a->id }}" @selected(old('assignment') == $a->id)>
+                                {{ $a->schoolClass->full_name }} - {{ $a->subject->name }} ({{ $a->term?->name ?? 'All terms' }})
+                            </option>
+                        @endif
+                    @empty
+                        <option value="" disabled>No class assignments found for your account.</option>
+                    @endforelse
                 </select>
             </div>
             <div class="col-md-4">

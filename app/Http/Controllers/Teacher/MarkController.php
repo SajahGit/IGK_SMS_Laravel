@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Teacher;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Teacher\UpdateMarksRequest;
+use App\Models\ClassSubject;
 use App\Models\Exam;
 use App\Models\Result;
 use App\Models\Student;
@@ -70,6 +71,26 @@ class MarkController extends Controller
 
     private function authorizeExam(Exam $exam): void
     {
-        SchoolHelper::authorizeTeacherClass(auth()->user()->teacher, $exam->class_id);
+        if (auth()->user()->isAdmin()) {
+            return;
+        }
+
+        $teacher = auth()->user()->teacher;
+        abort_unless($teacher && $teacher->status === 'active', 403, 'Inactive or missing teacher profile.');
+
+        if ($exam->created_by === auth()->id()) {
+            return;
+        }
+
+        $teachesSubject = ClassSubject::where('teacher_id', $teacher->id)
+            ->where('class_id', $exam->class_id)
+            ->where('subject_id', $exam->subject_id)
+            ->exists();
+
+        if ($teachesSubject) {
+            return;
+        }
+
+        SchoolHelper::authorizeTeacherClass($teacher, $exam->class_id);
     }
 }

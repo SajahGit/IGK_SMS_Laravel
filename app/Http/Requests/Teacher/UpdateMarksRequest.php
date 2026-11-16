@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Teacher;
 
+use App\Models\ClassSubject;
 use App\Models\Exam;
 use App\Services\ResultPublicationService;
 use App\Support\SchoolHelper;
@@ -34,8 +35,18 @@ class UpdateMarksRequest extends FormRequest
         /** @var Exam $exam */
         $exam = $this->route('exam');
 
-        if (auth()->user()->isTeacher()) {
-            SchoolHelper::authorizeTeacherClass(auth()->user()->teacher, $exam->class_id);
+        if (auth()->user()->isTeacher() && ! auth()->user()->isAdmin()) {
+            $teacher = auth()->user()->teacher;
+            if ($exam->created_by !== auth()->id()) {
+                $teachesSubject = ClassSubject::where('teacher_id', $teacher?->id)
+                    ->where('class_id', $exam->class_id)
+                    ->where('subject_id', $exam->subject_id)
+                    ->exists();
+
+                if (! $teachesSubject) {
+                    SchoolHelper::authorizeTeacherClass($teacher, $exam->class_id);
+                }
+            }
         }
 
         // Enforce lock if published

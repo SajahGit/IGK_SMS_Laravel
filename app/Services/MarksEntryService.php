@@ -36,7 +36,14 @@ class MarksEntryService
             ->where('status', 'enrolled')
             ->pluck('student_id');
 
-        return Student::whereIn('id', $enrolledStudentIds)
+        if ($enrolledStudentIds->isNotEmpty()) {
+            return Student::whereIn('id', $enrolledStudentIds)
+                ->where('status', 'active')
+                ->orderBy('admission_no')
+                ->pluck('id');
+        }
+
+        return Student::where('class_id', $exam->class_id)
             ->where('status', 'active')
             ->orderBy('admission_no')
             ->pluck('id');

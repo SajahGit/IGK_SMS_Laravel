@@ -12,7 +12,7 @@
         @endif
     </div>
 </div>
-<p class="text-muted">{{ $exam->class?->full_name ?? 'Unassigned' }} &middot; {{ $exam->subject->name }} &middot; Maximum marks: {{ $exam->max_marks }}</p>
+<p class="text-muted">{{ $exam->class?->full_name ?? 'Unassigned' }} &middot; {{ $exam->subject?->name ?? 'Unassigned' }} &middot; Maximum marks: {{ $exam->max_marks }}</p>
 
 <div class="row g-3 mb-4">
     @foreach ([['Entered', $stats['count'], 'pencil-square', 'indigo'], ['Average', $stats['average'], 'bar-chart-fill', 'cyan'],
@@ -30,8 +30,8 @@
         @forelse ($results as $r)
             @php $pct = \App\Support\SchoolHelper::resultPercentage($r->marks, $exam->max_marks); $grade = \App\Support\SchoolHelper::gradeFor($pct); @endphp
             <tr>
-                <td>{{ $r->student->admission_no }}</td>
-                <td>{{ $r->student->user->name }}</td>
+                <td>{{ $r->student?->admission_no ?? '-' }}</td>
+                <td>{{ $r->student?->user?->name ?? '-' }}</td>
                 <td>{{ \App\Support\SchoolHelper::formatMarks($r->marks) }}</td>
                 <td>{{ $pct }}%</td>
                 <td><span class="badge bg-{{ \App\Support\SchoolHelper::gradeBadge($grade) }}">{{ $grade }}</span></td>

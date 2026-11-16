@@ -52,7 +52,7 @@
                             <div class="teacher-assignment-list">
                                 @forelse ($visibleAssignments as $assignment)
                                     <span class="badge bg-light text-dark border teacher-assignment-chip">
-                                        {{ $assignment->schoolClass->full_name }} &middot; {{ $assignment->subject->name }}
+                                        {{ $assignment->schoolClass?->full_name ?? 'Class' }} &middot; {{ $assignment->subject?->name ?? 'Subject' }}
                                     </span>
                                 @empty
                                     <span class="text-muted small">Not assigned</span>
@@ -63,7 +63,7 @@
                                         <div class="teacher-assignment-overflow-list">
                                             @foreach ($moreAssignments as $assignment)
                                                 <span class="badge bg-light text-dark border teacher-assignment-chip">
-                                                    {{ $assignment->schoolClass->full_name }} &middot; {{ $assignment->subject->name }}
+                                                    {{ $assignment->schoolClass?->full_name ?? 'Class' }} &middot; {{ $assignment->subject?->name ?? 'Subject' }}
                                                 </span>
                                             @endforeach
                                         </div>

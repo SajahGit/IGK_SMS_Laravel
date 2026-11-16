@@ -4,7 +4,7 @@
 <div class="mb-3">
     <a href="{{ route('student.lms.index') }}" class="small">My learning courses</a>
     <h3 class="mb-0">{{ $course->title }}</h3>
-    <div class="text-muted">{{ $course->classSubject->schoolClass->full_name }} · {{ $course->classSubject->subject->name }}</div>
+    <div class="text-muted">{{ $course->classSubject?->schoolClass?->full_name ?? 'Class' }} · {{ $course->classSubject?->subject?->name ?? 'Subject' }}</div>
 </div>
 
 <div class="card shadow-sm mb-4">

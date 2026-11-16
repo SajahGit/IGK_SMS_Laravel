@@ -5,7 +5,7 @@
     <div>
         <a href="{{ route('teacher.lms.index') }}" class="small">Learning management</a>
         <h3 class="mb-0">{{ $course->title }}</h3>
-        <div class="text-muted">{{ $course->classSubject->schoolClass->full_name }} · {{ $course->classSubject->subject->name }}</div>
+        <div class="text-muted">{{ $course->classSubject?->schoolClass?->full_name ?? 'Class' }} · {{ $course->classSubject?->subject?->name ?? 'Subject' }}</div>
     </div>
 </div>
 @if ($errors->any())

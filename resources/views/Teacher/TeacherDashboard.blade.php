@@ -15,10 +15,12 @@
             <div class="card-header">My classes and subjects</div>
             <ul class="list-group list-group-flush">
                 @forelse ($assignments as $a)
-                    <li class="list-group-item d-flex justify-content-between">
-                        <span>{{ $a->schoolClass->full_name }} - {{ $a->subject->name }}</span>
-                        <a href="{{ route('teacher.classes.students', $a->schoolClass) }}" class="small">Students</a>
-                    </li>
+                    @if ($a->schoolClass && $a->subject)
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>{{ $a->schoolClass->full_name }} - {{ $a->subject->name }}</span>
+                            <a href="{{ route('teacher.classes.students', $a->schoolClass) }}" class="small">Students</a>
+                        </li>
+                    @endif
                 @empty
                     <li class="list-group-item text-muted">No classes assigned yet. Ask the admin.</li>
                 @endforelse

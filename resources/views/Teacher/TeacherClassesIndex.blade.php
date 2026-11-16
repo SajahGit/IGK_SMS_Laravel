@@ -8,10 +8,12 @@
         <tbody>
         @forelse ($assignments as $a)
             <tr>
-                <td>{{ $a->schoolClass->full_name }}</td>
-                <td>{{ $a->subject->name }}</td>
+                <td>{{ $a->schoolClass?->full_name ?? 'Unassigned' }}</td>
+                <td>{{ $a->subject?->name ?? 'Unassigned' }}</td>
                 <td class="text-end">
-                    <a href="{{ route('teacher.classes.students', $a->schoolClass) }}" class="btn btn-sm btn-outline-primary">Students</a>
+                    @if ($a->schoolClass)
+                        <a href="{{ route('teacher.classes.students', $a->schoolClass) }}" class="btn btn-sm btn-outline-primary">Students</a>
+                    @endif
                     <a href="{{ route('teacher.attendance.create', ['class_id' => $a->class_id]) }}" class="btn btn-sm btn-outline-success">Mark attendance</a>
                 </td>
             </tr>

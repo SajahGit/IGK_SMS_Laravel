@@ -8,7 +8,7 @@
             <div class="card shadow-sm h-100">
                 <div class="card-body">
                     <h4 class="h5">{{ $course->title }}</h4>
-                    <p class="text-muted">{{ $course->classSubject->schoolClass->full_name }} · {{ $course->classSubject->subject->name }}</p>
+                    <p class="text-muted">{{ $course->classSubject?->schoolClass?->full_name ?? 'Class' }} · {{ $course->classSubject?->subject?->name ?? 'Subject' }}</p>
                     @if ($course->description)<p>{{ $course->description }}</p>@endif
                     <a class="btn btn-primary btn-sm" href="{{ route('student.lms.courses.show', $course) }}">Open course</a>
                 </div>

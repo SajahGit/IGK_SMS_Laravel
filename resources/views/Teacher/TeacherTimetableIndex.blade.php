@@ -36,8 +36,8 @@
                 <div class="card-body p-2 d-flex flex-column gap-2">
                     @forelse ($daySlots as $slot)
                         <div class="p-2 rounded border bg-body-tertiary">
-                            <div class="fw-bold text-primary">{{ $slot->classSubject->schoolClass->full_name }}</div>
-                            <div class="small fw-semibold text-body mb-1">{{ $slot->classSubject->subject->name }}</div>
+                            <div class="fw-bold text-primary">{{ $slot->classSubject?->schoolClass?->full_name ?? 'Class' }}</div>
+                            <div class="small fw-semibold text-body mb-1">{{ $slot->classSubject?->subject?->name ?? 'Subject' }}</div>
                             <div class="d-flex justify-content-between align-items-center mt-2 small">
                                 <span class="badge bg-dark-subtle text-body border"><i class="bi bi-clock me-1"></i>{{ substr($slot->start_time, 0, 5) }} - {{ substr($slot->end_time, 0, 5) }}</span>
                                 <span class="badge bg-info-subtle text-info border border-info-subtle"><i class="bi bi-door-closed me-1"></i>{{ $slot->room }}</span>

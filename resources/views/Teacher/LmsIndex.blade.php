@@ -20,7 +20,9 @@
                     <label class="form-label" for="class_subject_id">Teaching assignment</label>
                     <select class="form-select" id="class_subject_id" name="class_subject_id" required>
                         @foreach ($offerings as $offering)
-                            <option value="{{ $offering->id }}">{{ $offering->schoolClass->full_name }} — {{ $offering->subject->name }}{{ $offering->term ? ' · '.$offering->term->name : '' }}</option>
+                            @if ($offering->schoolClass && $offering->subject)
+                                <option value="{{ $offering->id }}">{{ $offering->schoolClass->full_name }} — {{ $offering->subject->name }}{{ $offering->term ? ' · '.$offering->term->name : '' }}</option>
+                            @endif
                         @endforeach
                     </select>
                 </div>
@@ -46,7 +48,7 @@
             <div class="card shadow-sm h-100">
                 <div class="card-body">
                     <h4 class="h5">{{ $course->title }}</h4>
-                    <p class="text-muted mb-3">{{ $course->classSubject->schoolClass->full_name }} · {{ $course->classSubject->subject->name }}</p>
+                    <p class="text-muted mb-3">{{ $course->classSubject?->schoolClass?->full_name ?? 'Class' }} · {{ $course->classSubject?->subject?->name ?? 'Subject' }}</p>
                     @if ($course->description)<p>{{ $course->description }}</p>@endif
                     <div class="small text-muted mb-3">{{ $course->lessons_count }} lesson(s), {{ $course->assignments->count() }} assignment(s), {{ $course->assignments->sum(fn ($assignment) => $assignment->submissions->count()) }} submission(s)</div>
                     <a class="btn btn-primary btn-sm" href="{{ route('teacher.lms.courses.show', $course) }}">Manage course</a>
