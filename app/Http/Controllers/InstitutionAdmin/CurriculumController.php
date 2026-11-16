@@ -69,7 +69,7 @@ class CurriculumController extends Controller
 
         $curriculum->load(['program', 'subject']);
         $programs = Program::where('is_active', true)->orderBy('name')->get();
-        $subjects = Subject::where('is_active', true)->orderBy('name')->get();
+        $subjects = Subject::orderBy('name')->get();
 
         return view('InstitutionAdmin.InstitutionAdminCurriculaEdit', compact('curriculum', 'programs', 'subjects'));
     }
