@@ -50,32 +50,32 @@
         <label class="form-label">Nationality</label>
         <x-international-nationality-select :value="old('nationality', $isEdit ? $student->nationality : '')" />
     </div>
-    <div class="col-md-4">
-        <label class="form-label">Document type <span class="text-danger">*</span></label>
-        <select name="document_type" data-document-type @class(['form-select', 'is-invalid' => $errors->has('document_type')]) required>
-            <option value="">Select document type</option>
-            @foreach (['national_id' => 'National ID', 'passport' => 'Passport'] as $value => $label)
-                <option value="{{ $value }}" @selected(old('document_type', $isEdit ? $student->document_type : '') === $value)>{{ $label }}</option>
-            @endforeach
-        </select>
-        @error('document_type')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
-    </div>
+    <input type="hidden" name="document_type" data-document-type value="{{ old('document_type', $isEdit ? ($student->document_type ?? 'national_id') : 'national_id') }}">
     <div class="col-md-4">
         <label class="form-label">Issuing country <span class="text-danger">*</span></label>
-        <x-international-country-select name="issuing_country" :value="old('issuing_country', $isEdit ? $student->issuing_country : '')" required />
+        <x-international-country-select name="issuing_country" :value="old('issuing_country', $isEdit ? $student->issuing_country : 'LK')" required />
     </div>
     <div class="col-md-4">
-        <label class="form-label">Document number <span class="text-danger">*</span></label>
-        @php
-            $documentTypeValue = old('document_type', $isEdit ? $student->document_type : '');
-            $issuingCountryValue = old('issuing_country', $isEdit ? $student->issuing_country : '');
-        @endphp
-        <input type="text" name="document_number" data-document-number @class(['form-control', 'is-invalid' => $errors->has('document_number')]) value="{{ old('document_number', $isEdit ? $student->document_number : '') }}" maxlength="20" autocomplete="off" {{ $documentTypeValue && $issuingCountryValue ? '' : 'disabled' }} required>
+        <label class="form-label">National ID / Document number <span class="text-danger">*</span></label>
+        <input type="text" name="document_number" data-document-number @class(['form-control', 'is-invalid' => $errors->has('document_number')]) value="{{ old('document_number', $isEdit ? $student->document_number : '') }}" maxlength="30" autocomplete="off" placeholder="e.g. 200012345678 or Passport number" required>
         @error('document_number')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
     </div>
     <div class="col-md-6">
         <label class="form-label">Phone</label>
         <x-international-phone-input name="phone" :value="$isEdit ? $student->phone : ''" />
+    </div>
+    <div class="col-12 mt-2">
+        <div class="card border border-primary-subtle bg-primary-subtle bg-opacity-10 shadow-none">
+            <div class="card-body p-3">
+                <label class="form-label fw-bold d-flex align-items-center gap-2 mb-1">
+                    <i class="bi bi-cloud-arrow-up text-primary fs-5"></i>
+                    <span>Upload Student Documents (Optional)</span>
+                </label>
+                <p class="small text-muted mb-2">Attach student Birth Certificate, Passport copy, previous academic transcripts, or photograph (PDF, PNG, JPG &bull; Max 10MB each).</p>
+                <input type="file" name="documents[]" class="form-control" accept=".pdf,.png,.jpg,.jpeg" multiple>
+                <div class="form-text small">You can select one or multiple files at once. They will be uploaded and attached to this student record.</div>
+            </div>
+        </div>
     </div>
 </div>
 <div class="mt-4">

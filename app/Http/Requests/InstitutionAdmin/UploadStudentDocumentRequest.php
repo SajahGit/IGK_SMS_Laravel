@@ -12,11 +12,18 @@ class UploadStudentDocumentRequest extends FormRequest
             && (auth()->user()->isAdmin() || auth()->user()->can('student_documents.create') || auth()->user()->isStudent());
     }
 
+    protected function prepareForValidation(): void
+    {
+        if (! $this->filled('type')) {
+            $this->merge(['type' => 'other']);
+        }
+    }
+
     public function rules(): array
     {
         return [
-            'type' => ['required', 'string', 'in:birth_cert,transcript,photo,id_card,other'],
-            'document' => ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:5120'], // Max 5MB
+            'type' => ['nullable', 'string', 'max:50'],
+            'document' => ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:10240'], // Max 10MB
         ];
     }
 }

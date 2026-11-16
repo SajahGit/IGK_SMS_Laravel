@@ -33,7 +33,7 @@ class StudentController extends Controller
         $students = $this->studentQuery($request)
             ->with(['user', 'class', 'primaryGuardian.user'])
             ->withCount('documents')
-            ->orderBy('admission_no')
+            ->orderByDesc('id')
             ->paginate(10)
             ->withQueryString();
 
@@ -89,6 +89,20 @@ class StudentController extends Controller
     public function store(StoreStudentRequest $request): RedirectResponse
     {
         $student = EnrollmentService::enrollStudent($request->validated());
+
+        // Process document upload during student creation
+        if ($request->hasFile('documents')) {
+            foreach ($request->file('documents') as $file) {
+                if ($file && $file->isValid()) {
+                    $this->saveStudentDocumentFile($student, $file, $request->input('type', 'other'));
+                }
+            }
+        } elseif ($request->hasFile('document')) {
+            $file = $request->file('document');
+            if ($file && $file->isValid()) {
+                $this->saveStudentDocumentFile($student, $file, $request->input('type', 'other'));
+            }
+        }
 
         return redirect()->route('admin.students.index')
             ->with('success', "Student {$student->user->name} enrolled successfully. Admission number: {$student->admission_no}.");
@@ -282,6 +296,16 @@ class StudentController extends Controller
     public function uploadDocument(UploadStudentDocumentRequest $request, Student $student): RedirectResponse
     {
         $file = $request->file('document');
+        $doc = $this->saveStudentDocumentFile($student, $file, $request->input('type', 'other'));
+
+        return back()->with('success', "Document '{$doc->original_name}' uploaded successfully.");
+    }
+
+    /**
+     * Reusable helper to persist student documents to private storage and create database record.
+     */
+    private function saveStudentDocumentFile(Student $student, $file, ?string $type = 'other'): StudentDocument
+    {
         $originalName = $file->getClientOriginalName();
         $mime = $file->getClientMimeType() ?: 'application/octet-stream';
         $size = $file->getSize();
@@ -291,7 +315,7 @@ class StudentController extends Controller
 
         $doc = StudentDocument::create([
             'student_id' => $student->id,
-            'type' => $request->input('type'),
+            'type' => $type ?: 'other',
             'original_name' => $originalName,
             'path' => $path,
             'mime' => $mime,
@@ -301,7 +325,7 @@ class StudentController extends Controller
 
         AuditLogger::log('uploaded_document', $doc, null, ['name' => $originalName]);
 
-        return back()->with('success', "Document '{$originalName}' uploaded successfully.");
+        return $doc;
     }
 
     /**

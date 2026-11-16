@@ -130,26 +130,17 @@
         <label class="form-label">Nationality</label>
         <x-international-nationality-select :value="old('nationality', $isEdit ? $student->nationality : '')" />
     </div>
-    <div class="col-md-4">
-        <label class="form-label">Document type <span class="text-danger">*</span></label>
-        <select name="document_type" data-document-type @class(['form-select', 'is-invalid' => $errors->has('document_type')]) required>
-            <option value="">Select document type</option>
-            @foreach (['national_id' => 'National ID', 'passport' => 'Passport'] as $value => $label)
-                <option value="{{ $value }}" @selected(old('document_type', $isEdit ? $student->document_type : '') === $value)>{{ $label }}</option>
-            @endforeach
-        </select>
-        @error('document_type')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
-    </div>
-    <div class="col-md-4">
+    @php
+        $documentTypeValue = old('document_type', $isEdit ? $student->document_type : '');
+        $issuingCountryValue = old('issuing_country', $isEdit ? $student->issuing_country : '');
+    @endphp
+    <input type="hidden" name="document_type" data-document-type value="{{ $documentTypeValue ?: 'national_id' }}">
+    <div class="col-md-6">
         <label class="form-label">Issuing country <span class="text-danger">*</span></label>
-        <x-international-country-select name="issuing_country" :value="old('issuing_country', $isEdit ? $student->issuing_country : '')" required />
+        <x-international-country-select name="issuing_country" :value="$issuingCountryValue" required />
     </div>
-    <div class="col-md-4">
-        <label class="form-label">Document number <span class="text-danger">*</span></label>
-        @php
-            $documentTypeValue = old('document_type', $isEdit ? $student->document_type : '');
-            $issuingCountryValue = old('issuing_country', $isEdit ? $student->issuing_country : '');
-        @endphp
+    <div class="col-md-6">
+        <label class="form-label">National ID / Document number <span class="text-danger">*</span></label>
         <input type="text" name="document_number" data-document-number @class(['form-control', 'is-invalid' => $errors->has('document_number')]) value="{{ old('document_number', $isEdit ? $student->document_number : '') }}" maxlength="20" autocomplete="off" {{ $documentTypeValue && $issuingCountryValue ? '' : 'disabled' }} required>
         @error('document_number')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
     </div>
@@ -157,12 +148,12 @@
         <label class="form-label">Admission date</label>
         <input type="date" name="admission_date" class="form-control" max="{{ today()->toDateString() }}" value="{{ old('admission_date', $isEdit ? $student->admission_date?->format('Y-m-d') : today()->toDateString()) }}">
     </div>
-    <div class="col-md-6">
+    <div class="col-md-4">
         <label class="form-label">Phone</label>
         <x-international-phone-input name="phone" :value="$isEdit ? $student->phone : ''" />
     </div>
     @if ($isEdit)
-        <div class="col-md-6">
+        <div class="col-md-4">
             <label class="form-label">Student status</label>
             <select name="status" class="form-select" required>
                 @foreach (['active' => 'Active', 'suspended' => 'Suspended', 'graduated' => 'Graduated', 'withdrawn' => 'Withdrawn'] as $value => $label)
@@ -171,6 +162,19 @@
             </select>
         </div>
     @endif
+    <div class="col-12 mt-2">
+        <div class="card border border-primary-subtle bg-primary-subtle bg-opacity-10 shadow-none">
+            <div class="card-body p-3">
+                <label class="form-label fw-bold d-flex align-items-center gap-2 mb-1">
+                    <i class="bi bi-cloud-arrow-up text-primary fs-5"></i>
+                    <span>Upload Student Documents (Optional)</span>
+                </label>
+                <p class="small text-muted mb-2">Attach student Birth Certificate, Passport copy, previous academic transcripts, or photograph (PDF, PNG, JPG &bull; Max 10MB each).</p>
+                <input type="file" name="documents[]" class="form-control" accept=".pdf,.png,.jpg,.jpeg" multiple>
+                <div class="form-text small">You can select one or multiple files at once. They will be uploaded and attached to this student record.</div>
+            </div>
+        </div>
+    </div>
 </div>
 @unless ($isEdit)
 <script>
@@ -186,11 +190,22 @@
         });
         studentLoginFields.querySelectorAll('[data-document-number]').forEach((input) => {
             const form = input.form;
-            input.disabled = useExistingAccount
-                || !form.querySelector('[data-document-type]').value
-                || !form.querySelector('[data-country-value]').value;
+            const countryVal = form ? form.querySelector('[data-country-value], select[name="issuing_country"]')?.value : '';
+            input.disabled = useExistingAccount || !countryVal;
         });
     }
+
+    document.addEventListener('change', function (e) {
+        if (e.target && (e.target.name === 'issuing_country' || e.target.closest('[data-country-search], [data-nationality-picker]'))) {
+            const form = e.target.closest('form');
+            if (form) {
+                const docNum = form.querySelector('[data-document-number]');
+                const docType = form.querySelector('[data-document-type]');
+                if (docNum) { docNum.disabled = false; }
+                if (docType && !docType.value) { docType.value = 'national_id'; }
+            }
+        }
+    });
 
     existingStudentAccount.addEventListener('change', toggleStudentLoginFields);
     toggleStudentLoginFields();

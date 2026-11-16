@@ -65,6 +65,9 @@ class StoreStudentRequest extends FormRequest
             'primary_guardian_id' => ['nullable', 'integer', 'exists:guardians,id'],
             'status' => ['nullable', 'in:active,suspended,graduated,withdrawn'],
             'confirm_duplicate' => ['nullable', 'boolean'],
+            'document' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:10240'],
+            'documents' => ['nullable', 'array'],
+            'documents.*' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:10240'],
         ];
     }
 

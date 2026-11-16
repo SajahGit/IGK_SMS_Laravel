@@ -394,22 +394,13 @@
             <div class="collapse p-3 bg-body-tertiary border-bottom" id="uploadDocCollapse">
                 <form method="POST" action="{{ route('admin.students.documents.upload', $student) }}" enctype="multipart/form-data" class="row g-2 align-items-end">
                     @csrf
-                    <div class="col-md-4">
-                        <label class="form-label small">Document Type <span class="text-danger">*</span></label>
-                        <select name="type" class="form-select form-select-sm" required>
-                            <option value="birth_certificate">Birth Certificate</option>
-                            <option value="id_proof">ID Proof / Passport</option>
-                            <option value="transfer_certificate">Transfer Certificate</option>
-                            <option value="medical_record">Medical Record</option>
-                            <option value="other">Other Official Document</option>
-                        </select>
-                    </div>
-                    <div class="col-md-5">
-                        <label class="form-label small">Select File (PDF, PNG, JPG - max 10MB) <span class="text-danger">*</span></label>
+                    <input type="hidden" name="type" value="other">
+                    <div class="col-md-9">
+                        <label class="form-label small">Select Document File (PDF, PNG, JPG - max 10MB) <span class="text-danger">*</span></label>
                         <input type="file" name="document" class="form-control form-control-sm" accept=".pdf,.png,.jpg,.jpeg" required>
                     </div>
                     <div class="col-md-3">
-                        <button type="submit" class="btn btn-sm btn-primary w-100"><i class="bi bi-cloud-arrow-up me-1"></i>Upload</button>
+                        <button type="submit" class="btn btn-sm btn-primary w-100"><i class="bi bi-cloud-arrow-up me-1"></i>Upload Document</button>
                     </div>
                 </form>
             </div>

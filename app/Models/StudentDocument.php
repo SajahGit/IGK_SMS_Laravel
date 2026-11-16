@@ -43,11 +43,12 @@ class StudentDocument extends Model
     public function getTypeNameAttribute(): string
     {
         return match ($this->type) {
-            'birth_cert' => 'Birth Certificate',
+            'birth_cert', 'birth_certificate' => 'Birth Certificate',
             'transcript' => 'Academic Transcript',
             'photo' => 'Student Photograph',
-            'id_card' => 'Identity Card / Passport',
-            default => ucfirst(str_replace('_', ' ', $this->type)),
+            'id_card', 'id_proof' => 'Identity Card / Passport',
+            'other', 'document', '' => 'Official Document',
+            default => ucfirst(str_replace('_', ' ', (string) $this->type)),
         };
     }
 }

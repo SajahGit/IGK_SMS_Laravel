@@ -25,7 +25,7 @@
         <h5 class="mb-0"><i class="bi bi-person-lines-fill me-2"></i>Student Information</h5>
     </div>
     <div class="card-body">
-        <form method="POST" action="{{ route('admin.students.update', $student) }}">
+        <form method="POST" action="{{ route('admin.students.update', $student) }}" enctype="multipart/form-data">
             @csrf @method('PUT')
             @include('InstitutionAdmin.InstitutionAdminStudentsForm')
         </form>
@@ -83,24 +83,14 @@
     <div class="collapse p-3 bg-body-tertiary border-bottom" id="uploadDocCollapse">
         <form method="POST" action="{{ route('admin.students.documents.upload', $student) }}" enctype="multipart/form-data" class="row g-3 align-items-end">
             @csrf
-            <div class="col-md-4">
-                <label for="doc_type" class="form-label">Document Type <span class="text-danger">*</span></label>
-                <select name="type" id="doc_type" class="form-select" required>
-                    <option value="">Select Document Type</option>
-                    <option value="birth_cert">Birth Certificate</option>
-                    <option value="transcript">Academic Transcript</option>
-                    <option value="photo">Student Photograph</option>
-                    <option value="id_card">Identity Card / Passport</option>
-                    <option value="other">Other Official Document</option>
-                </select>
-            </div>
-            <div class="col-md-5">
-                <label for="doc_file" class="form-label">File (PDF, JPG, PNG &bull; Max 5MB) <span class="text-danger">*</span></label>
+            <input type="hidden" name="type" value="other">
+            <div class="col-md-9">
+                <label for="doc_file" class="form-label">Select Document (PDF, JPG, PNG &bull; Max 10MB) <span class="text-danger">*</span></label>
                 <input type="file" name="document" id="doc_file" class="form-control" accept=".pdf,.jpg,.jpeg,.png" required>
             </div>
             <div class="col-md-3">
                 <button type="submit" class="btn btn-success w-100">
-                    <i class="bi bi-upload me-1"></i> Upload
+                    <i class="bi bi-upload me-1"></i> Upload Document
                 </button>
             </div>
         </form>
