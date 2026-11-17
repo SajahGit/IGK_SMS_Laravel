@@ -17,7 +17,7 @@ class AccountController extends Controller
         $accounts = Account::with('parent')
             ->when($request->filled('type'), fn ($q) => $q->where('type', $request->string('type')))
             ->when($request->filled('q'), fn ($q) => $q->where(fn ($w) => $w->where('name', 'like', '%'.$request->string('q').'%')->orWhere('code', 'like', '%'.$request->string('q').'%')))
-            ->orderBy('code')->paginate(20)->withQueryString();
+            ->latest('id')->paginate(20)->withQueryString();
 
         return view('Accounting.AccountsIndex', compact('accounts'));
     }

@@ -204,6 +204,25 @@ Setting up an academic year, catalogue, classes, users/roles, fee structures, ex
 
 ---
 
+## 19. Universal Reverse-Chronological Listing Standard
+
+1. **Top-Level Visibility for New Entries**:
+   - Whenever an administrator or staff member adds a new record in any module (Cafeteria items, Hostel halls/rooms, Inventory stock items, Transport routes/vehicles, Classes, Subjects, Departments, Academic Programs, Curricula, Fee Structures, Invoices, Library books/copies, Suppliers, Purchase Orders, Accounts, Announcements, or System Users), the newly created item **automatically appears at the very top of the table** (`latest('id')` / `orderByDesc('id')`).
+   - Staff no longer need to navigate to the last pagination page or hunt alphabetically for newly added items.
+
+---
+
+## 20. Centralized Single-Alert Notifications & Cafeteria Multi-Branch Stock
+
+1. **Single Notification Alert**:
+   - Flash feedback (`success`, `status`, `warning`, `error`) is centralized in `LayoutApp.blade.php`.
+   - Redundant in-page alert components were purged across 24 child views, guaranteeing every action displays exactly one animated, auto-dismissing banner.
+2. **Multi-Branch Cafeteria & Stock Availability**:
+   - Cafeteria items are linked with `inventory_items` and multi-campus branches via `BranchIsolationServiceProvider`.
+   - When an administrator creates a menu item, active stock from the home campus or global stock is immediately visible in student ordering portals across that branch.
+
+---
+
 ## Role Summary
 
 | Role | Can Do |

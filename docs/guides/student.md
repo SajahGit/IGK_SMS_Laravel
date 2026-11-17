@@ -41,8 +41,9 @@ Students and guardians access their dedicated, secure portals with Role-Based Ac
 ## 3. Campus Life & Ancillary Services
 
 ### A. Cafeteria Ordering & Account
-- **Menu Catalog**: Browse available meal sets, snacks, and beverages categorized by day and meal slot.
-- **Cafeteria Orders**: Place meal orders directly through the portal and view order status (Pending, Confirmed, Delivered).
+- **Menu Catalog**: Browse available meal sets, snacks, and beverages categorized by day and meal slot. Newly added menu items always appear at the top of the menu list.
+- **Multi-Branch Stock Synchronization**: Students automatically view menu items available at their enrolled campus branch (or campus-wide stock).
+- **Cafeteria Orders**: Place meal orders directly through the portal and view order status (Pending, Confirmed, Delivered). Ordering reserves real inventory stock in real-time.
 
 ### B. Hostel & Boarding Services
 - **Hostel Allocation**: View assigned hostel building, room number, floor, room type, and room warden contact information.

@@ -46,8 +46,8 @@ The migration `2026_01_01_000023_complete_sop_academic_relationships` creates La
 4. Select the class, term, issue and due dates, and the fee items. Confirm the per-student total and issue invoices.
 5. Generation is safe to retry: students already invoiced for the term are skipped instead of being billed twice.
 6. Search/filter invoices by invoice number, student, admission number, class, or status. Open an invoice to review its balance and payment history; download the invoice PDF if needed.
-7. Choose **Record Payment** from an invoice or the finance menu. Select the invoice, enter the received amount, payment date, method, and optional bank reference.
-8. Partial payment is supported. Overpayments, invalid dates, and unsupported methods are rejected. The invoice balance/status updates in the same transaction as the payment.
+7. Choose **Record Payment** from an invoice or the finance menu. Select the invoice from the dropdown (which cleanly formats invoice number, student name, class, branch, and outstanding balance with clean Unicode middle dot `·` separators, avoiding raw HTML entities). Enter the received amount, payment date, method, and optional bank reference.
+8. Partial payment is supported. Overpayments, invalid dates, and unsupported methods are rejected. The invoice balance/status updates in the same transaction as the payment. Newly created fee structures and payments immediately appear at the top of their respective lists (`latest('id')`).
 9. Print or download the receipt PDF. It contains the receipt number, student/invoice details, amount in figures and words, cashier, and remaining balance.
 10. Use **Fee Collection**, **Defaulters**, or **Student Ledger** to review balances and collections. Apply filters and download CSV where needed.
 

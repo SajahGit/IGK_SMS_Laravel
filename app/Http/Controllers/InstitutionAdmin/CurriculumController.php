@@ -22,9 +22,7 @@ class CurriculumController extends Controller
 
         $curricula = Curriculum::with(['program.department', 'subject'])
             ->when($programId, fn ($q) => $q->where('program_id', $programId))
-            ->orderBy('program_id')
-            ->orderBy('term_number')
-            ->orderBy('subject_id')
+            ->latest('id')
             ->paginate(15)
             ->withQueryString();
 

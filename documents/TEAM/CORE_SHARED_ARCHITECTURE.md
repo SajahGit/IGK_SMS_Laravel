@@ -75,3 +75,14 @@ To prevent git merge conflicts in Fork:
 * **`routes/web.php`:** Never add feature logic directly to `routes/web.php`. Register only module prefix routes that point to your respective domain file (`routes/teacher.php`, `routes/accountant.php`, etc.).
 * **`LayoutApp.blade.php`:** Sidebar navigation arrays are strictly segregated by role key (`'admin'`, `'teacher'`, `'student'`, `'accountant'`, `'guardian'`, `'registrar'`). Edit only your own role's array items.
 * **Database Migrations:** Never modify an already-committed migration file. If a new column is needed, create a new timestamped migration.
+
+---
+
+### 4. Cross-Cutting UI & Query Standards
+
+1. **Reverse-Chronological Order (`latest('id')`):**
+   - Whenever records are listed on index views (Cafeteria, Hostels, Inventory, Transport, Classes, Subjects, Departments, Programs, Fee Structures, Invoices, Payments, Library, Procurement, Users, Announcements), queries MUST order by `latest('id')` or `orderByDesc('id')` by default so newly added records immediately appear at the top of the table.
+2. **Centralized Single Notification Alerts:**
+   - Session flash banners (`success`, `status`, `warning`, `error`) are strictly centralized in `LayoutApp.blade.php` with 4-second auto-dismiss. Never place redundant in-page alert blocks in child view templates.
+3. **Unicode Separator Standard:**
+   - All text separators inside Blade expressions `{{ ... }}` must use Unicode middle dot (`·`) or plain hyphens (` - `), never raw HTML entities such as `&middot;` which Laravel escapes into raw text `&amp;middot;`.

@@ -10,6 +10,7 @@ class CafeteriaItem extends Model
 {
     protected $fillable = [
         'inventory_item_id',
+        'branch_id',
         'name',
         'description',
         'price',
@@ -22,6 +23,11 @@ class CafeteriaItem extends Model
             'price' => 'decimal:2',
             'is_available' => 'boolean',
         ];
+    }
+
+    public function branch(): BelongsTo
+    {
+        return $this->belongsTo(Branch::class);
     }
 
     public function inventoryItem(): BelongsTo

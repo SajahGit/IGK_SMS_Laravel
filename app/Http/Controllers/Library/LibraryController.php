@@ -35,7 +35,7 @@ class LibraryController extends Controller
                 $search->where('title', 'like', '%'.$request->string('q').'%')
                     ->orWhere('isbn', 'like', '%'.$request->string('q').'%');
             }))
-            ->orderBy('title')
+            ->latest('id')
             ->paginate(10)
             ->withQueryString();
 

@@ -66,6 +66,9 @@ class BranchIsolationServiceProvider extends ServiceProvider
                 }
 
                 $branchId = BranchContext::activeBranchId($user);
+                if ($branchId === null && $record instanceof CafeteriaItem && $record->inventory_item_id) {
+                    $branchId = InventoryItem::withoutGlobalScopes()->where('id', $record->inventory_item_id)->value('branch_id');
+                }
                 if ($branchId !== null) {
                     $record->setAttribute('branch_id', $branchId);
 

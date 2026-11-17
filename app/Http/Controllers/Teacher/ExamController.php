@@ -24,6 +24,7 @@ class ExamController extends Controller
                 }
             })
             ->orderByDesc('exam_date')
+            ->latest('id')
             ->paginate(10);
 
         return view('Teacher.TeacherExamsIndex', compact('exams'));

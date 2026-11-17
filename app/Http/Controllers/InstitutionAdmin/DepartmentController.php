@@ -16,7 +16,7 @@ class DepartmentController extends Controller
     {
         $this->authorize('viewAny', Department::class);
 
-        $departments = Department::withCount('programs')->orderBy('name')->paginate(10)->withQueryString();
+        $departments = Department::withCount('programs')->latest('id')->paginate(10)->withQueryString();
 
         return view('InstitutionAdmin.InstitutionAdminDepartmentsIndex', compact('departments'));
     }

@@ -21,6 +21,7 @@ class AuditLogController extends Controller
             ->when($userId, fn ($q) => $q->where('user_id', $userId))
             ->when($action, fn ($q) => $q->where('action', $action))
             ->orderByDesc('created_at')
+            ->latest('id')
             ->paginate(20)
             ->withQueryString();
 

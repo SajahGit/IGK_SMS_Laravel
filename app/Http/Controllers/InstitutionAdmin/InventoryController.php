@@ -28,7 +28,7 @@ class InventoryController extends Controller
                     ->orWhere('category', 'like', '%'.$request->string('search').'%');
             }))
             ->when($request->boolean('low_stock'), fn ($query) => $query->whereColumn('quantity_on_hand', '<=', 'reorder_level'))
-            ->orderBy('name')
+            ->latest('id')
             ->paginate(15)
             ->withQueryString();
 

@@ -21,7 +21,7 @@ class ClassSubjectController extends Controller
             'assignments' => ClassSubject::with(['schoolClass', 'subject', 'teacher.user', 'term'])
                 ->whereHas('schoolClass')
                 ->whereHas('subject')
-                ->orderBy('class_id')->orderBy('term_id')->orderBy('subject_id')->get(),
+                ->latest('id')->get(),
             'classes' => SchoolClass::orderBy('name')->orderBy('section')->get(),
             'subjects' => Subject::orderBy('name')->get(),
             'teachers' => Teacher::with('user')->get()->sortBy(fn ($t) => $t->user->name),

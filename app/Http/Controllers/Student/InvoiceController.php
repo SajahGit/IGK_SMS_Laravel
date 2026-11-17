@@ -19,6 +19,7 @@ class InvoiceController extends Controller
             ->where('student_id', $student->id)
             ->where('status', '!=', 'draft')
             ->orderByDesc('issue_date')
+            ->latest('id')
             ->get();
 
         // Cancelled invoices are void and are left out of every total.

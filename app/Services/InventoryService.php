@@ -26,7 +26,7 @@ class InventoryService
         }
 
         return DB::transaction(function () use ($item, $type, $quantity, $reference, $notes, $recordedBy) {
-            $lockedItem = InventoryItem::query()->lockForUpdate()->findOrFail($item->id);
+            $lockedItem = InventoryItem::withoutGlobalScope(\App\Models\Scopes\BranchOwned::class)->lockForUpdate()->findOrFail($item->id);
             $change = match ($type) {
                 'receipt' => $quantity,
                 'issue' => -$quantity,

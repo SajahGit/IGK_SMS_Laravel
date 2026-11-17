@@ -40,7 +40,7 @@
             </div>
             <div class="text-uppercase tracking-widest small fw-semibold text-muted mb-1">Official Student Academic Report</div>
             <div class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-1 fs-6">
-                {{ $selectedTerm ? $selectedTerm->academicYear->name . ' &middot; ' . $selectedTerm->name : 'All Recorded Published Exams' }}
+                {{ $selectedTerm ? $selectedTerm->academicYear->name . ' · ' . $selectedTerm->name : 'All Recorded Published Exams' }}
             </div>
         </div>
 

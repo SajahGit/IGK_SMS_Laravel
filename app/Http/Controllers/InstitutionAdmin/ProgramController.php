@@ -19,7 +19,7 @@ class ProgramController extends Controller
 
         $programs = Program::with('department')
             ->withCount(['students', 'subjects', 'classes'])
-            ->orderBy('name')
+            ->latest('id')
             ->paginate(10)
             ->withQueryString();
 

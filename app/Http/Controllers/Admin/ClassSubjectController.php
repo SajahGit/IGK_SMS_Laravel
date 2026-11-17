@@ -16,7 +16,7 @@ class ClassSubjectController extends Controller
     {
         return view('Admin.AdminClassSubjectsIndex', [
             'assignments' => ClassSubject::with(['schoolClass', 'subject', 'teacher.user'])
-                ->orderBy('class_id')->orderBy('subject_id')->get(),
+                ->latest('id')->get(),
             'classes' => SchoolClass::orderBy('name')->orderBy('section')->get(),
             'subjects' => Subject::orderBy('name')->get(),
             'teachers' => Teacher::with('user')->get()->sortBy(fn ($t) => $t->user->name),

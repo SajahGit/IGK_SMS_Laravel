@@ -49,7 +49,7 @@ class UserController extends Controller
             ->when($statusFilter !== null && $statusFilter !== '', function ($query) use ($statusFilter) {
                 $query->where('is_active', (bool) $statusFilter);
             })
-            ->orderBy('name')
+            ->latest('id')
             ->paginate(15)
             ->withQueryString();
 

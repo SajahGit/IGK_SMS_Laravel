@@ -29,7 +29,7 @@ class LmsController extends Controller
             ->whereHas('classSubject.subject')
             ->with(['classSubject.subject', 'classSubject.schoolClass', 'assignments.submissions'])
             ->withCount('lessons')
-            ->orderBy('title')
+            ->latest('id')
             ->get();
         $offerings = ClassSubject::query()
             ->where('teacher_id', $teacher->id)
@@ -37,7 +37,7 @@ class LmsController extends Controller
             ->whereHas('schoolClass')
             ->whereHas('subject')
             ->with(['subject', 'schoolClass', 'term'])
-            ->orderBy('id')
+            ->latest('id')
             ->get();
 
         return view('Teacher.LmsIndex', compact('courses', 'offerings'));

@@ -41,7 +41,7 @@ class ElectiveRegistrationService
             ->where('class_id', $student->class_id)
             ->where(fn ($query) => $query->whereNull('term_id')->orWhere('term_id', $term->id))
             ->whereIn('subject_id', $electiveSubjectIds)
-            ->orderBy('subject_id')
+            ->latest('id')
             ->get();
     }
 

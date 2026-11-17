@@ -11,7 +11,7 @@ class SubjectController extends Controller
 {
     public function index()
     {
-        $subjects = Subject::orderBy('name')->paginate(10);
+        $subjects = Subject::latest('id')->paginate(10);
 
         return view('Admin.AdminSubjectsIndex', compact('subjects'));
     }

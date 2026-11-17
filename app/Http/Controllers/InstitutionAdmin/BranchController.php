@@ -17,7 +17,7 @@ class BranchController extends Controller
 {
     public function index(): View
     {
-        $branches = Branch::orderByDesc('is_main')->orderBy('name')->paginate(10)->withQueryString();
+        $branches = Branch::orderByDesc('is_main')->latest('id')->paginate(10)->withQueryString();
 
         return view('Branches.BranchesIndex', compact('branches'));
     }

@@ -42,6 +42,7 @@ class ExamController extends Controller
             ->when($classId, fn ($q) => $q->where('class_id', $classId))
             ->when($termId, fn ($q) => $q->where('term_id', $termId))
             ->orderByDesc('exam_date')
+            ->latest('id')
             ->paginate(15)
             ->withQueryString();
 

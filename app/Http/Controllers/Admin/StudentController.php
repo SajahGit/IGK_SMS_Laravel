@@ -30,7 +30,7 @@ class StudentController extends Controller
                 });
             })
             ->when($request->class_id, fn ($query, $classId) => $query->where('class_id', $classId))
-            ->orderBy('admission_no')
+            ->latest('id')
             ->paginate(10)
             ->withQueryString();
 

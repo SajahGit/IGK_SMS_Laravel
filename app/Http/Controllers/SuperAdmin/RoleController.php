@@ -20,7 +20,7 @@ class RoleController extends Controller
     {
         $this->authorize('viewAny', Role::class);
 
-        $roles = Role::with('permissions')->orderBy('name')->get();
+        $roles = Role::with('permissions')->latest('id')->get();
 
         return view('SuperAdmin.SuperAdminRolesIndex', compact('roles'));
     }

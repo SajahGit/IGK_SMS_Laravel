@@ -38,7 +38,7 @@ class MessageController extends Controller
             $query->having('unread_messages_count', '>', 0);
         }
 
-        $conversations = $query->orderByDesc('last_message_at')->paginate(15)->withQueryString();
+        $conversations = $query->orderByDesc('last_message_at')->latest('id')->paginate(15)->withQueryString();
 
         return view('Messages.Index', compact('conversations', 'tab'));
     }

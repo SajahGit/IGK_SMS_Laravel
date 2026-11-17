@@ -15,7 +15,7 @@ class SettingController extends Controller
     {
         $this->authorize('viewAny', Setting::class);
 
-        $settings = Setting::orderBy('group')->orderBy('key')->get();
+        $settings = Setting::latest('id')->get();
 
         return view('InstitutionAdmin.InstitutionAdminSettingsIndex', compact('settings'));
     }

@@ -21,7 +21,7 @@ class LibraryMasterController extends Controller
     {
         return view('Library.LibraryMasterIndex', [
             'title' => 'Authors', 'singular' => 'Author', 'slug' => 'authors',
-            'rows' => LibraryAuthor::withCount('books')->orderBy('name')->paginate(15),
+            'rows' => LibraryAuthor::withCount('books')->latest('id')->paginate(15),
         ]);
     }
 
@@ -61,7 +61,7 @@ class LibraryMasterController extends Controller
     {
         return view('Library.LibraryMasterIndex', [
             'title' => 'Categories', 'singular' => 'Category', 'slug' => 'categories',
-            'rows' => LibraryCategory::withCount('books')->orderBy('name')->paginate(15),
+            'rows' => LibraryCategory::withCount('books')->latest('id')->paginate(15),
         ]);
     }
 
@@ -101,7 +101,7 @@ class LibraryMasterController extends Controller
     {
         $copies = LibraryCopy::with('book')
             ->when($request->filled('status'), fn ($q) => $q->where('status', $request->string('status')))
-            ->orderBy('book_id')->orderBy('copy_number')->paginate(20)->withQueryString();
+            ->latest('id')->paginate(20)->withQueryString();
 
         return view('Library.LibraryCopiesIndex', compact('copies'));
     }
@@ -131,7 +131,7 @@ class LibraryMasterController extends Controller
             ->when($request->input('state') === 'active', fn ($q) => $q->whereNull('returned_at'))
             ->when($request->input('state') === 'overdue', fn ($q) => $q->whereNull('returned_at')->whereDate('due_at', '<', today()))
             ->when($request->input('state') === 'returned', fn ($q) => $q->whereNotNull('returned_at'))
-            ->orderByDesc('issued_at')->paginate(20)->withQueryString();
+            ->orderByDesc('issued_at')->latest('id')->paginate(20)->withQueryString();
 
         return view('Library.LibraryLoansIndex', compact('loans'));
     }

@@ -26,7 +26,7 @@ class HostelController extends Controller
                     ->where('status', 'active')
                     ->where(fn ($active) => $active->whereNull('end_date')->orWhereDate('end_date', '>=', today())),
             ])])
-            ->orderBy('name')
+            ->latest('id')
             ->get();
         $assignments = HostelAssignment::query()
             ->with(['student.user', 'room.hostel', 'academicYear'])
@@ -34,6 +34,7 @@ class HostelController extends Controller
             ->whereHas('room.hostel')
             ->whereHas('academicYear')
             ->latest('start_date')
+            ->latest('id')
             ->paginate(25)
             ->withQueryString();
 

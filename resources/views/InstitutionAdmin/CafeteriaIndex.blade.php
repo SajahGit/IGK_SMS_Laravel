@@ -12,7 +12,7 @@
     <div class="card-body">
         <form method="POST" action="{{ route('admin.cafeteria.items.store') }}" class="row g-2 align-items-end">
             @csrf
-            <div class="col-md-3"><label for="new-inventory-item" class="form-label">Stock item</label><select id="new-inventory-item" name="inventory_item_id" class="form-select" required><option value="">Choose stock</option>@foreach ($inventoryItems as $inventoryItem)<option value="{{ $inventoryItem->id }}">{{ $inventoryItem->name }} ({{ $inventoryItem->quantity_on_hand }} {{ $inventoryItem->unit }})</option>@endforeach</select></div>
+            <div class="col-md-3"><label for="new-inventory-item" class="form-label">Stock item</label><select id="new-inventory-item" name="inventory_item_id" class="form-select" required><option value="">Choose stock</option>@foreach ($inventoryItems as $inventoryItem)<option value="{{ $inventoryItem->id }}">{{ $inventoryItem->name }} ({{ $inventoryItem->quantity_on_hand }} {{ $inventoryItem->unit }}){{ $inventoryItem->branch ? ' · '.$inventoryItem->branch->name : '' }}</option>@endforeach</select></div>
             <div class="col-md-3"><label for="new-name" class="form-label">Menu name</label><input id="new-name" name="name" class="form-control" maxlength="80" pattern="[A-Za-z][A-Za-z0-9\s\x28\x29\x2d]*" data-live-filter="letter-start-name" required></div>
             <div class="col-md-2"><label for="new-price" class="form-label">Price</label><input id="new-price" name="price" type="number" step="0.01" min="0.01" class="form-control" required></div>
             <div class="col-md-3"><label for="new-description" class="form-label">Description</label><input id="new-description" name="description" class="form-control" maxlength="255" pattern="[A-Za-z0-9\s.,!?\x22\x27\x28\x29\x2d\x2f:]*" data-live-filter="description"></div>
@@ -30,7 +30,7 @@
             @forelse ($items as $item)
                 <tr>
                     <td>{{ $item->name }}<div class="small text-muted">{{ $item->description }}</div></td>
-                    <td>{{ $item->inventoryItem->quantity_on_hand }} {{ $item->inventoryItem->unit }}</td>
+                    <td>{{ $item->inventoryItem->quantity_on_hand }} {{ $item->inventoryItem->unit }} @if ($item->branch)<span class="badge bg-light text-dark border ms-1">{{ $item->branch->name }}</span>@elseif ($item->inventoryItem?->branch)<span class="badge bg-light text-dark border ms-1">{{ $item->inventoryItem->branch->name }}</span>@endif</td>
                     <td>{{ number_format((float) $item->price, 2) }}</td>
                     <td><span class="badge {{ $item->is_available ? 'bg-success' : 'bg-secondary' }}">{{ $item->is_available ? 'Available' : 'Unavailable' }}</span></td>
                     <td>
@@ -38,7 +38,7 @@
                             @csrf @method('PUT')
                             <select name="inventory_item_id" class="form-select form-select-sm" aria-label="Stock item" required>
                                 @foreach ($inventoryItems as $inventoryItem)
-                                    <option value="{{ $inventoryItem->id }}" @selected($item->inventory_item_id === $inventoryItem->id)>{{ $inventoryItem->name }}</option>
+                                    <option value="{{ $inventoryItem->id }}" @selected($item->inventory_item_id === $inventoryItem->id)>{{ $inventoryItem->name }}{{ $inventoryItem->branch ? ' · '.$inventoryItem->branch->name : '' }}</option>
                                 @endforeach
                                 @if (! $inventoryItems->contains('id', $item->inventory_item_id))
                                     <option value="{{ $item->inventory_item_id }}" selected>{{ $item->inventoryItem->name }} (inactive stock)</option>

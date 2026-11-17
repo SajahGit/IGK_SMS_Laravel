@@ -34,8 +34,7 @@ class FeeStructureController extends Controller
         $feeStructures = FeeStructure::with(['schoolClass.branch', 'term', 'program', 'academicYear', 'items'])
             ->when($classId, fn ($q) => $q->where('class_id', $classId))
             ->when($programId, fn ($q) => $q->where('program_id', $programId))
-            ->orderByRaw('class_id IS NULL')
-            ->orderBy('class_id')
+            ->latest('id')
             ->get();
 
         return view('Accountant.AccountantFeeStructuresIndex', compact('feeStructures', 'classes', 'terms', 'classId', 'programs', 'academicYears', 'programId') + [

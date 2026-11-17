@@ -29,7 +29,12 @@ class BranchOwned implements Scope
             return;
         }
 
-        if ($user->branch_id === null) {
+        $branchId = $user->branch_id;
+        if ($branchId === null && $user->isStudent()) {
+            $branchId = \Illuminate\Support\Facades\DB::table('students')->where('user_id', $user->id)->value('branch_id');
+        }
+
+        if ($branchId === null) {
             if (BranchContext::hasActiveBranches()) {
                 $builder->whereRaw('1 = 0');
             }
@@ -37,6 +42,11 @@ class BranchOwned implements Scope
             return;
         }
 
-        $builder->where($model->qualifyColumn('branch_id'), $user->branch_id);
+        $builder->where(function (Builder $query) use ($model, $branchId): void {
+            $query->where($model->qualifyColumn('branch_id'), $branchId);
+            if ($model instanceof \App\Models\CafeteriaItem || $model instanceof \App\Models\InventoryItem) {
+                $query->orWhereNull($model->qualifyColumn('branch_id'));
+            }
+        });
     }
 }

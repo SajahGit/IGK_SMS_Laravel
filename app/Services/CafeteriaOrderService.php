@@ -22,10 +22,10 @@ class CafeteriaOrderService
             }
 
             $requestedItems = collect($lines)->sortBy('cafeteria_item_id');
-            $items = CafeteriaItem::query()
+            $items = CafeteriaItem::withoutGlobalScope(\App\Models\Scopes\BranchOwned::class)
                 ->whereIn('id', $requestedItems->pluck('cafeteria_item_id'))
                 ->where('is_available', true)
-                ->with('inventoryItem')
+                ->with(['inventoryItem' => fn ($q) => $q->withoutGlobalScope(\App\Models\Scopes\BranchOwned::class)])
                 ->orderBy('id')
                 ->lockForUpdate()
                 ->get()
@@ -45,14 +45,14 @@ class CafeteriaOrderService
 
             foreach ($requestedItems as $line) {
                 $item = $items->get((int) $line['cafeteria_item_id']);
-                if (($item->branch_id !== null || $lockedStudent->branch_id !== null)
+                if ($item->branch_id !== null && $lockedStudent->branch_id !== null
                     && (int) $item->branch_id !== (int) $lockedStudent->branch_id) {
                     throw ValidationException::withMessages([
                         'items' => 'The student and cafeteria items must belong to the same campus.',
                     ]);
                 }
 
-                $inventory = InventoryItem::query()->lockForUpdate()->findOrFail($item->inventory_item_id);
+                $inventory = InventoryItem::withoutGlobalScope(\App\Models\Scopes\BranchOwned::class)->lockForUpdate()->findOrFail($item->inventory_item_id);
                 $quantity = (int) $line['quantity'];
                 if (! $inventory->is_active || $inventory->quantity_on_hand < $quantity) {
                     throw ValidationException::withMessages([
@@ -120,7 +120,7 @@ class CafeteriaOrderService
             }
 
             foreach ($locked->items->sortBy(fn ($line) => $line->cafeteriaItem->inventory_item_id) as $line) {
-                $inventory = InventoryItem::query()->lockForUpdate()->findOrFail($line->cafeteriaItem->inventory_item_id);
+                $inventory = InventoryItem::withoutGlobalScope(\App\Models\Scopes\BranchOwned::class)->lockForUpdate()->findOrFail($line->cafeteriaItem->inventory_item_id);
                 InventoryService::recordMovement(
                     $inventory,
                     'receipt',

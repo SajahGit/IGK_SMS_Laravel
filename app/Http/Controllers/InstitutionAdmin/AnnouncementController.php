@@ -18,6 +18,7 @@ class AnnouncementController extends Controller
     {
         $announcements = Announcement::with(['creator', 'program', 'schoolClass'])
             ->orderByDesc('published_at')
+            ->latest('id')
             ->paginate(15);
 
         return view('InstitutionAdmin.InstitutionAdminAnnouncementsIndex', [

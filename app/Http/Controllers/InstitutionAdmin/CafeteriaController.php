@@ -19,7 +19,7 @@ class CafeteriaController extends Controller
 {
     public function index(): View
     {
-        $items = CafeteriaItem::query()->with('inventoryItem')->orderBy('name')->get();
+        $items = CafeteriaItem::query()->with(['inventoryItem.branch', 'branch'])->latest('id')->get();
         $orders = CafeteriaOrder::query()
             ->with(['student.user', 'items.cafeteriaItem'])
             ->latest('order_date')
@@ -27,8 +27,9 @@ class CafeteriaController extends Controller
             ->paginate(25)
             ->withQueryString();
         $inventoryItems = InventoryItem::query()
+            ->with('branch')
             ->where('is_active', true)
-            ->orderBy('name')
+            ->latest('id')
             ->get();
 
         return view('InstitutionAdmin.CafeteriaIndex', compact('items', 'orders', 'inventoryItems'));
@@ -38,7 +39,9 @@ class CafeteriaController extends Controller
     {
         $data = $this->validateItem($request);
         $data['is_available'] = true;
-        $item = CafeteriaItem::create($data + ['is_available' => true]);
+        $inventoryItem = InventoryItem::withoutGlobalScopes()->findOrFail($data['inventory_item_id']);
+        $data['branch_id'] = \App\Support\BranchContext::activeBranchId($request->user()) ?? $inventoryItem->branch_id;
+        $item = CafeteriaItem::create($data);
         AuditLogger::log('cafeteria_item_created', $item, null, $item->toArray());
 
         return redirect()->route('admin.cafeteria.index')->with('success', 'Cafeteria menu item created.');
@@ -53,6 +56,10 @@ class CafeteriaController extends Controller
             ]);
         }
         $data['is_available'] = $request->boolean('is_available');
+        if ($item->branch_id === null) {
+            $inventoryItem = InventoryItem::withoutGlobalScopes()->find($data['inventory_item_id']);
+            $data['branch_id'] = \App\Support\BranchContext::activeBranchId($request->user()) ?? $inventoryItem?->branch_id;
+        }
         $old = $item->toArray();
         $item->update($data);
         AuditLogger::log('cafeteria_item_updated', $item, $old, $item->toArray());

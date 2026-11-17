@@ -15,6 +15,7 @@ class AcademicYearController extends Controller
     {
         $academicYears = AcademicYear::withCount('terms')
             ->orderByDesc('start_date')
+            ->latest('id')
             ->get();
 
         return view('InstitutionAdmin.InstitutionAdminAcademicYearsIndex', compact('academicYears'));

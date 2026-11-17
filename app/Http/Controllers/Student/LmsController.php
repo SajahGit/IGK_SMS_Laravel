@@ -25,7 +25,7 @@ class LmsController extends Controller
         $courses = LmsCourse::query()
             ->whereIn('class_subject_id', $classSubjectIds)
             ->with(['classSubject.subject', 'classSubject.schoolClass'])
-            ->orderBy('title')
+            ->latest('id')
             ->get();
 
         return view('Student.LmsIndex', compact('courses'));

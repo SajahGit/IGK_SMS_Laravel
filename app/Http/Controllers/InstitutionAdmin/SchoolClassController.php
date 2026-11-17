@@ -15,7 +15,7 @@ class SchoolClassController extends Controller
 {
     public function index()
     {
-        $classes = SchoolClass::withCount('students')->orderBy('name')->orderBy('section')->paginate(10);
+        $classes = SchoolClass::withCount('students')->latest('id')->paginate(10);
 
         return view('InstitutionAdmin.InstitutionAdminClassesIndex', compact('classes'));
     }

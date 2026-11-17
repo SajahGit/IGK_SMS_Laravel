@@ -17,12 +17,16 @@ class CafeteriaController extends Controller
     public function index(): View
     {
         $student = Auth::user()->student()->firstOrFail();
-        $items = CafeteriaItem::query()
+        $branchId = $student->branch_id ?? Auth::user()->branch_id;
+
+        $items = CafeteriaItem::withoutGlobalScope(\App\Models\Scopes\BranchOwned::class)
             ->where('is_available', true)
-            ->whereHas('inventoryItem', fn ($query) => $query->where('is_active', true)->where('quantity_on_hand', '>', 0))
-            ->with('inventoryItem:id,quantity_on_hand,unit')
-            ->orderBy('name')
+            ->when($branchId, fn ($q) => $q->where(fn ($sub) => $sub->where('branch_id', $branchId)->orWhereNull('branch_id')))
+            ->whereHas('inventoryItem', fn ($query) => $query->withoutGlobalScope(\App\Models\Scopes\BranchOwned::class)->where('is_active', true)->where('quantity_on_hand', '>', 0))
+            ->with(['inventoryItem' => fn ($q) => $q->withoutGlobalScope(\App\Models\Scopes\BranchOwned::class)->select('id', 'name', 'quantity_on_hand', 'unit', 'branch_id')])
+            ->latest('id')
             ->get();
+
         $orders = CafeteriaOrder::query()
             ->where('student_id', $student->id)
             ->with('items.cafeteriaItem')

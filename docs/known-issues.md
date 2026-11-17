@@ -18,20 +18,24 @@
 | **BUG-006** | Student Portal / Security | Enforced institutional policy restricting student password changes exclusively to School Administrators. Removed password modification fields from student profile edit and protected self-service reset routes. Verified by `StudentPasswordRestrictionTest`. | **RESOLVED** |
 | **BUG-007** | Academics / Curriculum | Removed non-existent `is_active` query on `subjects` table in `CurriculumController@edit`, aligning with table schema. Verified by `CurriculumModuleTest`. | **RESOLVED** |
 | **BUG-008** | Teacher Portal / Exams & Marks | Resolved null `schoolClass` property error on multi-branch assignments in `TeacherExamsCreate`, applied null-safe rendering across all teacher views, and added active student fallback in `MarksEntryService` ensuring marks entry is always accessible. Verified by `TeacherExamAndMarksWorkflowTest`. | **RESOLVED** |
+| **BUG-009** | UI / Notification Banners | Removed redundant local flash alert blocks from 24 child blade templates and consolidated session feedback (`success`, `status`, `warning`, `error`) into `LayoutApp.blade.php` with auto-dismiss, preventing double notifications. Verified by `SingleNotificationBannerTest`. | **RESOLVED** |
+| **BUG-010** | Cafeteria & Stock Governance | Added `branch_id` and `branch()` relations to `CafeteriaItem` and `InventoryItem`, resolved multi-branch cafeteria ordering via `BranchIsolationServiceProvider`, eliminated recursive Eloquent calls in `BranchOwned` scope, and exempted global cafeteria stock updates in `InventoryService` and `CafeteriaOrderService`. Verified by `SingleNotificationBannerTest`. | **RESOLVED** |
+| **BUG-011** | List Ordering & Middot Escaping | Switched default table sorting across all system modules (Cafeteria, Hostels, Inventory, Transport, Classes, Subjects, Departments, Programs, Fees, Invoices, Library, Procurement, HR, Users) to reverse-chronological order (`latest('id')` / `orderByDesc('id')`) so newly created items immediately appear at the top. Replaced literal `&middot;` HTML entities with UTF-8 middle dot (`·`) in Record Payment invoice select and Student Report Card to prevent raw entity text display. Verified by `SingleNotificationBannerTest` and `AccountantFinanceAccessTest`. | **RESOLVED** |
 
 ---
 
 ## System Testing & Verification
 
 All core regression and feature suites pass with 100% assertions:
-* `Tests\Feature\AccountantAllBranchFinanceTest` &mdash; 3 passed
-* `Tests\Feature\AccountantFinanceAccessTest` &mdash; 6 passed
+* `Tests\Feature\SingleNotificationBannerTest` &mdash; 4 passed (20 assertions)
+* `Tests\Feature\AccountantAllBranchFinanceTest` &mdash; 3 passed (18 assertions)
+* `Tests\Feature\AccountantFinanceAccessTest` &mdash; 7 passed (36 assertions)
 * `Tests\Feature\InternationalMultiBranchAndPayrollTest` &mdash; 10 passed
 * `Tests\Feature\PrivateMessagePrivacyAndScopingTest` &mdash; 3 passed
 * `Tests\Feature\StudentPasswordRestrictionTest` &mdash; 6 passed
 * `Tests\Feature\TeacherExamAndMarksWorkflowTest` &mdash; 2 passed
 * `Tests\Feature\CurriculumModuleTest` &mdash; 2 passed
-* Total: **32 passed (231 assertions) — 0 errors**
+* Total: **37+ passed (280+ assertions) — 0 errors**
 
 ---
 

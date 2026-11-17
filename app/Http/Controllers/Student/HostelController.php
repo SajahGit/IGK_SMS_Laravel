@@ -25,6 +25,7 @@ class HostelController extends Controller
             ->whereHas('academicYear')
             ->with(['room.hostel', 'academicYear'])
             ->orderByDesc('start_date')
+            ->latest('id')
             ->get();
 
         return view('Student.Hostel', compact('assignments'));

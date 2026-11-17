@@ -24,9 +24,9 @@ class TransportController extends Controller
         $routes = TransportRoute::query()
             ->with(['vehicle', 'stops'])
             ->withCount(['assignments as active_assignments' => fn ($query) => $query->where('status', 'active')])
-            ->orderBy('name')
+            ->latest('id')
             ->get();
-        $vehicles = TransportVehicle::query()->orderBy('registration_number')->get();
+        $vehicles = TransportVehicle::query()->latest('id')->get();
         $assignments = StudentTransportAssignment::query()
             ->with(['student.user', 'route', 'stop', 'academicYear'])
             ->whereHas('student')
@@ -34,6 +34,7 @@ class TransportController extends Controller
             ->whereHas('stop')
             ->whereHas('academicYear')
             ->latest('start_date')
+            ->latest('id')
             ->paginate(25, ['*'], 'assignments_page')
             ->withQueryString();
 

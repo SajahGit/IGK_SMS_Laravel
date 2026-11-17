@@ -98,7 +98,7 @@ class Invoice extends Model
 
     public function payments(): HasMany
     {
-        return $this->hasMany(Payment::class);
+        return $this->hasMany(Payment::class)->latest('id');
     }
 
     public function getStatusBadgeAttribute(): string
