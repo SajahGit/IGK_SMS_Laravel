@@ -12,7 +12,6 @@
     </div>
 </div>
 @include('Layouts.LayoutErrors')
-@if (session('success'))<div class="alert alert-success">{{ session('success') }}</div>@endif
 <div class="card shadow-sm border-0 mb-3"><div class="card-body row g-3">
     <div class="col-md-3"><div class="text-muted small">Status</div><strong>{{ ucwords(str_replace('_', ' ', $order->status)) }}</strong></div>
     <div class="col-md-3"><div class="text-muted small">Expected date</div><strong>{{ $order->expected_date?->format('Y-m-d') ?: '—' }}</strong></div>

@@ -32,12 +32,6 @@
 </div>
 
 @include('Layouts.LayoutErrors')
-@if (session('success'))
-    <div class="alert alert-success d-flex align-items-center gap-2 mb-3">
-        <i class="bi bi-check-circle-fill fs-5"></i>
-        <div>{{ session('success') }}</div>
-    </div>
-@endif
 
 <div class="card shadow-sm border-0 mb-4">
     <div class="table-responsive">

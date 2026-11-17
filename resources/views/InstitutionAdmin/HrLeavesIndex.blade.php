@@ -3,7 +3,6 @@
 @section('content')
 <div class="mb-3"><h3 class="mb-0">Leave management</h3><small class="text-muted">Submit employee leave requests and record an approval decision.</small></div>
 @include('Layouts.LayoutErrors')
-@if (session('success'))<div class="alert alert-success">{{ session('success') }}</div>@endif
 <div class="card shadow-sm border-0 mb-3"><div class="card-header bg-transparent"><strong>New leave request</strong></div><div class="card-body">
     <form method="POST" action="{{ route('admin.hr.leaves.store') }}" class="row g-3">
         @csrf

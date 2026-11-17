@@ -344,6 +344,18 @@
                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
             @endif
+            @if (session('status'))
+                <div class="alert alert-info d-flex align-items-center gap-2 no-print" data-autohide>
+                    <i class="bi bi-info-circle-fill"></i><span class="flex-grow-1">{{ session('status') }}</span>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            @endif
+            @if (session('warning'))
+                <div class="alert alert-warning d-flex align-items-center gap-2 no-print">
+                    <i class="bi bi-exclamation-triangle-fill"></i><span class="flex-grow-1">{{ session('warning') }}</span>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            @endif
             @if (session('error'))
                 <div class="alert alert-danger d-flex align-items-center gap-2 no-print">
                     <i class="bi bi-exclamation-triangle-fill"></i><span class="flex-grow-1">{{ session('error') }}</span>

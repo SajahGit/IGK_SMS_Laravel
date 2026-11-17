@@ -6,7 +6,6 @@
     <a href="{{ route('admin.transport.index') }}" class="btn btn-outline-secondary">Back</a>
 </div>
 @include('Layouts.LayoutErrors')
-@if (session('success'))<div class="alert alert-success">{{ session('success') }}</div>@endif
 <div class="card shadow-sm border-0 mb-4"><div class="card-body">
     <form method="POST" action="{{ $transportRoute ? route('admin.transport.routes.update', $transportRoute) : route('admin.transport.routes.store') }}">
         @csrf

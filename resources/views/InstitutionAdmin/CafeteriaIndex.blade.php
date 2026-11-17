@@ -5,7 +5,6 @@
     <div><h3 class="mb-0">Cafeteria</h3><small class="text-muted">Manage stock-linked menu items and student orders.</small></div>
 </div>
 @include('Layouts.LayoutErrors')
-@if (session('success'))<div class="alert alert-success">{{ session('success') }}</div>@endif
 <div class="alert alert-info">Placing an order reserves stock. Fulfillment records handover; cafeteria orders do not record payment or replace a finance receipt.</div>
 
 <div class="card shadow-sm border-0 mb-4">

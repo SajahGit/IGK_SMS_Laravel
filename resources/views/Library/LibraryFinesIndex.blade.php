@@ -6,7 +6,6 @@
     <a href="{{ route('library.dashboard') }}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i>Library Dashboard</a>
 </div>
 @include('Layouts.LayoutErrors')
-@if (session('success'))<div class="alert alert-success">{{ session('success') }}</div>@endif
 <div class="card shadow-sm border-0">
     <div class="table-responsive">
         <table class="table table-hover mb-0 align-middle">

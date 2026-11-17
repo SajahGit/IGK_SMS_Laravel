@@ -6,7 +6,6 @@
     @can('suppliers.create')<a href="{{ route('procurement.suppliers.create') }}" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i>Add Supplier</a>@endcan
 </div>
 @include('Layouts.LayoutErrors')
-@if (session('success'))<div class="alert alert-success">{{ session('success') }}</div>@endif
 <div class="d-flex gap-2 mb-3"><a href="{{ route('procurement.orders.index') }}" class="btn btn-outline-secondary">Purchase Orders</a></div>
 <div class="card shadow-sm border-0"><div class="table-responsive">
     <table class="table table-hover mb-0 align-middle"><thead class="table-light"><tr><th>Supplier</th><th>Contact</th><th>Email</th><th>Phone</th><th>Orders</th><th>Status</th><th class="text-end">Actions</th></tr></thead><tbody>

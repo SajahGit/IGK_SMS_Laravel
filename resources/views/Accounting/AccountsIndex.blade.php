@@ -7,7 +7,6 @@
 </div>
 
 @include('Layouts.LayoutErrors')
-@if (session('success'))<div class="alert alert-success">{{ session('success') }}</div>@endif
 
 <form method="GET" class="row g-2 mb-3">
     <div class="col-md-4"><input type="text" name="q" class="form-control" placeholder="Search code or name" value="{{ request('q') }}"></div>

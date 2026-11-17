@@ -9,7 +9,6 @@
     </div>
 </div>
 @include('Layouts.LayoutErrors')
-@if (session('success'))<div class="alert alert-success">{{ session('success') }}</div>@endif
 <div class="card shadow-sm border-0 mb-3"><div class="card-body"><form method="GET" class="row g-2">
     <div class="col-md-5"><input name="search" class="form-control" placeholder="Search order number" value="{{ request('search') }}"></div>
     <div class="col-md-4"><select name="status" class="form-select"><option value="">All statuses</option>@foreach (['draft','submitted','approved','partially_received','received','cancelled'] as $status)<option value="{{ $status }}" @selected(request('status') === $status)>{{ ucwords(str_replace('_', ' ', $status)) }}</option>@endforeach</select></div>

@@ -21,12 +21,6 @@
 </div>
 
 @include('Layouts.LayoutErrors')
-@if (session('success'))
-    <div class="alert alert-success d-flex align-items-center gap-2">
-        <i class="bi bi-check-circle-fill"></i>
-        <div>{{ session('success') }}</div>
-    </div>
-@endif
 
 <!-- Overview Metrics -->
 <div class="row g-3 mb-4">

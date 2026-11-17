@@ -6,7 +6,6 @@
         <small class="text-muted">{{ $entry->entry_date->format('d M Y') }} · {{ $entry->currency }} · {{ $entry->description }} @if ($entry->branch) · {{ $entry->branch->name }} @endif</small></div>
     <a href="{{ route('admin.journals.index') }}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i>Back</a>
 </div>
-@if (session('success'))<div class="alert alert-success">{{ session('success') }}</div>@endif
 <div class="card shadow-sm border-0">
     <div class="table-responsive">
         <table class="table mb-0 align-middle">

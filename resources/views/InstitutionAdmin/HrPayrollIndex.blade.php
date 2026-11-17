@@ -3,7 +3,6 @@
 @section('content')
 <div class="mb-3"><h3 class="mb-0">Payroll</h3><small class="text-muted">Generate draft monthly payroll, review and approve it, then record payment.</small></div>
 @include('Layouts.LayoutErrors')
-@if (session('success'))<div class="alert alert-success">{{ session('success') }}</div>@endif
 @can('payroll.create')
 <div class="card shadow-sm border-0 mb-3"><div class="card-body">
     <form method="POST" action="{{ route('admin.hr.payroll.generate') }}" class="row g-3 align-items-end">

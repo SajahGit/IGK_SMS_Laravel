@@ -3,7 +3,6 @@
 @section('content')
 <h3 class="mb-3">Cafeteria</h3>
 @include('Layouts.LayoutErrors')
-@if (session('success'))<div class="alert alert-success">{{ session('success') }}</div>@endif
 <div class="alert alert-info">Submitting an order reserves the listed stock. This page does not collect payment or issue a receipt.</div>
 <div class="card shadow-sm mb-4">
     <div class="card-header bg-transparent"><h5 class="mb-0">Available menu</h5></div>

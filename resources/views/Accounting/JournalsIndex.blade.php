@@ -15,7 +15,6 @@
     </div>
 </div>
 @include('Layouts.LayoutErrors')
-@if (session('success'))<div class="alert alert-success">{{ session('success') }}</div>@endif
 
 <form method="GET" class="row g-2 mb-3">
     <div class="col-md-3"><input type="date" name="from" class="form-control" value="{{ request('from') }}"></div>

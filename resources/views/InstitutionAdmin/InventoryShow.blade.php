@@ -12,7 +12,6 @@
     </div>
 </div>
 @include('Layouts.LayoutErrors')
-@if (session('success'))<div class="alert alert-success">{{ session('success') }}</div>@endif
 
 <div class="row g-3 mb-3">
     <div class="col-md-4"><div class="card shadow-sm border-0"><div class="card-body"><div class="text-muted small">Quantity on hand</div><div class="fs-4 fw-semibold">{{ number_format($inventoryItem->quantity_on_hand) }} {{ $inventoryItem->unit }}</div></div></div></div>

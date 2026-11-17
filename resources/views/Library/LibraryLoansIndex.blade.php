@@ -6,7 +6,6 @@
     <a href="{{ route('library.dashboard') }}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i>Library Dashboard</a>
 </div>
 @include('Layouts.LayoutErrors')
-@if (session('success'))<div class="alert alert-success">{{ session('success') }}</div>@endif
 <form method="GET" class="row g-2 mb-3">
     <div class="col-md-3"><select name="state" class="form-select">
         <option value="">All loans</option>
