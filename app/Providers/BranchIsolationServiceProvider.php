@@ -55,6 +55,10 @@ class BranchIsolationServiceProvider extends ServiceProvider
 
         foreach (array_merge(self::PHASE_ONE_MODELS, self::PHASE_TWO_MODELS) as $model) {
             $model::creating(function (Model $record): void {
+                if (array_key_exists('branch_id', $record->getAttributes()) && ($record->getAttribute('branch_id') !== null || BranchContext::isGlobalAdmin(Auth::user()))) {
+                    return;
+                }
+
                 if ($record->getAttribute('branch_id') !== null) {
                     return;
                 }

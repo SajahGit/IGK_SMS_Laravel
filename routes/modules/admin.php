@@ -124,6 +124,8 @@ Route::middleware('role:admin')->prefix('cafeteria')->name('cafeteria.')->group(
     Route::delete('/items/{item}', [CafeteriaController::class, 'destroyItem'])->name('items.destroy');
     Route::post('/orders/{order}/fulfill', [CafeteriaController::class, 'fulfill'])->name('orders.fulfill');
     Route::post('/orders/{order}/cancel', [CafeteriaController::class, 'cancel'])->name('orders.cancel');
+    Route::post('/stock', [CafeteriaController::class, 'quickStoreStock'])->name('stock.store');
+    Route::post('/stock/{inventoryItem}/restock', [CafeteriaController::class, 'restock'])->name('stock.restock');
 });
 
 Route::middleware(['role:admin', 'permission:staff_attendance.read'])->group(function () {

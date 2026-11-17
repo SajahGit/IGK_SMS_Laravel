@@ -208,4 +208,146 @@ class SingleNotificationBannerTest extends TestCase
         $hostels = $hostelResponse->viewData('hostels');
         $this->assertSame('Zeta Hall', $hostels->first()->name, 'Newly added hostel must appear at the top of the list.');
     }
+
+    public function test_cafeteria_can_select_stocks_from_any_branch_and_assign_to_any_branch(): void
+    {
+        $this->artisan('db:seed', ['--class' => \Database\Seeders\RolePermissionSeeder::class])->run();
+
+        $branch1 = \App\Models\Branch::create(['name' => 'Colombo Campus', 'code' => 'CMB', 'is_active' => true]);
+        $branch2 = \App\Models\Branch::create(['name' => 'Kandy Campus', 'code' => 'KDY', 'is_active' => true]);
+
+        $admin = User::factory()->create([
+            'role' => 'admin',
+            'must_change_password' => false,
+            'is_active' => true,
+        ]);
+        $admin->assignRole('Super Admin');
+
+        // Stock in Branch 1
+        $stockBranch1 = InventoryItem::create([
+            'branch_id' => $branch1->id,
+            'name' => 'Branch 1 Flour',
+            'sku' => 'SKU-FLOUR-B1',
+            'category' => 'Food',
+            'unit' => 'kg',
+            'quantity_on_hand' => 100,
+            'reorder_level' => 10,
+            'is_active' => true,
+        ]);
+
+        // Stock in Branch 2
+        $stockBranch2 = InventoryItem::create([
+            'branch_id' => $branch2->id,
+            'name' => 'Branch 2 Tea',
+            'sku' => 'SKU-TEA-B2',
+            'category' => 'Beverage',
+            'unit' => 'pack',
+            'quantity_on_hand' => 50,
+            'reorder_level' => 5,
+            'is_active' => true,
+        ]);
+
+        // Stock Campus-Wide
+        $stockGlobal = InventoryItem::create([
+            'branch_id' => null,
+            'name' => 'Global Water',
+            'sku' => 'SKU-WATER-GL',
+            'category' => 'Beverage',
+            'unit' => 'bottle',
+            'quantity_on_hand' => 200,
+            'reorder_level' => 20,
+            'is_active' => true,
+        ]);
+
+        // Admin (even when in branch 1 context) can select Branch 2 stock and assign to Campus-Wide
+        session(['active_branch_id' => $branch1->id]);
+
+        $response1 = $this->actingAs($admin)->post(route('admin.cafeteria.items.store'), [
+            'inventory_item_id' => $stockBranch2->id,
+            'name' => 'Kandy Tea for All',
+            'price' => 75.00,
+            'branch_id' => '', // Campus-Wide
+        ]);
+        $response1->assertRedirect(route('admin.cafeteria.index'));
+
+        // Admin can select Branch 1 stock and assign to Branch 2
+        $response2 = $this->actingAs($admin)->post(route('admin.cafeteria.items.store'), [
+            'inventory_item_id' => $stockBranch1->id,
+            'name' => 'Colombo Bread in Kandy',
+            'price' => 110.00,
+            'branch_id' => $branch2->id,
+        ]);
+        $response2->assertRedirect(route('admin.cafeteria.index'));
+
+        $this->assertDatabaseHas('cafeteria_items', [
+            'name' => 'Kandy Tea for All',
+            'inventory_item_id' => $stockBranch2->id,
+            'branch_id' => null,
+        ]);
+
+        $this->assertDatabaseHas('cafeteria_items', [
+            'name' => 'Colombo Bread in Kandy',
+            'inventory_item_id' => $stockBranch1->id,
+            'branch_id' => $branch2->id,
+        ]);
+    }
+
+    public function test_cafeteria_can_create_fresh_stock_and_menu_item_in_one_step(): void
+    {
+        $this->artisan('db:seed', ['--class' => \Database\Seeders\RolePermissionSeeder::class])->run();
+
+        $branch = \App\Models\Branch::create(['name' => 'Galle Campus', 'code' => 'GAL', 'is_active' => true]);
+
+        $admin = User::factory()->create([
+            'role' => 'admin',
+            'must_change_password' => false,
+            'is_active' => true,
+        ]);
+        $admin->assignRole('Super Admin');
+
+        $response = $this->actingAs($admin)->post(route('admin.cafeteria.items.store'), [
+            'stock_source' => 'fresh',
+            'name' => 'Fresh Hot Samosa',
+            'unit' => 'piece',
+            'fresh_stock_quantity' => 60,
+            'reorder_level' => 10,
+            'price' => 50.00,
+            'branch_id' => $branch->id,
+            'category' => 'Snacks',
+            'description' => 'Crispy potato filling',
+        ]);
+
+        $response->assertRedirect(route('admin.cafeteria.index'));
+        $response->assertSessionHas('success');
+
+        // Verify fresh stock item was created in inventory
+        $stock = InventoryItem::where('name', 'Fresh Hot Samosa')->firstOrFail();
+        $this->assertSame(60, $stock->quantity_on_hand);
+        $this->assertSame('piece', $stock->unit);
+        $this->assertSame($branch->id, $stock->branch_id);
+
+        // Verify cafeteria item was created and linked to this fresh stock
+        $menuItem = \App\Models\CafeteriaItem::where('name', 'Fresh Hot Samosa')->firstOrFail();
+        $this->assertSame($stock->id, $menuItem->inventory_item_id);
+        $this->assertSame('50.00', (string) $menuItem->price);
+        $this->assertSame($branch->id, $menuItem->branch_id);
+
+        // Test restocking fresh stock directly from cafeteria
+        $restockResponse = $this->actingAs($admin)->post(route('admin.cafeteria.stock.restock', $stock->id), [
+            'quantity' => 40,
+        ]);
+        $restockResponse->assertRedirect(route('admin.cafeteria.index'));
+        $this->assertSame(100, $stock->fresh()->quantity_on_hand);
+
+        // Test quick adding standalone stock
+        $quickResponse = $this->actingAs($admin)->post(route('admin.cafeteria.stock.store'), [
+            'name' => 'Bulk Cooking Oil',
+            'unit' => 'liter',
+            'initial_quantity' => 25,
+            'branch_id' => $branch->id,
+        ]);
+        $quickResponse->assertRedirect(route('admin.cafeteria.index'));
+        $oil = InventoryItem::where('name', 'Bulk Cooking Oil')->firstOrFail();
+        $this->assertSame(25, $oil->quantity_on_hand);
+    }
 }
