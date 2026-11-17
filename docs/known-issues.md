@@ -26,6 +26,7 @@
 | **BUG-014** | PDF & Print Alignment Overhaul | Eliminated page clipping, horizontal stretching, and misaligned margins across DomPDF exports and browser printing (`window.print()`). Changed global `glass.css` `@page` orientation from hardcoded landscape to auto with standard margins, added explicit `@page { size: A4 portrait; margin: 10mm 12mm; }` on Report Cards, Invoices, Payslips, and Receipts, and `@page { size: A4 landscape; margin: 8mm 10mm; }` on Timetables and Reports. Fixed DomPDF templates (`PdfInvoice`, `PdfReceipt`, `PdfReportCard`, `PdfTranscript`, and `ReportPdfController`) with `* { box-sizing: border-box; }`, `table-layout: fixed;`, explicit column width percentages, and `page-break-inside: avoid;`. Verified by `PdfDocumentsTest` and `SingleNotificationBannerTest`. | **RESOLVED** |
 | **BUG-015** | User Roles Dropdown & Student Role Inclusion | Restored the "Student" role across all user role dropdowns and filters in `UserController` (`index`, `create`, `edit`), `StoreUserRequest`, and `UpdateUserRequest`. Administrators can now filter user accounts by the Student role and manage student user profiles without artificial exclusions. Verified by `SingleNotificationBannerTest`. | **RESOLVED** |
 | **BUG-016** | Comprehensive Exam & Results Search Engine | Added complete multi-parameter search bars and filter controls across Admin Exams (`admin.exams.index`), Teacher Exams (`teacher.exams.index`), Term Results (`admin.term-results.index`), and Exam Marks/Results views (`TeacherMarksShow`, `TeacherMarksEdit`, and `LayoutResultsTable`). Users can search exams by keyword, subject name/code, class, term, exam type, and publication status, and filter students in real-time while grading. Verified by `SingleNotificationBannerTest`, `TeacherExamAndMarksWorkflowTest`, and `TermResultsWorkflowTest`. | **RESOLVED** |
+| **BUG-017** | Teacher Exam List Default Ordering | Prioritized reverse-chronological ID ordering (`latest('id')`) on Teacher Exams (`Teacher\ExamController@index`) and Admin Exams (`InstitutionAdmin\ExamController@index`), ensuring newly created exams immediately appear at the very top of the list regardless of exam target date. Verified by `TeacherExamAndMarksWorkflowTest`. | **RESOLVED** |
 
 ---
 
@@ -34,7 +35,7 @@
 All core regression and feature suites pass with 100% assertions:
 * `Tests\Feature\SingleNotificationBannerTest` &mdash; 9 passed (55 assertions)
 * `Tests\Feature\PdfDocumentsTest` &mdash; 4 passed (13 assertions)
-* `Tests\Feature\TeacherExamAndMarksWorkflowTest` &mdash; 2 passed (18 assertions)
+* `Tests\Feature\TeacherExamAndMarksWorkflowTest` &mdash; 3 passed (22 assertions)
 * `Tests\Feature\TermResultsWorkflowTest` &mdash; 7 passed (48 assertions)
 * `Tests\Feature\AccountantAllBranchFinanceTest` &mdash; 3 passed (18 assertions)
 * `Tests\Feature\AccountantFinanceAccessTest` &mdash; 7 passed (36 assertions)
@@ -42,7 +43,7 @@ All core regression and feature suites pass with 100% assertions:
 * `Tests\Feature\PrivateMessagePrivacyAndScopingTest` &mdash; 3 passed
 * `Tests\Feature\StudentPasswordRestrictionTest` &mdash; 6 passed
 * `Tests\Feature\CurriculumModuleTest` &mdash; 2 passed
-* Total: **53+ passed (380+ assertions) — 0 errors**
+* Total: **54+ passed (384+ assertions) — 0 errors**
 
 ---
 

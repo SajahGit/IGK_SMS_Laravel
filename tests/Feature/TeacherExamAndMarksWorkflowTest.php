@@ -197,4 +197,41 @@ class TeacherExamAndMarksWorkflowTest extends TestCase
         $showResponse->assertSee('88.5');
         $showResponse->assertSee('Ali Imran');
     }
+
+    public function test_newly_created_teacher_exam_appears_at_the_very_top_of_the_list(): void
+    {
+        // Create an older exam with a future exam_date
+        Exam::create([
+            'name' => 'Future End-Year Physics Finals',
+            'type' => 'final',
+            'class_id' => $this->class->id,
+            'subject_id' => $this->subject->id,
+            'term_id' => $this->term->id,
+            'exam_date' => '2026-12-15',
+            'max_marks' => 100,
+            'weight' => 100,
+            'created_by' => $this->teacherUser->id,
+        ]);
+
+        // Now teacher creates a new exam with an earlier exam_date
+        $this->actingAs($this->teacherUser)
+            ->post(route('teacher.exams.store'), [
+                'name' => 'Brand New Pop Quiz Today',
+                'assignment' => $this->classSubject->id,
+                'exam_date' => '2026-02-01',
+                'max_marks' => 20,
+            ]);
+
+        $response = $this->actingAs($this->teacherUser)->get(route('teacher.exams.index'));
+        $response->assertOk();
+
+        // The newly created exam MUST appear first before the future exam in the list HTML
+        $content = $response->getContent();
+        $posNew = strpos($content, 'Brand New Pop Quiz Today');
+        $posFuture = strpos($content, 'Future End-Year Physics Finals');
+
+        $this->assertNotFalse($posNew, 'Newly created exam not found in list.');
+        $this->assertNotFalse($posFuture, 'Existing exam not found in list.');
+        $this->assertLessThan($posFuture, $posNew, 'Newly created exam must appear at the very top of the list.');
+    }
 }

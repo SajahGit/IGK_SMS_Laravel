@@ -64,7 +64,6 @@ class ExamController extends Controller
                     $q->where('is_published', false);
                 }
             })
-            ->orderByDesc('exam_date')
             ->latest('id')
             ->paginate(15)
             ->withQueryString();
