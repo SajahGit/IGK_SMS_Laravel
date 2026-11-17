@@ -22,6 +22,10 @@ class TermResultController extends Controller
     {
         $classes = SchoolHelper::allowedClasses($request->user());
         $terms = Term::with('academicYear')->orderByDesc('start_date')->get();
+        $search = $request->query('search') ?: $request->query('q');
+        $status = $request->query('status');
+        $resultStatus = $request->query('result_status');
+
         $validated = $request->validate([
             'term_id' => ['nullable', 'integer', 'exists:terms,id'],
             'class_id' => ['nullable', 'integer', 'exists:classes,id'],
@@ -40,6 +44,17 @@ class TermResultController extends Controller
                 ->where('term_id', $term->id)
                 ->whereIn('class_id', $classes->pluck('id'))
                 ->when($classId, fn ($builder) => $builder->where('class_id', $classId))
+                ->when($search, function ($builder, $s) {
+                    $builder->where(function ($w) use ($s) {
+                        $w->whereHas('student', function ($sq) use ($s) {
+                            $sq->where('admission_no', 'like', "%{$s}%")
+                                ->orWhereHas('user', fn ($uq) => $uq->where('name', 'like', "%{$s}%"));
+                        })
+                        ->orWhereHas('schoolClass', fn ($cq) => $cq->where('name', 'like', "%{$s}%")->orWhere('section', 'like', "%{$s}%"));
+                    });
+                })
+                ->when($status, fn ($builder, $st) => $builder->where('publication_status', $st))
+                ->when($resultStatus, fn ($builder, $rs) => $builder->where('result_status', $rs))
                 ->orderBy('class_id')
                 ->orderBy('student_id');
             $results = $query->paginate(30)->withQueryString();
@@ -65,7 +80,8 @@ class TermResultController extends Controller
             : collect();
 
         return view('InstitutionAdmin.InstitutionAdminTermResultsIndex', compact(
-            'classes', 'terms', 'term', 'classId', 'results', 'subjectResults', 'offerings', 'generation'
+            'classes', 'terms', 'term', 'classId', 'results', 'subjectResults', 'offerings', 'generation',
+            'search', 'status', 'resultStatus'
         ));
     }
 

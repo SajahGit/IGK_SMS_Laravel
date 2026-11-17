@@ -11,10 +11,18 @@ use Illuminate\Http\Request;
 
 class ExamController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         $teacher = auth()->user()->teacher;
         $classIds = SchoolHelper::teacherClassIds($teacher);
+        $search = $request->query('search') ?: $request->query('q');
+        $classId = $request->query('class_id');
+        $subjectId = $request->query('subject_id');
+
+        $teacherClasses = \App\Models\SchoolClass::whereIn('id', $classIds)->orderBy('name')->get();
+        $teacherSubjects = \App\Models\Subject::whereHas('classSubjects', fn ($cs) => $cs->where('teacher_id', $teacher?->id))
+            ->orderBy('name')
+            ->get();
 
         $exams = Exam::with(['class', 'subject'])->withCount('results')
             ->where(function ($query) use ($classIds) {
@@ -23,11 +31,29 @@ class ExamController extends Controller
                     $query->orWhereIn('class_id', $classIds);
                 }
             })
+            ->when($search, function ($query, $s) {
+                $query->where(function ($w) use ($s) {
+                    $w->where('name', 'like', "%{$s}%")
+                        ->orWhere('type', 'like', "%{$s}%")
+                        ->orWhereHas('subject', fn ($sub) => $sub->where('name', 'like', "%{$s}%")->orWhere('code', 'like', "%{$s}%"))
+                        ->orWhereHas('class', fn ($cls) => $cls->where('name', 'like', "%{$s}%")->orWhere('section', 'like', "%{$s}%"));
+                });
+            })
+            ->when($classId, fn ($q) => $q->where('class_id', $classId))
+            ->when($subjectId, fn ($q) => $q->where('subject_id', $subjectId))
             ->orderByDesc('exam_date')
             ->latest('id')
-            ->paginate(10);
+            ->paginate(12)
+            ->withQueryString();
 
-        return view('Teacher.TeacherExamsIndex', compact('exams'));
+        return view('Teacher.TeacherExamsIndex', compact(
+            'exams',
+            'search',
+            'classId',
+            'subjectId',
+            'teacherClasses',
+            'teacherSubjects'
+        ));
     }
 
     public function create()

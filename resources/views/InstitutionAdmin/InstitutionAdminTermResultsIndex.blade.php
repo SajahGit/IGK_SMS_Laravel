@@ -23,11 +23,26 @@
     </div>
 @endif
 
-<form method="GET" action="{{ route('admin.term-results.index') }}" class="card card-body mb-4">
+<form method="GET" action="{{ route('admin.term-results.index') }}" class="card card-body mb-4 shadow-sm border-0" id="termResultFilterForm">
     <div class="row g-2 align-items-end">
-        <div class="col-md-5">
-            <label for="term_id" class="form-label">Term</label>
-            <select id="term_id" name="term_id" class="form-select">
+        <div class="col-12 col-md-3">
+            <label for="search" class="form-label small fw-semibold text-muted mb-1">
+                <i class="bi bi-search me-1"></i>Search Student
+            </label>
+            <div class="input-group">
+                <input type="text" id="search" name="search" value="{{ $search }}" class="form-control" placeholder="Name or admission no..." autocomplete="off">
+                @if ($search)
+                    <button type="button" class="btn btn-outline-secondary" onclick="document.getElementById('search').value=''; document.getElementById('termResultFilterForm').submit();" title="Clear search">
+                        <i class="bi bi-x"></i>
+                    </button>
+                @endif
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <label for="term_id" class="form-label small fw-semibold text-muted mb-1">
+                <i class="bi bi-calendar2-week me-1"></i>Term
+            </label>
+            <select id="term_id" name="term_id" class="form-select" onchange="this.form.submit()">
                 @foreach ($terms as $option)
                     <option value="{{ $option->id }}" @selected($term?->id === $option->id)>
                         {{ $option->academicYear->name }} — {{ $option->name }}
@@ -35,17 +50,37 @@
                 @endforeach
             </select>
         </div>
-        <div class="col-md-5">
-            <label for="class_id" class="form-label">Class / Section</label>
-            <select id="class_id" name="class_id" class="form-select">
+        <div class="col-6 col-md-2">
+            <label for="class_id" class="form-label small fw-semibold text-muted mb-1">
+                <i class="bi bi-building me-1"></i>Class / Section
+            </label>
+            <select id="class_id" name="class_id" class="form-select" onchange="this.form.submit()">
                 <option value="">All permitted classes</option>
                 @foreach ($classes as $class)
                     <option value="{{ $class->id }}" @selected((int) $classId === $class->id)>{{ $class->full_name }}</option>
                 @endforeach
             </select>
         </div>
-        <div class="col-md-2 d-grid">
-            <button class="btn btn-primary" type="submit">Show Results</button>
+        <div class="col-6 col-md-2">
+            <label for="status" class="form-label small fw-semibold text-muted mb-1">
+                <i class="bi bi-globe me-1"></i>Publication
+            </label>
+            <select id="status" name="status" class="form-select" onchange="this.form.submit()">
+                <option value="">All Statuses</option>
+                <option value="draft" @selected(($status ?? null) === 'draft')>Draft</option>
+                <option value="pending_approval" @selected(($status ?? null) === 'pending_approval')>Pending Approval</option>
+                <option value="published" @selected(($status ?? null) === 'published')>Published</option>
+            </select>
+        </div>
+        <div class="col-6 col-md-2 d-flex gap-1">
+            <button class="btn btn-primary w-100" type="submit">
+                <i class="bi bi-funnel me-1"></i>Filter
+            </button>
+            @if ($search || $classId || ($status ?? null) || ($resultStatus ?? null))
+                <a href="{{ route('admin.term-results.index', ['term_id' => $term?->id]) }}" class="btn btn-outline-secondary" title="Clear Filters">
+                    <i class="bi bi-arrow-counterclockwise"></i>
+                </a>
+            @endif
         </div>
     </div>
 </form>
@@ -125,7 +160,19 @@
                         <td class="text-center">{{ str_replace('_', ' ', ucfirst($result->publication_status)) }}</td>
                     </tr>
                 @empty
-                    <tr><td colspan="6" class="text-center text-muted py-4">No term results have been generated for this selection.</td></tr>
+                    <tr>
+                        <td colspan="6" class="text-center text-muted py-5">
+                            <i class="bi bi-trophy fs-2 d-block mb-2 text-muted"></i>
+                            No term results found matching the selected search and filter criteria.
+                            @if ($search || $classId || ($status ?? null))
+                                <div class="mt-2">
+                                    <a href="{{ route('admin.term-results.index', ['term_id' => $term?->id]) }}" class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-arrow-counterclockwise me-1"></i>Reset Search
+                                    </a>
+                                </div>
+                            @endif
+                        </td>
+                    </tr>
                 @endforelse
             </tbody>
         </table>

@@ -23,15 +23,23 @@
     @endforeach
 </div>
 
-<div class="card shadow-sm"><div class="table-responsive">
-    <table class="table table-hover mb-0">
+<div class="card shadow-sm">
+    <div class="card-header bg-transparent py-2 d-flex justify-content-between align-items-center">
+        <span class="small fw-semibold text-muted">Results by Student</span>
+        <div class="input-group input-group-sm" style="max-width: 280px;">
+            <span class="input-group-text"><i class="bi bi-search"></i></span>
+            <input type="text" id="resultFilterInput" class="form-control" placeholder="Search student or admission no...">
+        </div>
+    </div>
+    <div class="table-responsive">
+    <table class="table table-hover mb-0" id="resultsTable">
         <thead><tr><th>Admission No</th><th>Name</th><th>Marks</th><th>Percentage</th><th>Grade</th></tr></thead>
         <tbody>
         @forelse ($results as $r)
             @php $pct = \App\Support\SchoolHelper::resultPercentage($r->marks, $exam->max_marks); $grade = \App\Support\SchoolHelper::gradeFor($pct); @endphp
-            <tr>
-                <td>{{ $r->student?->admission_no ?? '-' }}</td>
-                <td>{{ $r->student?->user?->name ?? '-' }}</td>
+            <tr class="result-row">
+                <td><code>{{ $r->student?->admission_no ?? '-' }}</code></td>
+                <td class="student-name"><strong>{{ $r->student?->user?->name ?? '-' }}</strong></td>
                 <td>{{ \App\Support\SchoolHelper::formatMarks($r->marks) }}</td>
                 <td>{{ $pct }}%</td>
                 <td><span class="badge bg-{{ \App\Support\SchoolHelper::gradeBadge($grade) }}">{{ $grade }}</span></td>
@@ -42,4 +50,18 @@
         </tbody>
     </table>
 </div></div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var filterInput = document.getElementById('resultFilterInput');
+        if (!filterInput) return;
+        filterInput.addEventListener('input', function () {
+            var q = this.value.toLowerCase().trim();
+            document.querySelectorAll('#resultsTable tbody tr.result-row').forEach(function (row) {
+                var text = row.innerText.toLowerCase();
+                row.style.display = text.indexOf(q) !== -1 ? '' : 'none';
+            });
+        });
+    });
+</script>
 @endsection

@@ -30,23 +30,58 @@ class ExamController extends Controller
 
     public function index(Request $request): View
     {
+        $search = $request->query('search') ?: $request->query('q');
         $classId = $request->query('class_id');
         $termId = $request->query('term_id');
+        $subjectId = $request->query('subject_id');
+        $type = $request->query('type');
+        $status = $request->query('status');
 
         $classes = SchoolHelper::allowedClasses($request->user());
         $terms = Term::orderBy('sequence')->get();
+        $subjects = Subject::orderBy('name')->get();
+        $examTypes = Exam::query()->whereNotNull('type')->distinct()->orderBy('type')->pluck('type');
 
         $exams = Exam::with(['class', 'subject', 'term', 'creator'])
             ->withCount('results')
             ->whereIn('class_id', $classes->pluck('id'))
+            ->when($search, function ($query, $s) {
+                $query->where(function ($w) use ($s) {
+                    $w->where('name', 'like', "%{$s}%")
+                        ->orWhere('type', 'like', "%{$s}%")
+                        ->orWhereHas('subject', fn ($sub) => $sub->where('name', 'like', "%{$s}%")->orWhere('code', 'like', "%{$s}%"))
+                        ->orWhereHas('class', fn ($cls) => $cls->where('name', 'like', "%{$s}%")->orWhere('section', 'like', "%{$s}%"));
+                });
+            })
             ->when($classId, fn ($q) => $q->where('class_id', $classId))
             ->when($termId, fn ($q) => $q->where('term_id', $termId))
+            ->when($subjectId, fn ($q) => $q->where('subject_id', $subjectId))
+            ->when($type, fn ($q) => $q->where('type', $type))
+            ->when($status !== null && $status !== '', function ($q) use ($status) {
+                if ($status === 'published') {
+                    $q->where('is_published', true);
+                } elseif ($status === 'draft') {
+                    $q->where('is_published', false);
+                }
+            })
             ->orderByDesc('exam_date')
             ->latest('id')
             ->paginate(15)
             ->withQueryString();
 
-        return view('InstitutionAdmin.InstitutionAdminExamsIndex', compact('exams', 'classes', 'terms', 'classId', 'termId'));
+        return view('InstitutionAdmin.InstitutionAdminExamsIndex', compact(
+            'exams',
+            'classes',
+            'terms',
+            'subjects',
+            'examTypes',
+            'search',
+            'classId',
+            'termId',
+            'subjectId',
+            'type',
+            'status'
+        ));
     }
 
     public function create(Request $request): View

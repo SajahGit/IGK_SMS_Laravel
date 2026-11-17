@@ -386,4 +386,85 @@ class SingleNotificationBannerTest extends TestCase
         $responseName->assertOk();
         $responseName->assertSee('Hasan Teacher');
     }
+
+    public function test_student_role_appears_in_users_dropdown_and_filters_correctly(): void
+    {
+        $this->artisan('db:seed', ['--class' => \Database\Seeders\RolePermissionSeeder::class])->run();
+
+        $admin = User::factory()->create([
+            'role' => 'admin',
+            'must_change_password' => false,
+            'is_active' => true,
+        ]);
+        $admin->assignRole('Super Admin');
+
+        $studentUser = User::factory()->create([
+            'name' => 'Fatima Student',
+            'email' => 'fatima.student@example.test',
+            'role' => 'student',
+            'must_change_password' => false,
+            'is_active' => true,
+        ]);
+        $studentUser->assignRole('Student');
+
+        $response = $this->actingAs($admin)->get(route('admin.users.index'));
+        $response->assertOk();
+        // Verify Student option exists in the Role dropdown
+        $response->assertSee('<option value="Student"', false);
+
+        // Verify filtering by role=Student returns the student user
+        $filterResponse = $this->actingAs($admin)->get(route('admin.users.index', ['role' => 'Student']));
+        $filterResponse->assertOk();
+        $filterResponse->assertSee('Fatima Student');
+    }
+
+    public function test_exams_and_results_search_option_works(): void
+    {
+        $this->artisan('db:seed', ['--class' => \Database\Seeders\RolePermissionSeeder::class])->run();
+
+        $admin = User::factory()->create([
+            'role' => 'admin',
+            'must_change_password' => false,
+            'is_active' => true,
+        ]);
+        $admin->assignRole('Super Admin');
+
+        $class = \App\Models\SchoolClass::create(['name' => 'Grade 11', 'section' => 'A']);
+        $subject = \App\Models\Subject::create(['name' => 'Advanced Physics', 'code' => 'PHY-301']);
+        $term = \App\Models\Term::create([
+            'academic_year_id' => \App\Models\AcademicYear::create(['name' => '2026/2027', 'start_date' => '2026-01-01', 'end_date' => '2026-12-31'])->id,
+            'name' => 'Term 1 Test',
+            'sequence' => 1,
+            'start_date' => '2026-01-10',
+            'end_date' => '2026-04-10',
+            'is_current' => true,
+        ]);
+
+        $exam = \App\Models\Exam::create([
+            'name' => 'Quantum Mechanics Midterm',
+            'class_id' => $class->id,
+            'subject_id' => $subject->id,
+            'term_id' => $term->id,
+            'exam_date' => '2026-03-15',
+            'max_marks' => 100,
+            'weight' => 30,
+            'type' => 'midterm',
+            'created_by' => $admin->id,
+        ]);
+
+        // Search exam by keyword on admin.exams.index
+        $response = $this->actingAs($admin)->get(route('admin.exams.index', ['search' => 'Quantum']));
+        $response->assertOk();
+        $response->assertSee('Quantum Mechanics Midterm');
+
+        // Search exam by subject code
+        $responseCode = $this->actingAs($admin)->get(route('admin.exams.index', ['search' => 'PHY-301']));
+        $responseCode->assertOk();
+        $responseCode->assertSee('Quantum Mechanics Midterm');
+
+        // Search exam that doesn't match
+        $responseNone = $this->actingAs($admin)->get(route('admin.exams.index', ['search' => 'NonExistentExam']));
+        $responseNone->assertOk();
+        $responseNone->assertDontSee('Quantum Mechanics Midterm');
+    }
 }

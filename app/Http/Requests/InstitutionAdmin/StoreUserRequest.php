@@ -35,7 +35,6 @@ class StoreUserRequest extends FormRequest
                 'string',
                 'distinct',
                 'exists:roles,name',
-                Rule::notIn(['Student', 'student']),
                 ...($this->user()->isSuperAdmin() ? [] : [Rule::notIn(['Super Admin'])]),
             ],
             'branch_id' => [

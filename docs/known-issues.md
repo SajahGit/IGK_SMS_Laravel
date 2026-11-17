@@ -24,22 +24,25 @@
 | **BUG-012** | Cafeteria Multi-Branch Stock & Fresh Stock Provisioning | Enabled cross-branch stock selection for cafeteria items across any campus or central inventory, introduced 1-click fresh stock & menu item creation with automated SKU generation and opening inventory movements, added standalone cafeteria stock intake (`/admin/cafeteria/stock`), and provided 1-click inline stock replenishment (`/admin/cafeteria/stock/{id}/restock`). Verified by `SingleNotificationBannerTest`. | **RESOLVED** |
 | **BUG-013** | User Management Search Column Fix | Resolved `SQLSTATE[42S22]: Unknown column 'phone' in 'where clause'` in `UserController@index`. Since the `users` table does not store phone numbers directly, updated search filters to check `phone` across related models (`teacher`, `student`, and `guardian`) via `orWhereHas()`. Verified by `SingleNotificationBannerTest`. | **RESOLVED** |
 | **BUG-014** | PDF & Print Alignment Overhaul | Eliminated page clipping, horizontal stretching, and misaligned margins across DomPDF exports and browser printing (`window.print()`). Changed global `glass.css` `@page` orientation from hardcoded landscape to auto with standard margins, added explicit `@page { size: A4 portrait; margin: 10mm 12mm; }` on Report Cards, Invoices, Payslips, and Receipts, and `@page { size: A4 landscape; margin: 8mm 10mm; }` on Timetables and Reports. Fixed DomPDF templates (`PdfInvoice`, `PdfReceipt`, `PdfReportCard`, `PdfTranscript`, and `ReportPdfController`) with `* { box-sizing: border-box; }`, `table-layout: fixed;`, explicit column width percentages, and `page-break-inside: avoid;`. Verified by `PdfDocumentsTest` and `SingleNotificationBannerTest`. | **RESOLVED** |
+| **BUG-015** | User Roles Dropdown & Student Role Inclusion | Restored the "Student" role across all user role dropdowns and filters in `UserController` (`index`, `create`, `edit`), `StoreUserRequest`, and `UpdateUserRequest`. Administrators can now filter user accounts by the Student role and manage student user profiles without artificial exclusions. Verified by `SingleNotificationBannerTest`. | **RESOLVED** |
+| **BUG-016** | Comprehensive Exam & Results Search Engine | Added complete multi-parameter search bars and filter controls across Admin Exams (`admin.exams.index`), Teacher Exams (`teacher.exams.index`), Term Results (`admin.term-results.index`), and Exam Marks/Results views (`TeacherMarksShow`, `TeacherMarksEdit`, and `LayoutResultsTable`). Users can search exams by keyword, subject name/code, class, term, exam type, and publication status, and filter students in real-time while grading. Verified by `SingleNotificationBannerTest`, `TeacherExamAndMarksWorkflowTest`, and `TermResultsWorkflowTest`. | **RESOLVED** |
 
 ---
 
 ## System Testing & Verification
 
 All core regression and feature suites pass with 100% assertions:
-* `Tests\Feature\SingleNotificationBannerTest` &mdash; 7 passed (45 assertions)
+* `Tests\Feature\SingleNotificationBannerTest` &mdash; 9 passed (55 assertions)
 * `Tests\Feature\PdfDocumentsTest` &mdash; 4 passed (13 assertions)
+* `Tests\Feature\TeacherExamAndMarksWorkflowTest` &mdash; 2 passed (18 assertions)
+* `Tests\Feature\TermResultsWorkflowTest` &mdash; 7 passed (48 assertions)
 * `Tests\Feature\AccountantAllBranchFinanceTest` &mdash; 3 passed (18 assertions)
 * `Tests\Feature\AccountantFinanceAccessTest` &mdash; 7 passed (36 assertions)
 * `Tests\Feature\InternationalMultiBranchAndPayrollTest` &mdash; 10 passed
 * `Tests\Feature\PrivateMessagePrivacyAndScopingTest` &mdash; 3 passed
 * `Tests\Feature\StudentPasswordRestrictionTest` &mdash; 6 passed
-* `Tests\Feature\TeacherExamAndMarksWorkflowTest` &mdash; 2 passed
 * `Tests\Feature\CurriculumModuleTest` &mdash; 2 passed
-* Total: **44+ passed (320+ assertions) — 0 errors**
+* Total: **53+ passed (380+ assertions) — 0 errors**
 
 ---
 

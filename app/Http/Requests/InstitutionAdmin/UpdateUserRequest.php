@@ -28,9 +28,6 @@ class UpdateUserRequest extends FormRequest
         $user = $this->route('user');
         $roleRules = ['required', 'string', 'distinct', 'exists:roles,name'];
 
-        if (! $user?->student) {
-            $roleRules[] = Rule::notIn(['Student', 'student']);
-        }
         if (! $this->user()->isSuperAdmin()) {
             $roleRules[] = Rule::notIn(['Super Admin']);
         }

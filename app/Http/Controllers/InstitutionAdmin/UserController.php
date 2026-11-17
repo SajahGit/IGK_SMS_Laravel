@@ -44,7 +44,8 @@ class UserController extends Controller
             ->when($roleFilter, function ($query, $rf) {
                 $query->where(function ($w) use ($rf) {
                     $w->where('role', $rf)
-                        ->orWhereHas('roles', fn ($r) => $r->where('name', $rf));
+                        ->orWhere('role', strtolower($rf))
+                        ->orWhereHas('roles', fn ($r) => $r->where('name', $rf)->orWhere('name', strtolower($rf)));
                 });
             })
             ->when($branchFilter, fn ($query, $bid) => $query->where('branch_id', $bid))
@@ -55,7 +56,7 @@ class UserController extends Controller
             ->paginate(15)
             ->withQueryString();
 
-        $roles = Role::whereNotIn('name', ['Student', 'student'])
+        $roles = Role::query()
             ->when(! $request->user()->isSuperAdmin(), fn ($query) => $query->where('name', '!=', 'Super Admin'))
             ->orderBy('name')
             ->get();
@@ -68,7 +69,7 @@ class UserController extends Controller
     {
         $this->authorize('create', User::class);
 
-        $roles = Role::whereNotIn('name', ['Student', 'student'])
+        $roles = Role::query()
             ->when(! request()->user()->isSuperAdmin(), fn ($query) => $query->where('name', '!=', 'Super Admin'))
             ->orderBy('name')
             ->get();

@@ -35,8 +35,15 @@
 <form method="POST" action="{{ route('teacher.marks.update', $exam) }}">
     @csrf
     <div class="card shadow-sm border-0">
+        <div class="card-header bg-transparent py-2 d-flex justify-content-between align-items-center">
+            <span class="small fw-semibold text-muted">Students Grading List ({{ $students->count() }} students)</span>
+            <div class="input-group input-group-sm" style="max-width: 280px;">
+                <span class="input-group-text"><i class="bi bi-search"></i></span>
+                <input type="text" id="marksStudentFilterInput" class="form-control" placeholder="Filter student or admission no...">
+            </div>
+        </div>
         <div class="table-responsive">
-            <table class="table table-hover mb-0 align-middle">
+            <table class="table table-hover mb-0 align-middle" id="marksEntryTable">
                 <thead class="table-light">
                     <tr>
                         <th style="width: 15%;">Admission No</th>
@@ -54,7 +61,7 @@
                         $isExcused = old('is_excused.'.$s->id, $record?->is_excused ?? false);
                         $markVal = old('marks.'.$s->id, ($record && !$record->is_absent && $record->marks !== null) ? \App\Support\SchoolHelper::formatMarks($record->marks) : '');
                     @endphp
-                    <tr>
+                    <tr class="student-mark-row">
                         <td><code>{{ $s->admission_no }}</code></td>
                         <td>
                             <div class="fw-semibold">{{ $s->user->name }}</div>
@@ -131,6 +138,17 @@
                 }
             });
         });
+
+        var filterInput = document.getElementById('marksStudentFilterInput');
+        if (filterInput) {
+            filterInput.addEventListener('input', function () {
+                var q = this.value.toLowerCase().trim();
+                document.querySelectorAll('#marksEntryTable tbody tr.student-mark-row').forEach(function (row) {
+                    var text = row.innerText.toLowerCase();
+                    row.style.display = text.indexOf(q) !== -1 ? '' : 'none';
+                });
+            });
+        }
     });
 </script>
 @endsection
