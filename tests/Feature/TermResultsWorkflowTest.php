@@ -27,6 +27,8 @@ use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Validation\ValidationException;
+use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
 use Spatie\Permission\PermissionRegistrar;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Tests\TestCase;
@@ -194,7 +196,6 @@ class TermResultsWorkflowTest extends TestCase
 
     public function test_large_class_term_result_generation_is_queued(): void
     {
-        $this->artisan('db:seed', ['--class' => RolePermissionSeeder::class])->run();
         $context = $this->createContext();
         for ($index = 1; $index <= 201; $index++) {
             $this->enrollStudent(
@@ -204,6 +205,15 @@ class TermResultsWorkflowTest extends TestCase
             );
         }
 
+        $permission = Permission::firstOrCreate([
+            'name' => 'results.approve',
+            'guard_name' => 'web',
+        ]);
+        $superAdmin = Role::firstOrCreate([
+            'name' => 'Super Admin',
+            'guard_name' => 'web',
+        ]);
+        $superAdmin->givePermissionTo($permission);
         app()[PermissionRegistrar::class]->forgetCachedPermissions();
         $admin = User::create(['name' => 'Admin', 'email' => 'queue-admin@school.test', 'password' => 'password', 'role' => 'admin']);
         $admin->syncRoles(['Super Admin']);
