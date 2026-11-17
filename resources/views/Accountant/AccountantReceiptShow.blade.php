@@ -132,14 +132,49 @@
 
 <style>
 @media print {
-    .no-print, .sidebar, .topbar, .app-footer, .bg-orb-3, .sidebar-backdrop {
+    @page {
+        size: A4 portrait !important;
+        margin: 12mm 15mm !important;
+    }
+    *, *::before, *::after {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+        box-sizing: border-box !important;
+    }
+    html, body {
+        background: #ffffff !important;
+        color: #111827 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        font-size: 10pt !important;
+    }
+    .no-print, .sidebar, .topbar, .app-footer, .bg-orb-3, .sidebar-backdrop, nav, button {
         display: none !important;
     }
-    .app-shell { display: block !important; }
-    .app-main { margin-left: 0 !important; padding: 0 !important; }
-    .content { padding: 0 !important; }
-    body { background: #ffffff !important; color: #000000 !important; }
-    .receipt-sheet { box-shadow: none !important; border: 1px solid #dee2e6 !important; }
+    .app-shell, .app-main, .content, .receipt-container {
+        display: block !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+    .receipt-sheet {
+        box-shadow: none !important;
+        border: 1px solid #cbd5e1 !important;
+        padding: 20px 24px !important;
+        max-width: 100% !important;
+        width: 100% !important;
+        margin: 0 !important;
+        background: #ffffff !important;
+        border-radius: 4px !important;
+    }
+    .table {
+        width: 100% !important;
+        border-collapse: collapse !important;
+    }
+    .signatures, .border-bottom {
+        page-break-inside: avoid !important;
+    }
 }
 </style>
 @endsection

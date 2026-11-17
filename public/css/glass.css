@@ -697,26 +697,50 @@ hr { border-color: var(--glass-border); opacity: 1; }
 
 /* ---------- Print: plain paper, no glass ---------- */
 @media print {
-    @page { size: A4 landscape; margin: 10mm; }
-    *, *::before, *::after { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-    body::before, body::after, .bg-orb-3 { display: none !important; }
-    body { background: #fff !important; color: #212529 !important; }
-    .sidebar, .topbar, .sidebar-backdrop, nav, header, footer, .no-print, .app-footer,
-    form[method="GET"], button, input, select, textarea, .pagination, .sticky-top, .sticky-bottom, .sticky-footer { display: none !important; }
-    .app-main { margin: 0 !important; padding: 0 !important; }
-    .card { background: #fff !important; box-shadow: none !important; border: 1px solid #bbb !important; backdrop-filter: none !important; color: #212529 !important; }
-    h1, h2, h3, h4, h5, .stat-value, .table { color: #212529 !important; }
-    .text-muted, .stat-label, .form-text { color: #495057 !important; }
-    .table { --bs-table-color: #212529; --bs-table-bg: #fff; --bs-table-border-color: #dee2e6; }
-    .table thead th { background: #e9ecef !important; color: #212529 !important; }
-    .table-light > * > * { background: #f1f3f5 !important; color: #212529 !important; }
+    @page { size: auto; margin: 10mm 12mm; }
+    *, *::before, *::after {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+        box-sizing: border-box !important;
+    }
+    html, body {
+        background: #ffffff !important;
+        color: #111827 !important;
+        font-size: 10pt !important;
+        line-height: 1.4 !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+    body::before, body::after, .bg-orb-3, .sidebar-backdrop { display: none !important; }
+    .sidebar, .topbar, nav, header.topbar, footer.app-footer, .no-print, .app-footer,
+    form[method="GET"], button, input, select, textarea, .pagination, .sticky-top, .sticky-bottom, .sticky-footer,
+    .dropdown, .modal, .alert-dismissible .btn-close { display: none !important; }
+    .app-shell { display: block !important; width: 100% !important; min-height: auto !important; margin: 0 !important; padding: 0 !important; }
+    .app-main { display: block !important; width: 100% !important; max-width: 100% !important; min-width: 100% !important; margin: 0 !important; padding: 0 !important; }
+    .content { display: block !important; width: 100% !important; max-width: 100% !important; margin: 0 !important; padding: 0 !important; }
+    .card { background: #ffffff !important; box-shadow: none !important; border: 1px solid #d1d5db !important; backdrop-filter: none !important; color: #111827 !important; page-break-inside: avoid; }
+    h1, h2, h3, h4, h5, .stat-value, .table { color: #111827 !important; }
+    .text-muted, .stat-label, .form-text { color: #4b5563 !important; }
+    .table {
+        --bs-table-color: #111827;
+        --bs-table-bg: #ffffff;
+        --bs-table-border-color: #d1d5db;
+        width: 100% !important;
+        border-collapse: collapse !important;
+        page-break-inside: auto;
+    }
+    .table thead th { background: #f3f4f6 !important; color: #111827 !important; border-bottom: 2px solid #9ca3af !important; }
+    .table-light > * > * { background: #f1f3f5 !important; color: #111827 !important; }
     .table, .table tbody, .table tr, .table td, .table th, .table-responsive, .card-body {
         box-shadow: none !important; text-shadow: none !important;
     }
-    .table-responsive { contain: none !important; overflow: visible !important; }
-    .table, .table td, .table th { word-break: normal !important; overflow-wrap: break-word !important; }
+    .table-responsive { contain: none !important; overflow: visible !important; width: 100% !important; }
+    .table td, .table th { padding: 6px 8px !important; border: 1px solid #e5e7eb !important; word-break: normal !important; overflow-wrap: break-word !important; }
+    tr { page-break-inside: avoid; page-break-after: auto; }
+    thead { display: table-header-group; }
+    tfoot { display: table-footer-group; }
     .print-nowrap { white-space: nowrap !important; }
-    form[method="GET"], .sticky-top, .sticky-bottom, .sticky-footer { display: none !important; }
     a { color: inherit !important; text-decoration: none !important; }
     .btn, .form-control, .form-select, .form-check, .pagination { display: none !important; }
     .content > * { animation: none !important; }

@@ -4,72 +4,97 @@
     <meta charset="utf-8">
     <title>Receipt {{ $payment->receipt_no }}</title>
     <style>
-        @page { margin: 34px; }
-        body { font-family: DejaVu Sans, sans-serif; color: #172033; font-size: 11px; }
+        * { box-sizing: border-box; }
+        @page { size: a4 portrait; margin: 26px 30px; }
+        body { font-family: DejaVu Sans, sans-serif; color: #1e293b; font-size: 10px; line-height: 1.4; margin: 0; padding: 0; }
         h1, h2, p { margin: 0; }
-        .header { text-align: center; border-bottom: 2px solid #244c86; padding-bottom: 14px; margin-bottom: 18px; }
-        .header h1 { color: #244c86; font-size: 20px; margin-bottom: 5px; }
-        .header p { color: #526179; margin-top: 3px; }
-        h2 { font-size: 16px; margin-bottom: 5px; }
-        .receipt-no { color: #244c86; font-size: 14px; margin-top: 7px; }
-        table { width: 100%; border-collapse: collapse; margin: 12px 0; }
-        td { border: 1px solid #d5dce7; padding: 8px; }
-        td.label { width: 35%; color: #526179; }
-        .amount { background: #edf7f0; border: 1px solid #a8d5b5; padding: 12px; margin: 16px 0; }
-        .amount strong { font-size: 18px; }
-        .words { margin-top: 6px; font-style: italic; }
-        .reversed { color: #b42318; font-size: 18px; font-weight: bold; text-align: center; border: 2px solid #b42318; padding: 5px; margin-bottom: 12px; }
-        .signatures { margin-top: 48px; text-align: center; }
-        .signatures td { width: 50%; border: 0; border-top: 1px solid #7b8798; vertical-align: top; }
-        .muted { color: #64748b; }
+        .header { text-align: center; border-bottom: 2px solid #2563eb; padding-bottom: 12px; margin-bottom: 16px; }
+        .header h1 { color: #1e3a8a; font-size: 19px; margin-bottom: 4px; }
+        .header p { color: #475569; font-size: 9.5px; margin-top: 2px; }
+        .receipt-title { font-size: 14px; font-weight: bold; margin-top: 8px; color: #1e293b; text-transform: uppercase; letter-spacing: 0.5px; }
+        .receipt-no { color: #2563eb; font-size: 13px; font-weight: bold; margin-top: 2px; }
+        table { width: 100%; border-collapse: collapse; table-layout: fixed; margin: 10px 0; }
+        td { border: 1px solid #cbd5e1; padding: 6px 8px; vertical-align: middle; }
+        td.label { width: 32%; color: #64748b; font-size: 8.5px; text-transform: uppercase; }
+        td.val { width: 68%; font-weight: 600; color: #0f172a; }
+        .amount-box { background: #f0fdf4; border: 1px solid #86efac; padding: 12px; margin: 14px 0; text-align: center; border-radius: 3px; }
+        .amount-title { color: #166534; font-size: 9px; text-transform: uppercase; font-weight: bold; letter-spacing: 0.5px; }
+        .amount-val { font-size: 20px; font-weight: bold; color: #15803d; margin: 4px 0; }
+        .amount-words { font-style: italic; color: #334155; font-size: 9.5px; }
+        .reversed { color: #b91c1c; font-size: 16px; font-weight: bold; text-align: center; border: 2px solid #b91c1c; padding: 6px; margin-bottom: 12px; }
+        .summary-table td { width: 33.33%; text-align: center; padding: 7px; background: #f8fafc; }
+        .signatures { margin-top: 40px; text-align: center; page-break-inside: avoid; }
+        .signatures td { width: 50%; padding: 0 25px; border: none; vertical-align: top; }
+        .line { border-top: 1px solid #94a3b8; padding-top: 6px; font-weight: bold; font-size: 9.5px; }
+        .muted { color: #64748b; font-size: 8.5px; }
     </style>
 </head>
 <body>
-    @if ($payment->isReversed()) <div class="reversed">REVERSED</div> @endif
+    @if ($payment->isReversed())
+        <div class="reversed">VOID / TRANSACTION REVERSED</div>
+    @endif
+
     <header class="header">
         <h1>{{ $institution['name'] }}</h1>
         @if ($institution['address']) <p>{{ $institution['address'] }}</p> @endif
         @if ($institution['phone'] || $institution['email'])
             <p>{{ $institution['phone'] }}{{ $institution['phone'] && $institution['email'] ? ' | ' : '' }}{{ $institution['email'] }}</p>
         @endif
-        <h2>Official Fee Payment Receipt</h2>
-        <p class="receipt-no">{{ $payment->receipt_no }}</p>
+        <div class="receipt-title">Official Fee Payment Receipt</div>
+        <div class="receipt-no">{{ $payment->receipt_no }}</div>
     </header>
 
     <table>
-        <tr><td class="label">Student Name</td><td><strong>{{ $payment->invoice->student->user->name }}</strong></td></tr>
-        <tr><td class="label">Admission Number</td><td>{{ $payment->invoice->student->admission_no }}</td></tr>
-        <tr><td class="label">Class &amp; Section</td><td>{{ $payment->invoice->student->class?->full_name ?? '—' }}</td></tr>
-        <tr><td class="label">Invoice Number</td><td>{{ $payment->invoice->invoice_no }}</td></tr>
-        <tr><td class="label">Academic Term</td><td>{{ $payment->invoice->term?->name ?? 'General' }}</td></tr>
-        <tr><td class="label">Payment Method</td><td>{{ ucwords(str_replace('_', ' ', $payment->method)) }}</td></tr>
-        <tr><td class="label">Payment Date</td><td>{{ $payment->paid_at->format('d F Y') }}</td></tr>
-        <tr><td class="label">Cashier</td><td>{{ $payment->receiver?->name ?? 'System Admin' }}</td></tr>
+        <tr><td class="label">Student Name</td><td class="val">{{ $payment->invoice->student->user->name }}</td></tr>
+        <tr><td class="label">Admission Number</td><td class="val">{{ $payment->invoice->student->admission_no }}</td></tr>
+        <tr><td class="label">Class &amp; Section</td><td class="val">{{ $payment->invoice->student->class?->full_name ?? '—' }}</td></tr>
+        <tr><td class="label">Invoice Reference</td><td class="val">{{ $payment->invoice->invoice_no }}</td></tr>
+        <tr><td class="label">Academic Term</td><td class="val">{{ $payment->invoice->term?->name ?? 'General' }}</td></tr>
+        <tr><td class="label">Payment Method</td><td class="val">{{ ucwords(str_replace('_', ' ', $payment->method)) }}</td></tr>
+        <tr><td class="label">Payment Date</td><td class="val">{{ $payment->paid_at->format('d F Y') }}</td></tr>
+        <tr><td class="label">Cashier / Receiver</td><td class="val">{{ $payment->receiver?->name ?? 'System Admin' }}</td></tr>
         @if ($payment->reference)
-            <tr><td class="label">Transaction Reference</td><td>{{ $payment->reference }}</td></tr>
+            <tr><td class="label">Transaction Reference</td><td class="val">{{ $payment->reference }}</td></tr>
         @endif
     </table>
 
-    <div class="amount">
-        <div>Amount received</div>
-        <strong>{{ \App\Support\Money::format($payment->amount, $payment->currency.' ') }}</strong>
-        <div class="words">{{ $amountInWords }}</div>
+    <div class="amount-box">
+        <div class="amount-title">Amount Received</div>
+        <div class="amount-val">{{ \App\Support\Money::format($payment->amount, $payment->currency.' ') }}</div>
+        <div class="amount-words">{{ $amountInWords }}</div>
     </div>
 
-    <table>
-        <tr><td class="label">Invoice Total</td><td>{{ \App\Support\Money::format($payment->invoice->total, $payment->invoice->currency.' ') }}</td></tr>
-        <tr><td class="label">Total Paid</td><td>{{ \App\Support\Money::format($payment->invoice->amount_paid, $payment->invoice->currency.' ') }}</td></tr>
-        <tr><td class="label">Outstanding Balance</td><td>{{ \App\Support\Money::format($payment->invoice->balance, $payment->invoice->currency.' ') }}</td></tr>
+    <table class="summary-table">
+        <tr>
+            <td>
+                <span class="muted" style="display: block; text-transform: uppercase;">Invoice Total</span>
+                <strong>{{ \App\Support\Money::format($payment->invoice->total, $payment->invoice->currency.' ') }}</strong>
+            </td>
+            <td>
+                <span class="muted" style="display: block; text-transform: uppercase;">Total Paid to Date</span>
+                <strong style="color: #15803d;">{{ \App\Support\Money::format($payment->invoice->amount_paid, $payment->invoice->currency.' ') }}</strong>
+            </td>
+            <td>
+                <span class="muted" style="display: block; text-transform: uppercase;">Outstanding Balance</span>
+                <strong style="color: {{ $payment->invoice->balance > 0 ? '#b91c1c' : '#1e3a8a' }};">{{ \App\Support\Money::format($payment->invoice->balance, $payment->invoice->currency.' ') }}</strong>
+            </td>
+        </tr>
     </table>
 
     @if ($payment->isReversed())
-        <p class="reversed">Voided {{ $payment->reversed_at->format('d M Y, h:i A') }} — {{ $payment->reversal_reason }}</p>
+        <p class="reversed" style="font-size: 10px; margin-top: 10px;">Voided {{ $payment->reversed_at->format('d M Y, h:i A') }} — {{ $payment->reversal_reason }}</p>
     @endif
 
     <table class="signatures">
         <tr>
-            <td>Cashier: {{ $payment->receiver?->name ?? 'System Admin' }}<br><span class="muted">Authorized Signature</span></td>
-            <td>School Finance Department<br><span class="muted">Official Stamp</span></td>
+            <td>
+                <div class="line">Cashier: {{ $payment->receiver?->name ?? 'System Admin' }}</div>
+                <div class="muted">Authorized Signature</div>
+            </td>
+            <td>
+                <div class="line">School Finance Department</div>
+                <div class="muted">Official Seal &amp; Stamp</div>
+            </td>
         </tr>
     </table>
 </body>

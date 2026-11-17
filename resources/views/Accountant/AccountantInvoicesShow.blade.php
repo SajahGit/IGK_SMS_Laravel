@@ -10,10 +10,13 @@
         </div>
         <small class="text-muted">{{ $invoice->isDraft() ? 'Draft dated' : 'Issued on' }} {{ $invoice->issue_date->format('d M Y') }} · Due by {{ $invoice->due_date->format('d M Y') }}</small>
     </div>
-    <div class="d-flex gap-2">
+    <div class="d-flex gap-2 no-print">
         <a href="{{ route($financeRoutePrefix.'.invoices.pdf', $invoice) }}" class="btn btn-outline-primary">
             <i class="bi bi-file-earmark-pdf me-1"></i> Download PDF
         </a>
+        <button type="button" class="btn btn-outline-primary" onclick="window.print()">
+            <i class="bi bi-printer me-1"></i> Print Invoice
+        </button>
         @if ($invoice->balance > 0 && ! in_array($invoice->status, ['cancelled', 'draft'], true))
             <a href="{{ route($financeRoutePrefix.'.payments.create', ['invoice_id' => $invoice->id]) }}" class="btn btn-success">
                 <i class="bi bi-cash-stack me-1"></i> Record Payment
@@ -307,4 +310,48 @@
         });
     });
 </script>
+
+<style>
+@media print {
+    @page {
+        size: A4 portrait !important;
+        margin: 10mm 12mm !important;
+    }
+    *, *::before, *::after {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+        box-sizing: border-box !important;
+    }
+    html, body {
+        background: #ffffff !important;
+        color: #111827 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        font-size: 10pt !important;
+    }
+    .no-print, .sidebar, .topbar, .app-footer, .bg-orb-3, .sidebar-backdrop, nav, button, .modal {
+        display: none !important;
+    }
+    .app-shell, .app-main, .content {
+        display: block !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+    .card {
+        box-shadow: none !important;
+        border: 1px solid #cbd5e1 !important;
+        margin-bottom: 12px !important;
+    }
+    .table {
+        width: 100% !important;
+        border-collapse: collapse !important;
+    }
+    .table th, .table td {
+        border: 1px solid #cbd5e1 !important;
+        padding: 6px 8px !important;
+    }
+}
+</style>
 @endsection

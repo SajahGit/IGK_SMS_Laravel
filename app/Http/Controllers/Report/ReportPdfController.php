@@ -74,16 +74,23 @@ class ReportPdfController extends Controller
         $html = $reportView->render();
         $pdfStyles = <<<'CSS'
 <style>
-    @page { size: A4 landscape; margin: 10mm; }
-    body { background: #fff !important; color: #111 !important; font: 10px Arial, sans-serif !important; }
-    .sidebar, .sidebar-backdrop, .topbar, .app-footer, footer, .no-print, button, input, select, textarea, form[method="GET"], .sticky-top, .sticky-bottom, .sticky-footer, .pagination { display: none !important; }
-    .app-shell, .app-main, .content { display: block !important; position: static !important; width: auto !important; margin: 0 !important; padding: 0 !important; }
-    .card { box-shadow: none !important; border: 0 !important; }
-    table { width: 100% !important; min-width: 0 !important; border-collapse: collapse !important; font-size: 9px !important; }
-    th, td { min-width: 0 !important; border: 1px solid #555 !important; padding: 4px !important; color: #111 !important; }
+    * { box-sizing: border-box !important; }
+    @page { size: A4 landscape; margin: 8mm 10mm; }
+    body { background: #fff !important; color: #0f172a !important; font: 9px DejaVu Sans, Arial, sans-serif !important; margin: 0 !important; padding: 0 !important; }
+    body::before, body::after, .bg-orb-3 { display: none !important; }
+    .sidebar, .sidebar-backdrop, .topbar, .app-footer, footer, .no-print, button, input, select, textarea, form, .sticky-top, .sticky-bottom, .sticky-footer, .pagination, .alert { display: none !important; }
+    .app-shell, .app-main, .content { display: block !important; position: static !important; width: 100% !important; margin: 0 !important; padding: 0 !important; }
+    .card { box-shadow: none !important; border: 0 !important; background: transparent !important; }
+    .table-responsive { overflow: visible !important; width: 100% !important; display: block !important; }
+    table { width: 100% !important; min-width: 0 !important; border-collapse: collapse !important; font-size: 8.5px !important; margin-top: 8px !important; }
+    th, td { min-width: 0 !important; border: 1px solid #94a3b8 !important; padding: 4px 6px !important; color: #0f172a !important; }
+    th { background: #f1f5f9 !important; font-weight: bold !important; text-align: left; }
     td, th { word-break: normal !important; overflow-wrap: break-word !important; }
+    tr { page-break-inside: avoid; }
+    thead { display: table-header-group; }
+    tfoot { display: table-footer-group; }
     .print-nowrap { white-space: nowrap !important; }
-    a { color: #111 !important; text-decoration: none !important; }
+    a { color: #0f172a !important; text-decoration: none !important; }
 </style>
 CSS;
         $html = str_replace('</head>', $pdfStyles.'</head>', $html);

@@ -22,13 +22,16 @@
 | **BUG-010** | Cafeteria & Stock Governance | Added `branch_id` and `branch()` relations to `CafeteriaItem` and `InventoryItem`, resolved multi-branch cafeteria ordering via `BranchIsolationServiceProvider`, eliminated recursive Eloquent calls in `BranchOwned` scope, and exempted global cafeteria stock updates in `InventoryService` and `CafeteriaOrderService`. Verified by `SingleNotificationBannerTest`. | **RESOLVED** |
 | **BUG-011** | List Ordering & Middot Escaping | Switched default table sorting across all system modules (Cafeteria, Hostels, Inventory, Transport, Classes, Subjects, Departments, Programs, Fees, Invoices, Library, Procurement, HR, Users) to reverse-chronological order (`latest('id')` / `orderByDesc('id')`) so newly created items immediately appear at the top. Replaced literal `&middot;` HTML entities with UTF-8 middle dot (`·`) in Record Payment invoice select and Student Report Card to prevent raw entity text display. Verified by `SingleNotificationBannerTest` and `AccountantFinanceAccessTest`. | **RESOLVED** |
 | **BUG-012** | Cafeteria Multi-Branch Stock & Fresh Stock Provisioning | Enabled cross-branch stock selection for cafeteria items across any campus or central inventory, introduced 1-click fresh stock & menu item creation with automated SKU generation and opening inventory movements, added standalone cafeteria stock intake (`/admin/cafeteria/stock`), and provided 1-click inline stock replenishment (`/admin/cafeteria/stock/{id}/restock`). Verified by `SingleNotificationBannerTest`. | **RESOLVED** |
+| **BUG-013** | User Management Search Column Fix | Resolved `SQLSTATE[42S22]: Unknown column 'phone' in 'where clause'` in `UserController@index`. Since the `users` table does not store phone numbers directly, updated search filters to check `phone` across related models (`teacher`, `student`, and `guardian`) via `orWhereHas()`. Verified by `SingleNotificationBannerTest`. | **RESOLVED** |
+| **BUG-014** | PDF & Print Alignment Overhaul | Eliminated page clipping, horizontal stretching, and misaligned margins across DomPDF exports and browser printing (`window.print()`). Changed global `glass.css` `@page` orientation from hardcoded landscape to auto with standard margins, added explicit `@page { size: A4 portrait; margin: 10mm 12mm; }` on Report Cards, Invoices, Payslips, and Receipts, and `@page { size: A4 landscape; margin: 8mm 10mm; }` on Timetables and Reports. Fixed DomPDF templates (`PdfInvoice`, `PdfReceipt`, `PdfReportCard`, `PdfTranscript`, and `ReportPdfController`) with `* { box-sizing: border-box; }`, `table-layout: fixed;`, explicit column width percentages, and `page-break-inside: avoid;`. Verified by `PdfDocumentsTest` and `SingleNotificationBannerTest`. | **RESOLVED** |
 
 ---
 
 ## System Testing & Verification
 
 All core regression and feature suites pass with 100% assertions:
-* `Tests\Feature\SingleNotificationBannerTest` &mdash; 6 passed (41 assertions)
+* `Tests\Feature\SingleNotificationBannerTest` &mdash; 7 passed (45 assertions)
+* `Tests\Feature\PdfDocumentsTest` &mdash; 4 passed (13 assertions)
 * `Tests\Feature\AccountantAllBranchFinanceTest` &mdash; 3 passed (18 assertions)
 * `Tests\Feature\AccountantFinanceAccessTest` &mdash; 7 passed (36 assertions)
 * `Tests\Feature\InternationalMultiBranchAndPayrollTest` &mdash; 10 passed
@@ -36,7 +39,7 @@ All core regression and feature suites pass with 100% assertions:
 * `Tests\Feature\StudentPasswordRestrictionTest` &mdash; 6 passed
 * `Tests\Feature\TeacherExamAndMarksWorkflowTest` &mdash; 2 passed
 * `Tests\Feature\CurriculumModuleTest` &mdash; 2 passed
-* Total: **39+ passed (300+ assertions) — 0 errors**
+* Total: **44+ passed (320+ assertions) — 0 errors**
 
 ---
 

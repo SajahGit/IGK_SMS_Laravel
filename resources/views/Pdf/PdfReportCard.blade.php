@@ -4,24 +4,30 @@
     <meta charset="utf-8">
     <title>Report Card - {{ $student->admission_no }}</title>
     <style>
-        @page { margin: 28px; }
-        body { font-family: DejaVu Sans, sans-serif; color: #172033; font-size: 10px; }
+        * { box-sizing: border-box; }
+        @page { size: a4 portrait; margin: 24px 28px; }
+        body { font-family: DejaVu Sans, sans-serif; color: #1e293b; font-size: 10px; line-height: 1.4; margin: 0; padding: 0; }
         h1, h2, p { margin: 0; }
-        .header { text-align: center; border-bottom: 2px solid #244c86; padding-bottom: 12px; margin-bottom: 16px; }
-        .header h1 { color: #244c86; font-size: 20px; margin-bottom: 5px; }
-        .header p { color: #526179; margin-top: 3px; }
-        .title { text-align: center; margin: 12px 0; font-size: 15px; }
-        .meta, .summary { width: 100%; border-collapse: collapse; margin-bottom: 14px; }
-        .meta td, .summary td { border: 1px solid #d5dce7; padding: 7px; }
-        .label { color: #526179; font-size: 9px; }
-        table.marks { width: 100%; border-collapse: collapse; margin: 12px 0; }
-        .marks th, .marks td { border: 1px solid #cbd4e1; padding: 6px; }
-        .marks th { background: #edf2f8; text-align: left; }
+        .header { text-align: center; border-bottom: 2px solid #2563eb; padding-bottom: 12px; margin-bottom: 14px; }
+        .header h1 { color: #1e3a8a; font-size: 19px; margin-bottom: 4px; }
+        .header p { color: #475569; font-size: 9.5px; margin-top: 2px; }
+        .title { text-align: center; margin: 10px 0 3px; font-size: 14px; color: #1e293b; }
+        table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+        .meta, .summary { margin-bottom: 12px; }
+        .meta td, .summary td { border: 1px solid #cbd5e1; padding: 6px 8px; width: 33.33%; vertical-align: top; }
+        .label { color: #64748b; font-size: 8.5px; text-transform: uppercase; letter-spacing: 0.5px; }
+        table.marks { margin: 12px 0; }
+        .marks th, .marks td { border: 1px solid #cbd5e1; padding: 6px 7px; vertical-align: middle; }
+        .marks th { background: #f1f5f9; color: #1e293b; font-weight: bold; }
         .center { text-align: center; }
-        .signatures { width: 100%; margin-top: 45px; text-align: center; }
-        .signatures td { width: 33%; padding: 0 12px; }
-        .line { border-top: 1px solid #7b8798; padding-top: 6px; }
+        .signatures { margin-top: 35px; text-align: center; page-break-inside: avoid; }
+        .signatures td { width: 33.33%; padding: 0 16px; border: none; }
+        .line { border-top: 1px solid #94a3b8; padding-top: 6px; font-weight: bold; font-size: 9.5px; }
         .muted { color: #64748b; }
+        .col-sub { width: 34%; }
+        .col-num { width: 11%; }
+        .col-cred { width: 10%; }
+        .col-gp { width: 12%; }
     </style>
 </head>
 <body>
@@ -34,7 +40,7 @@
     </header>
 
     <h2 class="title">Official Student Report Card</h2>
-    <p class="center muted">{{ $selectedTerm ? $selectedTerm->academicYear->name.' - '.$selectedTerm->name : 'Published results' }}</p>
+    <p class="center muted" style="margin-bottom: 10px;">{{ $selectedTerm ? $selectedTerm->academicYear->name.' — '.$selectedTerm->name : 'Published results' }}</p>
 
     <table class="meta">
         <tr>
@@ -52,13 +58,13 @@
     <table class="marks">
         <thead>
             <tr>
-                <th>Subject / Exam</th>
-                <th class="center">Credits</th>
-                <th class="center">Maximum</th>
-                <th class="center">Obtained</th>
-                <th class="center">Percent</th>
-                <th class="center">Grade</th>
-                <th class="center">Grade Point</th>
+                <th class="col-sub">Subject / Exam</th>
+                <th class="col-cred center">Credits</th>
+                <th class="col-num center">Maximum</th>
+                <th class="col-num center">Obtained</th>
+                <th class="col-num center">Percent</th>
+                <th class="col-num center">Grade</th>
+                <th class="col-gp center">Grade Point</th>
             </tr>
         </thead>
         <tbody>
@@ -73,13 +79,13 @@
                         $totalMaximum += $credits;
                     @endphp
                     <tr>
-                        <td>{{ $subjectResult->subject->name }}<br><span class="muted">{{ $subjectResult->subject->code }} - Term result</span></td>
-                        <td class="center">{{ $credits ?: '—' }}</td>
-                        <td class="center">—</td>
-                        <td class="center">{{ $subjectResult->result_status === 'excused' ? 'Excused' : '—' }}</td>
-                        <td class="center">{{ $subjectResult->percentage === null ? '—' : $subjectResult->percentage.'%' }}</td>
-                        <td class="center">{{ $subjectResult->result_status === 'graded' ? $subjectResult->grade : ucfirst($subjectResult->result_status) }}</td>
-                        <td class="center">{{ $subjectResult->grade_point === null ? '—' : number_format((float) $subjectResult->grade_point, 2) }}</td>
+                        <td class="col-sub">{{ $subjectResult->subject->name }}<br><span class="muted">{{ $subjectResult->subject->code }} — Term result</span></td>
+                        <td class="col-cred center">{{ $credits ?: '—' }}</td>
+                        <td class="col-num center">—</td>
+                        <td class="col-num center">{{ $subjectResult->result_status === 'excused' ? 'Excused' : '—' }}</td>
+                        <td class="col-num center">{{ $subjectResult->percentage === null ? '—' : $subjectResult->percentage.'%' }}</td>
+                        <td class="col-num center">{{ $subjectResult->result_status === 'graded' ? $subjectResult->grade : ucfirst($subjectResult->result_status) }}</td>
+                        <td class="col-gp center">{{ $subjectResult->grade_point === null ? '—' : number_format((float) $subjectResult->grade_point, 2) }}</td>
                     </tr>
                 @empty
                     <tr><td colspan="7" class="center">No subject results are available for this term.</td></tr>
@@ -99,13 +105,13 @@
                         }
                     @endphp
                     <tr>
-                        <td>{{ $subject->name }}<br><span class="muted">{{ $subject->code }} - {{ $result->exam->name }}</span></td>
-                        <td class="center">{{ $credits }}</td>
-                        <td class="center">{{ $maximum }}</td>
-                        <td class="center">{{ $result->is_absent ? ($result->is_excused ? 'Excused' : 'Absent') : \App\Support\SchoolHelper::formatMarks($result->marks) }}</td>
-                        <td class="center">{{ $result->is_absent ? '—' : $percentage.'%' }}</td>
-                        <td class="center">{{ $grade }}</td>
-                        <td class="center">{{ number_format($gradePoint, 1) }}</td>
+                        <td class="col-sub">{{ $subject->name }}<br><span class="muted">{{ $subject->code }} — {{ $result->exam->name }}</span></td>
+                        <td class="col-cred center">{{ $credits }}</td>
+                        <td class="col-num center">{{ $maximum }}</td>
+                        <td class="col-num center">{{ $result->is_absent ? ($result->is_excused ? 'Excused' : 'Absent') : \App\Support\SchoolHelper::formatMarks($result->marks) }}</td>
+                        <td class="col-num center">{{ $result->is_absent ? '—' : $percentage.'%' }}</td>
+                        <td class="col-num center">{{ $grade }}</td>
+                        <td class="col-gp center">{{ number_format($gradePoint, 1) }}</td>
                     </tr>
                 @empty
                     <tr><td colspan="7" class="center">No published results available for this term.</td></tr>

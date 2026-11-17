@@ -350,4 +350,40 @@ class SingleNotificationBannerTest extends TestCase
         $oil = InventoryItem::where('name', 'Bulk Cooking Oil')->firstOrFail();
         $this->assertSame(25, $oil->quantity_on_hand);
     }
+
+    public function test_user_index_search_by_phone_and_name_executes_without_sql_column_error(): void
+    {
+        $this->artisan('db:seed', ['--class' => \Database\Seeders\RolePermissionSeeder::class])->run();
+
+        $admin = User::factory()->create([
+            'name' => 'System Super Admin',
+            'email' => 'admin_search_test@example.com',
+            'role' => 'admin',
+            'must_change_password' => false,
+            'is_active' => true,
+        ]);
+        $admin->assignRole('Super Admin');
+
+        $teacherUser = User::factory()->create([
+            'name' => 'Hasan Teacher',
+            'email' => 'hasan.teacher@example.com',
+            'role' => 'teacher',
+            'must_change_password' => false,
+            'is_active' => true,
+        ]);
+        \App\Models\Teacher::create([
+            'user_id' => $teacherUser->id,
+            'phone' => '+94771234567',
+        ]);
+
+        // Search by partial phone number
+        $responsePhone = $this->actingAs($admin)->get(route('admin.users.index', ['search' => '771234']));
+        $responsePhone->assertOk();
+        $responsePhone->assertSee('Hasan Teacher');
+
+        // Search by partial name matching 'has'
+        $responseName = $this->actingAs($admin)->get(route('admin.users.index', ['search' => 'has']));
+        $responseName->assertOk();
+        $responseName->assertSee('Hasan Teacher');
+    }
 }

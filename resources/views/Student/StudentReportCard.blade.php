@@ -236,32 +236,63 @@
 
 <style>
 @media print {
-    .no-print, .sidebar, .topbar, .app-footer, .bg-orb-3, .sidebar-backdrop {
+    @page {
+        size: A4 portrait !important;
+        margin: 10mm 12mm !important;
+    }
+    *, *::before, *::after {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+        box-sizing: border-box !important;
+    }
+    html, body {
+        background: #ffffff !important;
+        color: #111827 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        font-size: 10pt !important;
+    }
+    .no-print, .sidebar, .topbar, .app-footer, .bg-orb-3, .sidebar-backdrop, nav, button {
         display: none !important;
     }
-    .app-shell {
+    .app-shell, .app-main, .content, .report-card-container {
         display: block !important;
-    }
-    .app-main {
-        margin-left: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 !important;
         padding: 0 !important;
-    }
-    .content {
-        padding: 0 !important;
-    }
-    body {
-        background: #ffffff !important;
-        color: #000000 !important;
     }
     .report-card-sheet {
         box-shadow: none !important;
-        border: 1px solid #dee2e6 !important;
-        padding: 20px !important;
+        border: 1px solid #cbd5e1 !important;
+        padding: 16px 20px !important;
+        margin: 0 !important;
+        background: #ffffff !important;
+        border-radius: 4px !important;
     }
-    .table-light {
-        background-color: #f8f9fa !important;
-        -webkit-print-color-adjust: exact;
-        print-color-adjust: exact;
+    .report-header {
+        border-bottom: 2px solid #2563eb !important;
+        padding-bottom: 12px !important;
+        margin-bottom: 16px !important;
+    }
+    .table {
+        width: 100% !important;
+        border-collapse: collapse !important;
+    }
+    .table th, .table td {
+        border: 1px solid #cbd5e1 !important;
+        padding: 6px 8px !important;
+    }
+    .table-light, thead th {
+        background-color: #f1f5f9 !important;
+    }
+    .badge {
+        border: 1px solid #94a3b8 !important;
+        color: #0f172a !important;
+        background-color: #f8fafc !important;
+    }
+    .signatures, .signature-line {
+        page-break-inside: avoid !important;
     }
 }
 </style>

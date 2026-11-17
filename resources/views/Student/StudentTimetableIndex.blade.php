@@ -54,4 +54,53 @@
         </div>
     @endforeach
 </div>
+
+<style>
+@media print {
+    @page {
+        size: A4 landscape !important;
+        margin: 8mm 10mm !important;
+    }
+    *, *::before, *::after {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+        box-sizing: border-box !important;
+    }
+    html, body {
+        background: #ffffff !important;
+        color: #111827 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        font-size: 9pt !important;
+    }
+    .no-print, .sidebar, .topbar, .app-footer, .bg-orb-3, .sidebar-backdrop, nav, button {
+        display: none !important;
+    }
+    .app-shell, .app-main, .content {
+        display: block !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+    .row {
+        display: flex !important;
+        flex-wrap: nowrap !important;
+        gap: 6px !important;
+    }
+    .col-lg {
+        flex: 1 1 0% !important;
+        max-width: 20% !important;
+        width: 20% !important;
+    }
+    .card {
+        border: 1px solid #cbd5e1 !important;
+        box-shadow: none !important;
+        background: #ffffff !important;
+    }
+    .badge {
+        border: 1px solid #cbd5e1 !important;
+    }
+}
+</style>
 @endsection

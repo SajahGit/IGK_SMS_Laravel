@@ -36,7 +36,9 @@ class UserController extends Controller
                 $query->where(function ($w) use ($s) {
                     $w->where('name', 'like', "%{$s}%")
                         ->orWhere('email', 'like', "%{$s}%")
-                        ->orWhere('phone', 'like', "%{$s}%");
+                        ->orWhereHas('teacher', fn ($q) => $q->where('phone', 'like', "%{$s}%"))
+                        ->orWhereHas('student', fn ($q) => $q->where('phone', 'like', "%{$s}%"))
+                        ->orWhereHas('guardian', fn ($q) => $q->where('phone', 'like', "%{$s}%"));
                 });
             })
             ->when($roleFilter, function ($query, $rf) {
