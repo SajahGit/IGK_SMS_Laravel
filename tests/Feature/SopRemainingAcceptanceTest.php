@@ -122,8 +122,8 @@ class SopRemainingAcceptanceTest extends TestCase
             'teacher_id' => $teacher->id,
             'term_id' => $term->id,
         ]);
-        $enrolled = $this->student($class, 'Enrolled Student', 'enrolled@school.test');
-        $dropped = $this->student($class, 'Dropped Student', 'dropped@school.test');
+        $enrolled = $this->student($class, 'Amina EnrolledLearner', 'enrolled@school.test');
+        $dropped = $this->student($class, 'Bilal DroppedLearner', 'dropped@school.test');
         $classSubject->students()->attach($enrolled->id, ['status' => 'enrolled', 'enrolled_at' => now()]);
         $classSubject->students()->attach($dropped->id, ['status' => 'dropped', 'enrolled_at' => now(), 'dropped_at' => now()]);
 
@@ -150,8 +150,8 @@ class SopRemainingAcceptanceTest extends TestCase
         $this->actingAs($admin)
             ->get(route('reports.enrollment', ['class_id' => $class->id, 'status' => 'dropped']))
             ->assertOk()
-            ->assertSee('Dropped Student')
-            ->assertDontSee('Enrolled Student');
+            ->assertSee('Bilal DroppedLearner')
+            ->assertDontSee('Amina EnrolledLearner');
 
         $this->actingAs($admin)
             ->post(route('admin.students.class-subjects.drop', [$enrolled, $classSubject]))
