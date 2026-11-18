@@ -11,7 +11,7 @@ class SubjectController extends Controller
 {
     public function index()
     {
-        $subjects = Subject::latest('id')->paginate(10);
+        $subjects = Subject::orderByDesc('updated_at')->latest('id')->paginate(10);
 
         return view('Admin.AdminSubjectsIndex', compact('subjects'));
     }
@@ -46,6 +46,7 @@ class SubjectController extends Controller
         ]);
 
         $subject->update($data);
+        $subject->touch();
 
         return redirect()->route('admin.subjects.index')->with('success', 'Subject updated successfully.');
     }

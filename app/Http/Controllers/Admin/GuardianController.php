@@ -19,7 +19,8 @@ class GuardianController extends Controller
     {
         $guardians = Guardian::with(['user', 'students.user'])
             ->when($request->q, fn ($query, $s) => $query->whereHas('user', fn ($u) => $u->where('name', 'like', "%{$s}%")))
-            ->latest()
+            ->orderByDesc('updated_at')
+            ->latest('id')
             ->paginate(10)
             ->withQueryString();
 
@@ -90,6 +91,7 @@ class GuardianController extends Controller
                 'phone' => $data['phone'],
                 'nationality' => $data['nationality'] ?? null,
             ]);
+            $guardian->touch();
         });
 
         return redirect()->route('admin.guardians.index')->with('success', 'Parent updated successfully.');

@@ -16,7 +16,7 @@ class ClassSubjectController extends Controller
     {
         return view('Admin.AdminClassSubjectsIndex', [
             'assignments' => ClassSubject::with(['schoolClass', 'subject', 'teacher.user'])
-                ->latest('id')->get(),
+                ->orderByDesc('updated_at')->latest('id')->get(),
             'classes' => SchoolClass::orderBy('name')->orderBy('section')->get(),
             'subjects' => Subject::orderBy('name')->get(),
             'teachers' => Teacher::with('user')->get()->sortBy(fn ($t) => $t->user->name),
@@ -32,14 +32,22 @@ class ClassSubjectController extends Controller
             'teacher_id' => 'required|exists:teachers,id',
         ], ['subject_id.unique' => 'This subject is already assigned to that class.']);
 
-        ClassSubject::create($data);
+        $assignment = ClassSubject::create($data);
+        $teacher = Teacher::find($data['teacher_id']);
+        if ($teacher) {
+            $teacher->touch();
+        }
 
         return back()->with('success', 'Subject assigned to class.');
     }
 
     public function destroy(ClassSubject $classSubject)
     {
+        $teacher = $classSubject->teacher;
         $classSubject->delete();
+        if ($teacher) {
+            $teacher->touch();
+        }
 
         return back()->with('success', 'Assignment removed.');
     }

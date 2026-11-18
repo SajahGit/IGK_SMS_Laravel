@@ -21,8 +21,10 @@
                             ->values();
                         $visibleAssignments = $assignments->take(3);
                         $moreAssignments = $assignments->slice(3);
-                        $campusName = $teacher->branch?->name ?? $teacher->user->branch?->name ?? 'Unassigned';
-                        $availableBranches = ($branches ?? collect())->where('id', '!=', $teacher->branch_id ?? $teacher->user->branch_id);
+                        $campus = $teacher->branch ?? $teacher->user?->branch ?? $teacher->classSubjects->first()?->schoolClass?->branch;
+                        $campusName = $campus?->name ?? 'Unassigned';
+                        $teacherBranchId = $teacher->branch_id ?? $teacher->user?->branch_id ?? $campus?->id;
+                        $availableBranches = ($branches ?? collect())->where('id', '!=', $teacherBranchId);
                     @endphp
                     <tr>
                         <td class="teacher-name fw-semibold">

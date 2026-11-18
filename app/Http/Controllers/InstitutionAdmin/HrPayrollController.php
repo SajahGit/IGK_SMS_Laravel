@@ -33,6 +33,7 @@ class HrPayrollController extends Controller
                     ->orWhereHas('user', fn ($user) => $user->where('name', 'like', '%'.$request->string('search').'%'))
                     ->orWhereHas('teacher.user', fn ($user) => $user->where('name', 'like', '%'.$request->string('search').'%'));
             }))
+            ->orderByDesc('updated_at')
             ->latest('id')
             ->paginate(15)
             ->withQueryString();
@@ -73,6 +74,7 @@ class HrPayrollController extends Controller
         $data = $this->validateEmployee($request, $employee);
         $before = $employee->toArray();
         $employee->update($data);
+        $employee->touch();
         AuditLogger::log('updated_employee', $employee, $before, $employee->fresh()->toArray());
 
         return redirect()->route('admin.hr.employees.index')->with('success', 'Employee updated.');
@@ -97,7 +99,7 @@ class HrPayrollController extends Controller
         $this->authorize('hr.read');
         $leaveRequests = LeaveRequest::query()->with(['employee.user', 'employee.teacher.user', 'reviewer'])
             ->whereHas('employee')
-            ->latest('start_date')->latest('id')->paginate(20);
+            ->orderByDesc('updated_at')->latest('id')->paginate(20);
         $employees = Employee::query()->where('employment_status', 'active')->with(['user', 'teacher.user'])->orderBy('employee_no')->get();
 
         return view('InstitutionAdmin.HrLeavesIndex', compact('leaveRequests', 'employees'));
@@ -133,7 +135,7 @@ class HrPayrollController extends Controller
     public function payrollIndex(): View
     {
         $this->authorize('payroll.read');
-        $runs = PayrollRun::query()->withCount('entries')->latest('period_start')->latest('id')->paginate(15);
+        $runs = PayrollRun::query()->withCount('entries')->orderByDesc('updated_at')->latest('id')->paginate(15);
 
         return view('InstitutionAdmin.HrPayrollIndex', compact('runs'));
     }

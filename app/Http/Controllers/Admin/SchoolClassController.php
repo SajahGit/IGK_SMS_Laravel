@@ -11,7 +11,7 @@ class SchoolClassController extends Controller
 {
     public function index()
     {
-        $classes = SchoolClass::withCount('students')->latest('id')->paginate(10);
+        $classes = SchoolClass::withCount('students')->orderByDesc('updated_at')->latest('id')->paginate(10);
 
         return view('Admin.AdminClassesIndex', compact('classes'));
     }
@@ -47,6 +47,7 @@ class SchoolClassController extends Controller
         ], ['section.unique' => 'This class and section already exist.']);
 
         $schoolClass->update($data);
+        $schoolClass->touch();
 
         return redirect()->route('admin.classes.index')->with('success', 'Class updated successfully.');
     }

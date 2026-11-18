@@ -30,6 +30,7 @@ class StudentController extends Controller
                 });
             })
             ->when($request->class_id, fn ($query, $classId) => $query->where('class_id', $classId))
+            ->orderByDesc('updated_at')
             ->latest('id')
             ->paginate(10)
             ->withQueryString();
@@ -85,6 +86,7 @@ class StudentController extends Controller
                 'nationality' => $data['nationality'] ?? null,
                 'phone' => $data['phone'] ?? null,
             ]);
+            $student->touch();
         });
 
         return redirect()->route('admin.students.index')->with('success', 'Student created successfully.');
@@ -135,6 +137,7 @@ class StudentController extends Controller
                 'nationality' => $data['nationality'] ?? null,
                 'phone' => $data['phone'] ?? null,
             ]);
+            $student->touch();
         });
 
         return redirect()->route('admin.students.index')->with('success', 'Student updated successfully.');

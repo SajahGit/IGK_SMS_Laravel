@@ -25,7 +25,7 @@ class PurchaseOrderController extends Controller
         $orders = PurchaseOrder::with('supplier')
             ->when($request->filled('status'), fn ($query) => $query->where('status', $request->string('status')))
             ->when($request->filled('search'), fn ($query) => $query->where('order_no', 'like', '%'.$request->string('search').'%'))
-            ->latest('order_date')
+            ->orderByDesc('updated_at')
             ->latest('id')
             ->paginate(15)
             ->withQueryString();

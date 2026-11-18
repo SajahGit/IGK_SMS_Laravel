@@ -21,24 +21,27 @@ class TeacherController extends Controller
 {
     public function index(Request $request)
     {
-        $branches = Branch::where('is_active', true)->orderBy('name')->get();
+        $branches = Branch::withoutGlobalScope('assigned-branch')->where('is_active', true)->orderBy('name')->get();
         $departments = Department::orderBy('name')->get();
 
         $teachers = Teacher::with([
-            'user',
+            'user' => fn ($q) => $q->withoutGlobalScopes(),
+            'user.branch' => fn ($q) => $q->withoutGlobalScopes(),
             'department',
-            'branch',
-            'branchTransfers.fromBranch',
-            'branchTransfers.toBranch',
-            'classSubjects' => fn ($query) => $query->whereHas('schoolClass')->whereHas('subject'),
-            'classSubjects.schoolClass',
+            'branch' => fn ($q) => $q->withoutGlobalScopes(),
+            'branchTransfers.fromBranch' => fn ($q) => $q->withoutGlobalScopes(),
+            'branchTransfers.toBranch' => fn ($q) => $q->withoutGlobalScopes(),
+            'classSubjects' => fn ($query) => $query->withoutGlobalScopes()->whereHas('schoolClass', fn ($q) => $q->withoutGlobalScopes())->whereHas('subject'),
+            'classSubjects.schoolClass' => fn ($query) => $query->withoutGlobalScopes(),
+            'classSubjects.schoolClass.branch' => fn ($query) => $query->withoutGlobalScopes(),
             'classSubjects.subject',
         ])
             ->when($request->q, fn ($query, $s) => $query->whereHas('user', fn ($u) => $u->where('name', 'like', "%{$s}%")))
             ->when($request->filled('status'), fn ($query) => $query->where('status', $request->input('status')))
             ->when($request->filled('department_id'), fn ($query) => $query->where('department_id', $request->integer('department_id')))
             ->when($request->filled('branch_id'), fn ($query) => $query->where('branch_id', $request->integer('branch_id')))
-            ->latest()
+            ->orderByDesc('updated_at')
+            ->latest('id')
             ->paginate(10)
             ->withQueryString();
 
@@ -49,7 +52,7 @@ class TeacherController extends Controller
     {
         return view('InstitutionAdmin.InstitutionAdminTeachersCreate', [
             'departments' => Department::orderBy('name')->get(),
-            'branches' => Branch::where('is_active', true)->orderBy('name')->get(),
+            'branches' => Branch::withoutGlobalScope('assigned-branch')->where('is_active', true)->orderBy('name')->get(),
         ]);
     }
 
@@ -68,6 +71,9 @@ class TeacherController extends Controller
 
         DB::transaction(function () use ($data) {
             $branchId = $data['branch_id'] ?? BranchContext::activeBranchId();
+            if (! $branchId) {
+                $branchId = Branch::withoutGlobalScope('assigned-branch')->where('is_active', true)->orderByDesc('is_main')->value('id');
+            }
 
             $user = User::create([
                 'name' => $data['name'],
@@ -93,9 +99,13 @@ class TeacherController extends Controller
     public function edit(Teacher $teacher)
     {
         return view('InstitutionAdmin.InstitutionAdminTeachersEdit', [
-            'teacher' => $teacher->load('user', 'branch'),
+            'teacher' => $teacher->load([
+                'user' => fn ($q) => $q->withoutGlobalScopes(),
+                'user.branch' => fn ($q) => $q->withoutGlobalScopes(),
+                'branch' => fn ($q) => $q->withoutGlobalScopes(),
+            ]),
             'departments' => Department::orderBy('name')->get(),
-            'branches' => Branch::where('is_active', true)->orderBy('name')->get(),
+            'branches' => Branch::withoutGlobalScope('assigned-branch')->where('is_active', true)->orderBy('name')->get(),
         ]);
     }
 
@@ -113,7 +123,7 @@ class TeacherController extends Controller
         ]);
 
         DB::transaction(function () use ($data, $teacher) {
-            $branchId = $data['branch_id'] ?? $teacher->branch_id;
+            $branchId = $data['branch_id'] ?? $teacher->branch_id ?? $teacher->user->branch_id;
 
             $user = $teacher->user;
             $user->name = $data['name'];
@@ -133,6 +143,7 @@ class TeacherController extends Controller
                 'branch_id' => $branchId,
                 'status' => $data['status'],
             ]);
+            $teacher->touch();
         });
 
         return redirect()->route('admin.teachers.index')->with('success', 'Teacher updated successfully.');

@@ -26,6 +26,7 @@ class HostelController extends Controller
                     ->where('status', 'active')
                     ->where(fn ($active) => $active->whereNull('end_date')->orWhereDate('end_date', '>=', today())),
             ])])
+            ->orderByDesc('updated_at')
             ->latest('id')
             ->get();
         $assignments = HostelAssignment::query()
@@ -33,7 +34,7 @@ class HostelController extends Controller
             ->whereHas('student')
             ->whereHas('room.hostel')
             ->whereHas('academicYear')
-            ->latest('start_date')
+            ->orderByDesc('updated_at')
             ->latest('id')
             ->paginate(25)
             ->withQueryString();
@@ -123,6 +124,8 @@ class HostelController extends Controller
         DB::transaction(function () use ($room, $data): void {
             $old = $room->toArray();
             $room->update($data);
+            $room->touch();
+            $room->hostel?->touch();
             AuditLogger::log('updated', $room, $old, $room->fresh()->toArray());
         });
 

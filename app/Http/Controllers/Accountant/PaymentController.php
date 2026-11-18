@@ -32,7 +32,8 @@ class PaymentController extends Controller
         $pendingInvoices = Invoice::with(['student.user', 'student.class', 'branch'])
             ->where('balance', '>', 0)
             ->whereNotIn('status', ['cancelled', 'draft'])
-            ->orderByDesc('id')
+            ->orderByDesc('updated_at')
+            ->latest('id')
             ->get();
 
         return view('Accountant.AccountantPaymentsCreate', compact('selectedInvoice', 'pendingInvoices') + [

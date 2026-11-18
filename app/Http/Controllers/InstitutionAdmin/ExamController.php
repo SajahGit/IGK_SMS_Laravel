@@ -64,6 +64,7 @@ class ExamController extends Controller
                     $q->where('is_published', false);
                 }
             })
+            ->orderByDesc('updated_at')
             ->latest('id')
             ->paginate(15)
             ->withQueryString();
@@ -120,6 +121,7 @@ class ExamController extends Controller
         $before = $exam->only(['name', 'class_id', 'subject_id', 'term_id', 'exam_date', 'max_marks', 'weight']);
         $data = $this->validatedExam($request);
         $exam->update($data);
+        $exam->touch();
         AuditLogger::log('updated_exam', $exam, $before, $exam->only(array_keys($before)));
 
         return redirect()->route('admin.exams.index')->with('success', 'Exam updated successfully.');

@@ -17,7 +17,7 @@ class BranchController extends Controller
 {
     public function index(): View
     {
-        $branches = Branch::orderByDesc('is_main')->latest('id')->paginate(10)->withQueryString();
+        $branches = Branch::withoutGlobalScope('assigned-branch')->orderByDesc('updated_at')->latest('id')->paginate(10)->withQueryString();
 
         return view('Branches.BranchesIndex', compact('branches'));
     }
@@ -68,6 +68,7 @@ class BranchController extends Controller
     {
         $before = $branch->toArray();
         $branch->update($this->validated($request, $branch));
+        $branch->touch();
         $this->enforceSingleMain($branch);
         AuditLogger::log('updated_branch', $branch, $before, $branch->toArray());
 

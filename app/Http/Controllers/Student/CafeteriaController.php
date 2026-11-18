@@ -24,13 +24,14 @@ class CafeteriaController extends Controller
             ->when($branchId, fn ($q) => $q->where(fn ($sub) => $sub->where('branch_id', $branchId)->orWhereNull('branch_id')))
             ->whereHas('inventoryItem', fn ($query) => $query->withoutGlobalScope(\App\Models\Scopes\BranchOwned::class)->where('is_active', true)->where('quantity_on_hand', '>', 0))
             ->with(['inventoryItem' => fn ($q) => $q->withoutGlobalScope(\App\Models\Scopes\BranchOwned::class)->select('id', 'name', 'quantity_on_hand', 'unit', 'branch_id')])
+            ->orderByDesc('updated_at')
             ->latest('id')
             ->get();
 
         $orders = CafeteriaOrder::query()
             ->where('student_id', $student->id)
             ->with('items.cafeteriaItem')
-            ->latest('order_date')
+            ->orderByDesc('updated_at')
             ->latest('id')
             ->paginate(15)
             ->withQueryString();

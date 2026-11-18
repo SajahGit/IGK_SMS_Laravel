@@ -14,7 +14,7 @@ class AcademicYearController extends Controller
     public function index(): View
     {
         $academicYears = AcademicYear::withCount('terms')
-            ->orderByDesc('start_date')
+            ->orderByDesc('updated_at')
             ->latest('id')
             ->get();
 
@@ -65,6 +65,7 @@ class AcademicYearController extends Controller
             }
 
             $academicYear->update($data);
+            $academicYear->touch();
         });
 
         return redirect()->route('admin.academic-years.index')

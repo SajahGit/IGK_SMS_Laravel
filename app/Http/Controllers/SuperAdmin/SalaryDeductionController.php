@@ -30,7 +30,8 @@ class SalaryDeductionController extends Controller
             ->when($request->filled('branch_id'), fn ($q) => $q->whereHas('employee', fn ($emp) => $emp->where('branch_id', $request->integer('branch_id'))))
             ->when($request->filled('month'), fn ($q) => $q->where('payroll_month', $request->input('month')))
             ->when($request->filled('type'), fn ($q) => $q->where('type', $request->input('type')))
-            ->latest()
+            ->orderByDesc('updated_at')
+            ->latest('id')
             ->paginate(15)
             ->withQueryString();
 

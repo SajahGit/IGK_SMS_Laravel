@@ -21,7 +21,7 @@ class LibraryMasterController extends Controller
     {
         return view('Library.LibraryMasterIndex', [
             'title' => 'Authors', 'singular' => 'Author', 'slug' => 'authors',
-            'rows' => LibraryAuthor::withCount('books')->latest('id')->paginate(15),
+            'rows' => LibraryAuthor::withCount('books')->orderByDesc('updated_at')->latest('id')->paginate(15),
         ]);
     }
 
@@ -39,6 +39,7 @@ class LibraryMasterController extends Controller
         $data = $request->validate(['name' => ['required', 'string', 'max:80', 'regex:/\A[A-Za-z\s.\'-]+\z/', Rule::unique('library_authors', 'name')->ignore($author->id)]]);
         $before = $author->toArray();
         $author->update($data);
+        $author->touch();
         AuditLogger::log('updated_library_author', $author, $before, $author->toArray());
 
         return back()->with('success', 'Author updated.');
@@ -61,7 +62,7 @@ class LibraryMasterController extends Controller
     {
         return view('Library.LibraryMasterIndex', [
             'title' => 'Categories', 'singular' => 'Category', 'slug' => 'categories',
-            'rows' => LibraryCategory::withCount('books')->latest('id')->paginate(15),
+            'rows' => LibraryCategory::withCount('books')->orderByDesc('updated_at')->latest('id')->paginate(15),
         ]);
     }
 
@@ -79,6 +80,7 @@ class LibraryMasterController extends Controller
         $data = $request->validate(['name' => ['required', 'string', 'max:120', 'regex:/\A[A-Za-z][A-Za-z0-9\s\-:()\'&]*\z/', Rule::unique('library_categories', 'name')->ignore($category->id)]]);
         $before = $category->toArray();
         $category->update($data);
+        $category->touch();
         AuditLogger::log('updated_library_category', $category, $before, $category->toArray());
 
         return back()->with('success', 'Category updated.');
@@ -101,7 +103,7 @@ class LibraryMasterController extends Controller
     {
         $copies = LibraryCopy::with('book')
             ->when($request->filled('status'), fn ($q) => $q->where('status', $request->string('status')))
-            ->latest('id')->paginate(20)->withQueryString();
+            ->orderByDesc('updated_at')->latest('id')->paginate(20)->withQueryString();
 
         return view('Library.LibraryCopiesIndex', compact('copies'));
     }
@@ -117,6 +119,7 @@ class LibraryMasterController extends Controller
         }
         $before = $copy->toArray();
         $copy->update($data);
+        $copy->touch();
         AuditLogger::log('updated_library_copy', $copy, $before, $copy->toArray());
 
         return back()->with('success', 'Copy updated.');
@@ -131,7 +134,7 @@ class LibraryMasterController extends Controller
             ->when($request->input('state') === 'active', fn ($q) => $q->whereNull('returned_at'))
             ->when($request->input('state') === 'overdue', fn ($q) => $q->whereNull('returned_at')->whereDate('due_at', '<', today()))
             ->when($request->input('state') === 'returned', fn ($q) => $q->whereNotNull('returned_at'))
-            ->orderByDesc('issued_at')->latest('id')->paginate(20)->withQueryString();
+            ->orderByDesc('updated_at')->latest('id')->paginate(20)->withQueryString();
 
         return view('Library.LibraryLoansIndex', compact('loans'));
     }
@@ -144,6 +147,7 @@ class LibraryMasterController extends Controller
         }
         $before = $loan->toArray();
         $loan->update($data);
+        $loan->touch();
         AuditLogger::log('updated_library_loan', $loan, $before, $loan->toArray());
 
         return back()->with('success', 'Due date updated.');

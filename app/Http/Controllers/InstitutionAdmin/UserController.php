@@ -52,6 +52,7 @@ class UserController extends Controller
             ->when($statusFilter !== null && $statusFilter !== '', function ($query) use ($statusFilter) {
                 $query->where('is_active', (bool) $statusFilter);
             })
+            ->orderByDesc('updated_at')
             ->latest('id')
             ->paginate(15)
             ->withQueryString();
@@ -60,7 +61,7 @@ class UserController extends Controller
             ->when(! $request->user()->isSuperAdmin(), fn ($query) => $query->where('name', '!=', 'Super Admin'))
             ->orderBy('name')
             ->get();
-        $branches = Branch::where('is_active', true)->orderBy('name')->get();
+        $branches = Branch::withoutGlobalScope('assigned-branch')->where('is_active', true)->orderBy('name')->get();
 
         return view('InstitutionAdmin.InstitutionAdminUsersIndex', compact('users', 'roles', 'branches', 'search', 'roleFilter', 'branchFilter', 'statusFilter'));
     }
@@ -182,6 +183,7 @@ class UserController extends Controller
             }
 
             $user->update($updateData);
+            $user->touch();
             $user->syncRoles($roleNames);
 
             if ($oldRoles !== $roleNames) {

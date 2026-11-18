@@ -16,7 +16,7 @@ class SupplierController extends Controller
     public function index(): View
     {
         $this->authorize('suppliers.read');
-        $suppliers = Supplier::withCount('purchaseOrders')->latest('id')->paginate(15);
+        $suppliers = Supplier::withCount('purchaseOrders')->orderByDesc('updated_at')->latest('id')->paginate(15);
 
         return view('Procurement.SuppliersIndex', compact('suppliers'));
     }

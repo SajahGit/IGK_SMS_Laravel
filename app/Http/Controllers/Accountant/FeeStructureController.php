@@ -34,6 +34,7 @@ class FeeStructureController extends Controller
         $feeStructures = FeeStructure::with(['schoolClass.branch', 'term', 'program', 'academicYear', 'items'])
             ->when($classId, fn ($q) => $q->where('class_id', $classId))
             ->when($programId, fn ($q) => $q->where('program_id', $programId))
+            ->orderByDesc('updated_at')
             ->latest('id')
             ->get();
 

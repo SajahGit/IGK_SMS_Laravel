@@ -17,7 +17,7 @@ class AccountController extends Controller
         $accounts = Account::with('parent')
             ->when($request->filled('type'), fn ($q) => $q->where('type', $request->string('type')))
             ->when($request->filled('q'), fn ($q) => $q->where(fn ($w) => $w->where('name', 'like', '%'.$request->string('q').'%')->orWhere('code', 'like', '%'.$request->string('q').'%')))
-            ->latest('id')->paginate(20)->withQueryString();
+            ->orderByDesc('updated_at')->latest('id')->paginate(20)->withQueryString();
 
         return view('Accounting.AccountsIndex', compact('accounts'));
     }
@@ -44,6 +44,7 @@ class AccountController extends Controller
     {
         $before = $account->toArray();
         $account->update($this->validated($request, $account));
+        $account->touch();
         AuditLogger::log('updated_account', $account, $before, $account->toArray());
 
         return redirect()->route('admin.accounts.index')->with('success', 'Account updated successfully.');

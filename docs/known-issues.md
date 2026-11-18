@@ -27,15 +27,18 @@
 | **BUG-015** | User Roles Dropdown & Student Role Inclusion | Restored the "Student" role across all user role dropdowns and filters in `UserController` (`index`, `create`, `edit`), `StoreUserRequest`, and `UpdateUserRequest`. Administrators can now filter user accounts by the Student role and manage student user profiles without artificial exclusions. Verified by `SingleNotificationBannerTest`. | **RESOLVED** |
 | **BUG-016** | Comprehensive Exam & Results Search Engine | Added complete multi-parameter search bars and filter controls across Admin Exams (`admin.exams.index`), Teacher Exams (`teacher.exams.index`), Term Results (`admin.term-results.index`), and Exam Marks/Results views (`TeacherMarksShow`, `TeacherMarksEdit`, and `LayoutResultsTable`). Users can search exams by keyword, subject name/code, class, term, exam type, and publication status, and filter students in real-time while grading. Verified by `SingleNotificationBannerTest`, `TeacherExamAndMarksWorkflowTest`, and `TermResultsWorkflowTest`. | **RESOLVED** |
 | **BUG-017** | Teacher Exam List Default Ordering | Prioritized reverse-chronological ID ordering (`latest('id')`) on Teacher Exams (`Teacher\ExamController@index`) and Admin Exams (`InstitutionAdmin\ExamController@index`), ensuring newly created exams immediately appear at the very top of the list regardless of exam target date. Verified by `TeacherExamAndMarksWorkflowTest`. | **RESOLVED** |
+| **BUG-018** | Registrar Cross-Branch Multi-Campus Visibility & Teacher Class/Campus Display | Enabled institutional multi-campus visibility for Registrar role via `User::isRegistrar()` and `BranchContext::canAccessAllBranches()`. Backfilled `branch_id` across legacy teacher rows via migration `2026_11_17_170000_backfill_teacher_branch_ids.php`. Applied `withoutGlobalScopes()` on teacher branch, user branch, and class assignments in `TeacherController@index` and `teacher-table.blade.php`, ensuring campus name and assigned classes are always displayed. Verified by `RegistrarAccessTest`. | **RESOLVED** |
+| **BUG-019** | Application-Wide Global Auto-Sort by Latest Activity | Standardized list queries across all application modules (Teachers, Staff, Students, Classes, Subjects, Departments, Programs, Inventory, Cafeteria, Hostels, Transport, Guardians, Academic Years, Terms, Roles, Invoices, Payments, Fee Structures, and Exams) to `orderByDesc('updated_at')->latest('id')`. Implemented automatic timestamp touching on all updates and related model changes, guaranteeing newly created or edited records immediately move to the top of their respective lists. Verified by `RegistrarAccessTest`. | **RESOLVED** |
 
 ---
 
 ## System Testing & Verification
 
 All core regression and feature suites pass with 100% assertions:
+* `Tests\Feature\RegistrarAccessTest` &mdash; 5 passed (49 assertions)
 * `Tests\Feature\SingleNotificationBannerTest` &mdash; 9 passed (55 assertions)
-* `Tests\Feature\PdfDocumentsTest` &mdash; 4 passed (13 assertions)
 * `Tests\Feature\TeacherExamAndMarksWorkflowTest` &mdash; 3 passed (22 assertions)
+* `Tests\Feature\PdfDocumentsTest` &mdash; 4 passed (13 assertions)
 * `Tests\Feature\TermResultsWorkflowTest` &mdash; 7 passed (48 assertions)
 * `Tests\Feature\AccountantAllBranchFinanceTest` &mdash; 3 passed (18 assertions)
 * `Tests\Feature\AccountantFinanceAccessTest` &mdash; 7 passed (36 assertions)
@@ -43,7 +46,7 @@ All core regression and feature suites pass with 100% assertions:
 * `Tests\Feature\PrivateMessagePrivacyAndScopingTest` &mdash; 3 passed
 * `Tests\Feature\StudentPasswordRestrictionTest` &mdash; 6 passed
 * `Tests\Feature\CurriculumModuleTest` &mdash; 2 passed
-* Total: **54+ passed (384+ assertions) — 0 errors**
+* Total: **59+ passed (430+ assertions) — 0 errors**
 
 ---
 

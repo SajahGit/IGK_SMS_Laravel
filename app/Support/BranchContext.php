@@ -20,7 +20,7 @@ class BranchContext
 
     public static function canAccessAllBranches(?User $user): bool
     {
-        return $user !== null && ($user->isSuperAdmin() || $user->isInstitutionAdmin() || $user->isAccountant());
+        return $user !== null && ($user->isSuperAdmin() || $user->isInstitutionAdmin() || $user->isAccountant() || $user->isRegistrar());
     }
 
     public static function activeBranchId(?User $user = null): ?int

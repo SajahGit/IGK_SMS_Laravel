@@ -17,7 +17,7 @@ class AnnouncementController extends Controller
     public function index(): View
     {
         $announcements = Announcement::with(['creator', 'program', 'schoolClass'])
-            ->orderByDesc('published_at')
+            ->orderByDesc('updated_at')
             ->latest('id')
             ->paginate(15);
 

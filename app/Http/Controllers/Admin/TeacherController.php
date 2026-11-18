@@ -25,7 +25,8 @@ class TeacherController extends Controller
             'classSubjects.subject',
         ])
             ->when($request->q, fn ($query, $s) => $query->whereHas('user', fn ($u) => $u->where('name', 'like', "%{$s}%")))
-            ->latest()
+            ->orderByDesc('updated_at')
+            ->latest('id')
             ->paginate(10)
             ->withQueryString();
 
@@ -98,6 +99,7 @@ class TeacherController extends Controller
                 'phone' => $data['phone'] ?? null,
                 'department_id' => $data['department_id'] ?? null,
             ]);
+            $teacher->touch();
         });
 
         return redirect()->route('admin.teachers.index')->with('success', 'Teacher updated successfully.');

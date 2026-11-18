@@ -16,7 +16,7 @@ class DepartmentController extends Controller
     {
         $this->authorize('viewAny', Department::class);
 
-        $departments = Department::withCount('programs')->latest('id')->paginate(10)->withQueryString();
+        $departments = Department::withCount('programs')->orderByDesc('updated_at')->latest('id')->paginate(10)->withQueryString();
 
         return view('InstitutionAdmin.InstitutionAdminDepartmentsIndex', compact('departments'));
     }
@@ -52,6 +52,7 @@ class DepartmentController extends Controller
 
         $before = $department->toArray();
         $department->update($request->validated());
+        $department->touch();
         AuditLogger::log('updated_department', $department, $before, $department->toArray());
 
         return redirect()->route('admin.departments.index')

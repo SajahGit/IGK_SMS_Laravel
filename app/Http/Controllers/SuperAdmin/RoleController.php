@@ -20,7 +20,7 @@ class RoleController extends Controller
     {
         $this->authorize('viewAny', Role::class);
 
-        $roles = Role::with('permissions')->latest('id')->get();
+        $roles = Role::with('permissions')->orderByDesc('updated_at')->latest('id')->get();
 
         return view('SuperAdmin.SuperAdminRolesIndex', compact('roles'));
     }
@@ -70,6 +70,7 @@ class RoleController extends Controller
             'name' => $request->name,
             'guard_name' => $request->guard_name,
         ]);
+        $role->touch();
         AuditLogger::log('updated_role', $role, $before, $role->only(['name', 'guard_name']));
 
         return redirect()->route('admin.roles.index')

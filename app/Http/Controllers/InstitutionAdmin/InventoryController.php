@@ -28,6 +28,7 @@ class InventoryController extends Controller
                     ->orWhere('category', 'like', '%'.$request->string('search').'%');
             }))
             ->when($request->boolean('low_stock'), fn ($query) => $query->whereColumn('quantity_on_hand', '<=', 'reorder_level'))
+            ->orderByDesc('updated_at')
             ->latest('id')
             ->paginate(15)
             ->withQueryString();
@@ -76,7 +77,7 @@ class InventoryController extends Controller
     {
         $this->authorizeInventory('inventory.read');
         $inventoryItem->load(['movements.recorder']);
-        $movements = $inventoryItem->movements()->latest()->paginate(20);
+        $movements = $inventoryItem->movements()->orderByDesc('updated_at')->latest('id')->paginate(20);
 
         return view('InstitutionAdmin.InventoryShow', compact('inventoryItem', 'movements'));
     }
@@ -92,6 +93,7 @@ class InventoryController extends Controller
     {
         $before = $inventoryItem->toArray();
         $inventoryItem->update($request->validated() + ['is_active' => $request->boolean('is_active')]);
+        $inventoryItem->touch();
         AuditLogger::log('updated_inventory_item', $inventoryItem, $before, $inventoryItem->toArray());
 
         return redirect()->route('admin.inventory.show', $inventoryItem)

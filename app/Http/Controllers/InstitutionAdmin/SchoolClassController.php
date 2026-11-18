@@ -15,7 +15,7 @@ class SchoolClassController extends Controller
 {
     public function index()
     {
-        $classes = SchoolClass::withCount('students')->latest('id')->paginate(10);
+        $classes = SchoolClass::withCount('students')->orderByDesc('updated_at')->latest('id')->paginate(10);
 
         return view('InstitutionAdmin.InstitutionAdminClassesIndex', compact('classes'));
     }
@@ -71,6 +71,7 @@ class SchoolClassController extends Controller
 
         $before = $schoolClass->toArray();
         $schoolClass->update($data);
+        $schoolClass->touch();
         AuditLogger::log('updated_class', $schoolClass, $before, $schoolClass->toArray());
 
         return redirect()->route('admin.classes.index')->with('success', 'Class updated successfully.');
@@ -94,7 +95,7 @@ class SchoolClassController extends Controller
         return [
             'programs' => Program::orderBy('name')->get(),
             'academicYears' => AcademicYear::orderByDesc('start_date')->get(),
-            'branches' => Branch::where('is_active', true)->orderBy('name')->get(),
+            'branches' => Branch::withoutGlobalScope('assigned-branch')->where('is_active', true)->orderBy('name')->get(),
         ];
     }
 }

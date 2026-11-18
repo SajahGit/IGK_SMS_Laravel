@@ -26,12 +26,13 @@ class CafeteriaController extends Controller
     {
         $items = CafeteriaItem::withoutGlobalScope(BranchOwned::class)
             ->with(['inventoryItem.branch', 'branch'])
+            ->orderByDesc('updated_at')
             ->latest('id')
             ->get();
 
         $orders = CafeteriaOrder::query()
             ->with(['student.user', 'items.cafeteriaItem'])
-            ->latest('order_date')
+            ->orderByDesc('updated_at')
             ->latest('id')
             ->paginate(25)
             ->withQueryString();
@@ -39,6 +40,7 @@ class CafeteriaController extends Controller
         $inventoryItems = InventoryItem::withoutGlobalScope(BranchOwned::class)
             ->with('branch')
             ->where('is_active', true)
+            ->orderByDesc('updated_at')
             ->latest('id')
             ->get();
 
@@ -46,7 +48,7 @@ class CafeteriaController extends Controller
             ->pluck('inventory_item_id')
             ->all();
 
-        $branches = Branch::where('is_active', true)->orderBy('name')->get();
+        $branches = Branch::withoutGlobalScope('assigned-branch')->where('is_active', true)->orderBy('name')->get();
 
         return view('InstitutionAdmin.CafeteriaIndex', compact('items', 'orders', 'inventoryItems', 'linkedInventoryItemIds', 'branches'));
     }
@@ -242,6 +244,7 @@ class CafeteriaController extends Controller
 
         $old = $item->toArray();
         $item->update($data);
+        $item->touch();
         AuditLogger::log('cafeteria_item_updated', $item, $old, $item->toArray());
 
         return redirect()->route('admin.cafeteria.index')->with('success', 'Cafeteria menu item updated.');

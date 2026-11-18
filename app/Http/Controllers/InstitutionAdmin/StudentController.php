@@ -33,13 +33,14 @@ class StudentController extends Controller
         $students = $this->studentQuery($request)
             ->with(['user', 'class', 'primaryGuardian.user'])
             ->withCount('documents')
-            ->orderByDesc('id')
+            ->orderByDesc('updated_at')
+            ->latest('id')
             ->paginate(10)
             ->withQueryString();
 
         return view('InstitutionAdmin.InstitutionAdminStudentsIndex', [
             'students' => $students,
-            'classes' => SchoolClass::orderBy('name')->orderBy('section')->get(),
+            'classes' => SchoolClass::withoutGlobalScopes()->orderBy('name')->orderBy('section')->get(),
             'savedFilters' => SavedFilter::where('user_id', auth()->id() ?? $request->user()?->id)
                 ->where('scope', 'students')
                 ->orderBy('name')
@@ -253,6 +254,7 @@ class StudentController extends Controller
             }
 
             AuditLogger::log('updated', $student, $oldStudent, $student->toArray());
+            $student->touch();
         });
 
         return redirect()->route('admin.students.index')->with('success', 'Student updated successfully.');

@@ -39,7 +39,8 @@ class InvoiceController extends Controller
                             ->orWhereHas('user', fn ($u) => $u->where('name', 'like', "%{$s}%")));
                 });
             })
-            ->orderByDesc('id')
+            ->orderByDesc('updated_at')
+            ->latest('id')
             ->paginate(15)
             ->withQueryString();
 

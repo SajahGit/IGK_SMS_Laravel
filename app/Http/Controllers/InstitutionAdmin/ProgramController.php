@@ -19,6 +19,7 @@ class ProgramController extends Controller
 
         $programs = Program::with('department')
             ->withCount(['students', 'subjects', 'classes'])
+            ->orderByDesc('updated_at')
             ->latest('id')
             ->paginate(10)
             ->withQueryString();
@@ -61,6 +62,7 @@ class ProgramController extends Controller
 
         $before = $program->toArray();
         $program->update($request->validated());
+        $program->touch();
         AuditLogger::log('updated_program', $program, $before, $program->toArray());
 
         return redirect()->route('admin.programs.index')

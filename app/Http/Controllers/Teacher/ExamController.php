@@ -41,6 +41,7 @@ class ExamController extends Controller
             })
             ->when($classId, fn ($q) => $q->where('class_id', $classId))
             ->when($subjectId, fn ($q) => $q->where('subject_id', $subjectId))
+            ->orderByDesc('updated_at')
             ->latest('id')
             ->paginate(12)
             ->withQueryString();

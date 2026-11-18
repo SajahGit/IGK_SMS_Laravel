@@ -22,6 +22,7 @@ class CurriculumController extends Controller
 
         $curricula = Curriculum::with(['program.department', 'subject'])
             ->when($programId, fn ($q) => $q->where('program_id', $programId))
+            ->orderByDesc('updated_at')
             ->latest('id')
             ->paginate(15)
             ->withQueryString();
@@ -78,6 +79,7 @@ class CurriculumController extends Controller
 
         $before = $curriculum->toArray();
         $curriculum->update($request->validated());
+        $curriculum->touch();
         AuditLogger::log('updated_curriculum', $curriculum, $before, $curriculum->toArray());
 
         return redirect()->route('admin.curricula.index')

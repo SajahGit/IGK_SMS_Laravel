@@ -36,6 +36,29 @@ class User extends Authenticatable
 
     protected $hidden = ['password', 'remember_token'];
 
+    protected static function booted(): void
+    {
+        static::saved(function (User $user) {
+            if ($user->relationLoaded('teacher') && $user->teacher) {
+                $user->teacher->touch();
+            } elseif ($user->teacher()->exists()) {
+                $user->teacher()->first()?->touch();
+            }
+
+            if ($user->relationLoaded('student') && $user->student) {
+                $user->student->touch();
+            } elseif ($user->student()->exists()) {
+                $user->student()->first()?->touch();
+            }
+
+            if ($user->relationLoaded('guardian') && $user->guardian) {
+                $user->guardian->touch();
+            } elseif ($user->guardian()->exists()) {
+                $user->guardian()->first()?->touch();
+            }
+        });
+    }
+
     protected function casts(): array
     {
         return [
@@ -102,6 +125,11 @@ class User extends Authenticatable
     public function isStudent(): bool
     {
         return strtolower($this->role) === 'student';
+    }
+
+    public function isRegistrar(): bool
+    {
+        return $this->hasRole('Registrar') || strtolower($this->role) === 'registrar';
     }
 
     public function isAccountant(): bool

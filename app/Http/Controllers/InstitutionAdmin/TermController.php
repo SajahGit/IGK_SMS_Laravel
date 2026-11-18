@@ -25,7 +25,7 @@ class TermController extends Controller
             $termsQuery->where('academic_year_id', $selectedYearId);
         }
 
-        $terms = $termsQuery->orderByDesc('start_date')->orderBy('sequence')->get();
+        $terms = $termsQuery->orderByDesc('updated_at')->latest('id')->get();
 
         return view('InstitutionAdmin.InstitutionAdminTermsIndex', compact('terms', 'academicYears', 'selectedYearId'));
     }
@@ -74,6 +74,7 @@ class TermController extends Controller
             }
 
             $term->update($data);
+            $term->touch();
         });
 
         return redirect()->route('admin.terms.index', ['academic_year_id' => $data['academic_year_id']])
