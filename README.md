@@ -145,11 +145,11 @@ php vendor/bin/phpunit tests/Feature/ReportsParityTest.php
 
 ## 👥 Engineering Team Workstream & Git Fork Collaboration
 
-The system is architected into 5 specialized engineering domains, complete with individual zip deployment packages in `docs/TEAM/packages/` (and `documents/TEAM/packages/`):
+The system is architected into 5 specialized engineering domains, complete with individual standalone zip deployment packages hosted outside the code repository in `G:\ALL DOCS\packages\` (and `G:\ALL DOCS\`):
 
 * **Alass (Team Leader)**: Super Admin, Multi-Campus Branch Switching, RBAC Security, HR & EPF/ETF Payroll, Salary Deductions Governance & Private Messaging &rarr; [`docs/TEAM/ALASS_ADMIN_AND_SYSTEM_GOVERNANCE.md`](./docs/TEAM/ALASS_ADMIN_AND_SYSTEM_GOVERNANCE.md)
-* **Sumaiya**: Teacher Desk, Daily Attendance Roll Call, Exam Schedules, Marks Entry Boundary Checks & Batch GPA Publishing &rarr; [`docs/TEAM/SUMAIYA_TEACHER_EXAMS_AND_ACADEMICS.md`](./docs/TEAM/SUMAIYA_TEACHER_EXAMS_AND_ACADEMICS.md)
-* **Rajiya**: Student Information System (SIS), Admissions Onboarding, Multi-Child Guardian Portal, Academic Catalog & Transcripts &rarr; [`docs/TEAM/RAJIYA_STUDENT_ADMISSIONS_AND_GUARDIAN.md`](./docs/TEAM/RAJIYA_STUDENT_ADMISSIONS_AND_GUARDIAN.md)
+* **Sumaiya**: Teacher Desk, Daily Attendance Roll Call, Exam Schedules & Search Engine, Marks Entry Boundary Checks & Batch GPA Publishing &rarr; [`docs/TEAM/SUMAIYA_TEACHER_EXAMS_AND_ACADEMICS.md`](./docs/TEAM/SUMAIYA_TEACHER_EXAMS_AND_ACADEMICS.md)
+* **Rajiya**: Student Information System (SIS), Admissions Onboarding, Multi-Child Guardian Portal, Academic Catalog, Registrar Cross-Campus Access & Transcripts &rarr; [`docs/TEAM/RAJIYA_STUDENT_ADMISSIONS_AND_GUARDIAN.md`](./docs/TEAM/RAJIYA_STUDENT_ADMISSIONS_AND_GUARDIAN.md)
 * **Hasfa**: The 11 Master Reports Suite, High-Volume CSV Streaming, DomPDF Engines, Library Circulation & LMS Modules &rarr; [`docs/TEAM/HASFA_REPORTS_LIBRARY_AND_LMS.md`](./docs/TEAM/HASFA_REPORTS_LIBRARY_AND_LMS.md)
 * **Shilfa**: Invoicing & Billing, Counter Cashiering & Receipts, Online PayHere Gateway, Double-Entry General Ledger & Procurement &rarr; [`docs/TEAM/SHILFA_FINANCE_ACCOUNTING_AND_PROCUREMENT.md`](./docs/TEAM/SHILFA_FINANCE_ACCOUNTING_AND_PROCUREMENT.md)
 * **Core Shared Foundation**: Shared framework, base migrations, global glassmorphic layouts & `User` model &rarr; [`docs/TEAM/CORE_SHARED_ARCHITECTURE.md`](./docs/TEAM/CORE_SHARED_ARCHITECTURE.md)

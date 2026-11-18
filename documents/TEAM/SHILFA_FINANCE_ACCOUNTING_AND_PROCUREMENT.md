@@ -3,7 +3,7 @@
 
 **Assigned Engineer:** Shilfa  
 **System Role:** Chief Financial Officer / Accountant / Procurement Lead  
-**Deliverable Zip File:** `SHILFA_FINANCE_PACKAGE.zip` (located in `docs/TEAM/packages/` and `documents/TEAM/packages/`)  
+**Deliverable Zip File:** `SHILFA_FINANCE_PACKAGE.zip` (located in `G:\ALL DOCS\packages\` and `G:\ALL DOCS\`)  
 
 ---
 
@@ -14,10 +14,12 @@ Shilfa owns the financial operations of the institution, including student billi
    - Program-wide and class-specific fee structures.
    - BCMath high-precision monetary amounts (`Money.php`).
    - Guard against editing fee items that have already been billed to live invoices.
+   - Global Auto-Sort by Latest Activity (`updated_at DESC`, `id DESC`) for immediate visibility of recently configured fees.
 2. **Cohort Invoicing Engine (`/accountant/invoices`):**
    - Idempotent bulk invoice generation across student cohorts (skipping already billed students).
    - Draft vs Issued status lifecycles, itemized billing, and discounts.
-   - Official invoice PDF rendering (`InvoicePdf`).
+   - Official invoice PDF rendering (`InvoicePdf`) with zero clipping and standard A4 portrait boundaries.
+   - Reverse-chronological and latest activity ordering ensuring newly generated invoices appear at the top.
 3. **Counter Fee Payments & Receipting Desk (`/accountant/payments/create`):**
    - Real-time cashiering interface with pending balance autofill.
    - Multi-currency payment processing (Cash, Bank Transfer, Cheque).
@@ -28,6 +30,12 @@ Shilfa owns the financial operations of the institution, including student billi
    - Webhook callback listener updating invoice balances and issuing automated electronic receipts.
 5. **Multi-Branch Financial Scoping & Active Campus Switcher:**
    - Topbar campus switcher permitting Accountants to inspect "All Campuses" simultaneously or switch to a specific branch context.
+6. **Double-Entry General Ledger System (`/accountant/ledger`):**
+   - Strict double-entry accounting invariant ($\sum \text{Debits} = \sum \text{Credits}$).
+   - Chart of Accounts, Journal Entries, Trial Balance, Ledger Statements, and Income & Expense Reports.
+7. **Procurement & Supply Chain Management (`/procurement`):**
+   - Supplier directories, Purchase Orders (PO), and Goods Received Notes (GRN).
+   - Global Auto-Sort on Purchase Orders and Suppliers.
    - Campus badges on all invoice listings and payment forms.
 6. **Double-Entry General Ledger & Financial Reports:**
    - **Chart of Accounts (`/admin/accounts`):** Five master account classes (Asset, Liability, Equity, Income, Expense).

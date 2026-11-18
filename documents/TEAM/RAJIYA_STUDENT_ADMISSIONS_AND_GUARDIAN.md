@@ -3,7 +3,7 @@
 
 **Assigned Engineer:** Rajiya  
 **System Role:** Registrar / Student Affairs / Guardian Portal Lead  
-**Deliverable Zip File:** `RAJIYA_STUDENT_PACKAGE.zip` (located in `docs/TEAM/packages/` and `documents/TEAM/packages/`)  
+**Deliverable Zip File:** `RAJIYA_STUDENT_PACKAGE.zip` (located in `G:\ALL DOCS\packages\` and `G:\ALL DOCS\`)  
 
 ---
 
@@ -14,20 +14,23 @@ Rajiya owns the complete student lifecycle from initial admission to academic pr
    - Sequential, unique admission number generation via `AdmissionNumberGenerator`.
    - Student onboarding, profile management, and document uploads (`StudentDocument`).
    - Class capacity enforcement blocking enrollment when class size limit is reached.
-2. **Guardian / Parent Family Portal (`/guardian/dashboard`):**
+   - Global Auto-Sort by Latest Activity (`updated_at DESC`, `id DESC`) ensuring newly admitted or edited students immediately surface to the top of the directory.
+2. **Academic Registrar Cross-Campus Governance (`/admin/teachers`, `/admin/students`):**
+   - Multi-campus visibility for Registrar role (`User::isRegistrar()`), enabling seamless oversight of faculty, student cohorts, and campus allocations across all branches.
+3. **Guardian / Parent Family Portal (`/guardian/dashboard`):**
    - Multi-child linking allowing parents with multiple enrolled children to switch context seamlessly.
    - Live view of child attendance, published term results, and fee statements.
-3. **Student Self-Service Portal (`/student/dashboard`):**
+4. **Student Self-Service Portal (`/student/dashboard`):**
    - Student academic profile, personal class timetable, and published results.
    - Elective course registration with capacity checks (`/student/electives`).
-4. **Academic Catalog & Hierarchy:**
+5. **Academic Catalog & Hierarchy:**
    - Academic Years and Term management (ensuring single active year and term invariants).
    - Academic Departments, Degree/Certificate Programs, Curricula, and Subjects.
-   - Cohort Classes & Sections management.
-5. **Student Operational Logistics:**
+   - Cohort Classes & Sections management with reverse-chronological and latest activity ordering.
+6. **Student Operational Logistics & Cafeteria Stock Governance:**
    - Hostel boarding and room allotment (`HostelAssignmentService`).
    - Transport fleet logistics and student bus route assignments (`TransportService`).
-   - Cafeteria meal catalogue and student pre-ordering (`CafeteriaOrderService`).
+   - Multi-branch cafeteria inventory and 1-click fresh stock provisioning (`/admin/cafeteria/stock` and `/admin/cafeteria/stock/{id}/restock`).
 6. **Official Academic Transcripts (`/transcripts`):**
    - Official multi-term academic transcripts with cumulative CGPA computation and PDF download.
 

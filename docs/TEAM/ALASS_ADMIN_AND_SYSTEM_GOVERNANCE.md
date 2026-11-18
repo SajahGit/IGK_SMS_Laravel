@@ -3,19 +3,21 @@
 
 **Assigned Engineer:** Alass  
 **System Role:** Super Admin / Institution Admin / System Architect  
-**Deliverable Zip File:** `ALASS_ADMIN_PACKAGE.zip` (located in `docs/TEAM/packages/` and `documents/TEAM/packages/`)  
+**Deliverable Zip File:** `ALASS_ADMIN_PACKAGE.zip` (located in `G:\ALL DOCS\packages\` and `G:\ALL DOCS\`)  
 
 ---
 
 ### 1. Functional Scope & Key Responsibilities
 
 As Team Leader and System Governance owner, Alass owns the administrative backbone, security, multi-campus scoping, and system auditability:
-1. **Multi-Campus Branch Network Management:**
+1. **Multi-Campus Branch Network Management & Registrar Visibility:**
    - Multi-campus branch switching (All Campuses vs Main Campus vs Kandy Campus).
    - Global multi-tenant scoping via `BranchContext` and `BranchOwned` architectural scopes.
+   - Comprehensive multi-campus access for Academic Registrars (`User::isRegistrar()`) ensuring full visibility of teachers, students, and class allocations across all branches.
+   - Global Auto-Sort by Latest Activity (`updated_at DESC`, `id DESC`) across all operational modules, moving newly created or modified records to the top immediately.
 2. **Users Directory & RBAC Security (`/admin/users`):**
-   - Full-text keyword search across Name, Email, and Phone number.
-   - Dynamic filtering by System Role, Campus/Branch, and Account Status.
+   - Multi-relational keyword search across Name, Email, and Phone number (resolved across User, Teacher, Student, and Guardian models).
+   - Complete System Role inclusion (including restored Student role) and dynamic filtering by System Role, Campus/Branch, and Account Status.
    - Live matching totals counter and pagination preservation (`withQueryString()`).
    - Two-Factor Authentication (2FA) enforcement and challenge verification.
 3. **Human Resources & Statutory EPF/ETF Payroll (`/admin/payroll`):**
@@ -113,6 +115,8 @@ As Team Leader and System Governance owner, Alass owns the administrative backbo
 * `resources/views/InstitutionAdmin/InstitutionAdminDashboard.blade.php`
 
 #### Feature Test Suites:
+* `tests/Feature/RegistrarAccessTest.php`
+* `tests/Feature/SingleNotificationBannerTest.php`
 * `tests/Feature/SuperAdminAllCampusesTest.php`
 * `tests/Feature/InternationalMultiBranchAndPayrollTest.php`
 * `tests/Feature/RoleLoginVerificationTest.php`

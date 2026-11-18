@@ -39,19 +39,20 @@ Here is the golden rule:
 
 ## 3. How Each Person Pastes Their ZIP Package
 
-Each team member has a dedicated ZIP package located in `docs/TEAM/packages/`:
+Each team member has a dedicated standalone ZIP package located in the central `ALL DOCS` folder (`G:\ALL DOCS\packages\`):
 * Alass: `ALASS_ADMIN_PACKAGE.zip`
 * Sumaiya: `SUMAIYA_TEACHER_PACKAGE.zip`
 * Rajiya: `RAJIYA_STUDENT_PACKAGE.zip`
 * Hasfa: `HASFA_REPORTS_PACKAGE.zip`
 * Shilfa: `SHILFA_FINANCE_PACKAGE.zip`
+* Foundation: `CORE_SHARED_SYSTEM_PACKAGE.zip`
 
 ### Step 3: Extract Package Directly into Your Repository Root
-1. Copy your assigned `.zip` file from `docs/TEAM/packages/`.
+1. Copy your assigned `.zip` file from `G:\ALL DOCS\packages\` (or `G:\ALL DOCS\`).
 2. Paste the `.zip` file directly into the **root folder** of your cloned repository (where `artisan`, `composer.json`, and `app/` are located).
 3. Right-click the `.zip` file and select **Extract All...** (or extract using 7-Zip / WinRAR) directly into the current directory.
    > **Note:** Choose to overwrite/merge folders if prompted. The internal folder structure (`app/...`, `resources/views/...`, `routes/...`, `tests/...`) matches the repository layout exactly.
-4. Delete the `.zip` file from your local folder so it doesn't get committed.
+4. Delete the `.zip` file from your local folder so it doesn't get committed (only system code stays inside the repository).
 
 ---
 

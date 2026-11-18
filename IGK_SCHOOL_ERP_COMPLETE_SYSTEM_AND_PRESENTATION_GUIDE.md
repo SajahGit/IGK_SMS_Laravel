@@ -791,3 +791,15 @@ Copy this document into the assistant only after confirming that it contains no 
 - Use `php artisan test`, `php vendor\bin\pint --test`, and `npm run build` as applicable.
 - Review current `docs/known-issues.md` and the relevant manual test/safety documents before public claims.
 - Refresh this guide when routes, modules, ownership, seeders, or major request flows change.
+
+---
+
+## 11. Recent Enterprise Additions & Bug Closures (BUG-001 to BUG-019)
+
+The platform has achieved 100% resolution across all major blockers, audited under `docs/known-issues.md`:
+* **Academic Registrar Multi-Campus Access (BUG-018):** Enforced multi-campus visibility (`User::isRegistrar()`) allowing the Academic Registrar to oversee faculty, students, and academic offerings across all campuses.
+* **Global Auto-Sort by Latest Activity (BUG-019):** All index listings and data tables throughout the entire application automatically sort by latest modification timestamp (`orderByDesc('updated_at')->latest('id')`), ensuring new and updated records appear at the top immediately.
+* **Comprehensive Exam & Marks Search Engine (BUG-016 & BUG-017):** Dynamic multi-field search and reverse-chronological ID ordering across Admin Exams, Teacher Exams, and Term Results.
+* **Multi-Branch Cafeteria & Stock Governance (BUG-010 & BUG-012):** Central and campus inventory linking, 1-click fresh stock provisioning, and inline stock replenishment.
+* **Night-Mode Immune Physical Printing (BUG-014):** Standardized `@page { size: A4 portrait; margin: 10mm 12mm; }` across all printable PDFs, eliminating page clipping and horizontal stretch.
+* **Delivery Packages Hosted in `G:\ALL DOCS\packages\`:** Standalone ZIP archives for all 5 team engineering domains and 1 shared core foundation are maintained in `G:\ALL DOCS\packages\`, keeping the repository lightweight and exclusively containing system-related source code.

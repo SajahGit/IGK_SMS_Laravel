@@ -3,7 +3,7 @@
 
 **Assigned Engineer:** Hasfa  
 **System Role:** Institutional Analytics / Reporting Lead / Librarian  
-**Deliverable Zip File:** `HASFA_REPORTS_PACKAGE.zip` (located in `docs/TEAM/packages/` and `documents/TEAM/packages/`)  
+**Deliverable Zip File:** `HASFA_REPORTS_PACKAGE.zip` (located in `G:\ALL DOCS\packages\` and `G:\ALL DOCS\`)  
 
 ---
 
@@ -20,9 +20,13 @@ Hasfa owns data analytics, statutory compliance reporting, document exports, the
    - **Student Financial Ledger:** Comprehensive billing and transaction statement per student.
    - **Fee Collection Report:** Multi-currency payment receipts, cashier breakdowns, and collection methods.
    - **Defaulters Action List:** Aging overdue invoice report with balance due and guardian contact details.
-   - **Official Student Report Card (`/pdf/report-card`):** Pixel-perfect printable A4 PDF featuring institution crest, grades, GPA, attendance, and principal signature lines.
-2. **High-Performance Memory-Safe CSV Streaming:**
+   - **Official Student Report Card (`/pdf/report-card`):** Pixel-perfect printable A4 PDF featuring institution crest, grades, GPA, attendance, and principal signature lines. Standardized with `@page { size: A4 portrait; margin: 10mm 12mm; }` eliminating clipping and horizontal stretching.
+2. **High-Performance Memory-Safe CSV Streaming & PDF Generation:**
    - Powered by `CsvStreamer` support service; streams multi-thousand row datasets without memory spikes.
+   - Pixel-perfect DomPDF generation with fixed table layouts, box-sizing containment, and page-break rules.
+3. **Library Information System (LIS) & Circulation Desk:**
+   - Book cataloguing, author/publisher directories, inventory barcode tracking, and loan issuance/return workflows.
+   - Global Auto-Sort by Latest Activity (`updated_at DESC`, `id DESC`) across library catalogues, authors, and active loans.
 3. **Library Information & Circulation System (`/library`):**
    - Book cataloging (Title, ISBN, Category, Authors).
    - Physical copy inventory and barcode tracking.

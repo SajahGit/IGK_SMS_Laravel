@@ -3,7 +3,7 @@
 
 **Assigned Engineer:** Sumaiya  
 **System Role:** Teacher / Examination Officer / Academic Faculty  
-**Deliverable Zip File:** `SUMAIYA_TEACHER_PACKAGE.zip` (located in `docs/TEAM/packages/` and `documents/TEAM/packages/`)  
+**Deliverable Zip File:** `SUMAIYA_TEACHER_PACKAGE.zip` (located in `G:\ALL DOCS\packages\` and `G:\ALL DOCS\`)  
 
 ---
 
@@ -11,22 +11,26 @@
 
 Sumaiya owns the daily teaching desk, student examination workflows, marks evaluation, grading engines, and academic attendance roll calls:
 1. **Teacher Desk Portal (`/teacher/dashboard`):**
-   - Teacher assigned classes and class-subject combinations.
+   - Teacher assigned classes and class-subject combinations across all campuses with robust multi-tenant scope isolation.
+   - Comprehensive campus and assigned classes display with `withoutGlobalScopes()` ensuring full visibility for Registrars and Administrators.
    - Real-time weekly timetable view with period intervals and room allocations.
    - Teacher self-service profile (`/teacher/profile`) displaying assigned teaching load and salary transparent breakdown.
 2. **Attendance Roll Call & Biometric Monitoring (`/teacher/attendance`):**
    - Rapid 1-click class roll call (Present, Absent, Late, Excused).
    - Real-time absentee parent notifications via SMS and Email digests.
    - Staff daily attendance & biometric device endpoint integration (`/api/v1/biometric-events`).
-3. **Examination Management & Timetable Clash Detector (`/admin/exams`):**
+3. **Examination Management & Timetable Clash Detector (`/admin/exams` & `/teacher/exams`):**
+   - Comprehensive multi-field Search Engine: search by keyword, subject name/code, class, term, and publication status.
    - Creation of exam papers per class, subject, and term with maximum marks and weightages.
    - Timetable slot clash detection preventing overlapping room or teacher allocations.
-4. **Marks Entry Engine with Boundary Validation (`/teacher/marks`):**
+   - Guaranteed reverse-chronological and latest activity ordering (`latest('id')` & `orderByDesc('updated_at')`), ensuring newly created or modified exams immediately appear at the top.
+4. **Marks Entry Engine with Boundary Validation & Student Search (`/teacher/marks`):**
    - Marks entry strictly scoped to the teacher's assigned subjects.
+   - Real-time student search filtering during marks grading.
    - Hard boundary validation preventing negative marks or scores exceeding maximum marks.
 5. **Grading Engine & Term Results Publishing (`/admin/term-results`):**
    - Automated conversion of marks to letter grades and GPA using configured `GradeScale`.
-   - Batch GPA generation across all subjects.
+   - Batch GPA generation across all subjects with full-featured keyword and filter search.
    - Official result publication locking marks from further edits (with authorized unpublish audit logging).
 
 ---
@@ -98,6 +102,8 @@ Sumaiya owns the daily teaching desk, student examination workflows, marks evalu
 
 #### Feature Test Suites:
 * `tests/Feature/Phase3MarksLockGpaPublicationReportCardTest.php`
+* `tests/Feature/TeacherExamAndMarksWorkflowTest.php`
+* `tests/Feature/TermResultsWorkflowTest.php`
 * `tests/Feature/Phase2DocumentsCapacityTimetableAttendanceTest.php`
 * `tests/Feature/TeacherSubjectAssignmentSeederTest.php`
 * `tests/Feature/TermResultsWorkflowTest.php`

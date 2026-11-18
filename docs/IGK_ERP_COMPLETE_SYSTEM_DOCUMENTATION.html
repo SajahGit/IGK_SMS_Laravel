@@ -1748,6 +1748,14 @@ if ($session->created_at->diffInHours(now()) > 48) {
 <p>Exam papers are converted to letter grades and grade points ($GP \in [0.0, 4.0]$) via custom institution grade scales. Cumulative Grade Point Average (CGPA) is computed as:</p>
 $$\text{CGPA} = \frac{\sum_{i=1}^n (\text{GradePoint}_i \times \text{CreditHours}_i)}{\sum_{i=1}^n \text{CreditHours}_i}$$
 
+<h3>4.6 Global Auto-Sort by Latest Activity Invariant</h3>
+<p>To provide instant administrative responsiveness without requiring manual sorting or page reloads, all operational listings and data tables enforce a global latest-activity ordering policy:</p>
+<ul>
+    <li><strong>Dual-Column Order Invariant:</strong> Database queries default strictly to <code>orderByDesc('updated_at')-&gt;latest('id')</code>.</li>
+    <li><strong>Cascading Timestamp Updates:</strong> Whenever a record is edited or modified, Eloquent's timestamp mechanism automatically refreshes <code>updated_at = now()</code>. For related entities (such as user credentials, teacher profiles, subject assignments, or cafeteria stock), parent records are automatically touched to immediately bubble modified rows to the top of their respective administrative lists.</li>
+    <li><strong>Real-Time Dynamic Placement:</strong> Newly created or recently updated records appear instantly at the summit of table views across all 8 user roles and 20+ operational modules.</li>
+</ul>
+
 <!-- ============================================================================== -->
 <!-- SECTION 5: COMPLETE SIDEPANEL SCREEN DIRECTORY                                 -->
 <!-- ============================================================================== -->
@@ -6461,6 +6469,63 @@ echo &#039;Item code prefixed with campus code to maintain unique inventory inde
 
     <p><strong>Preventive Invariant Enforced:</strong> <em>Use campus-prefixed item SKU codes in multi-branch institutions.</em></p>
 </div>
+<div class="screen-card">
+    <div class="screen-header">
+        <span class="screen-title">Fault 15: Academic Registrar Multi-Campus Teacher Visibility &amp; Assigned Class Resolution</span>
+        <span class="badge badge-amber">HIGH</span>
+    </div>
+    <div class="callout callout-warning">
+        <div class="callout-title">Symptom &amp; Visual Failure:</div>
+        Academic Registrar logs in and navigates to the Teachers desk (/admin/teachers) or view screen, but teachers from other campuses appear with blank assigned classes or empty branch badges.
+    </div>
+    <p><strong>Root Cause Analysis:</strong> While the Registrar role has cross-campus authority to view all faculty across the institution, default Eloquent model relationships (<code>$teacher-&gt;branch</code>, <code>$teacher-&gt;user-&gt;branch</code>, and <code>$teacher-&gt;classSubjects-&gt;schoolClass</code>) were being evaluated through the single-branch <code>BranchOwned</code> global scope, filtering out cross-campus related models.</p>
+    
+    <div class="screen-section-title">Diagnostic Artisan / Terminal Script for Sir:</div>
+    <pre>php artisan tinker --execute=&quot;
+$u = App\Models\User::where(&#039;email&#039;, &#039;registrar@igk.edu&#039;)-&gt;first();
+dump(&#039;Registrar check:&#039;, $u-&gt;isRegistrar());
+dump(&#039;Can access all branches:&#039;, App\Support\BranchContext::canAccessAllBranches($u));
+&quot;</pre>
+
+    <div class="screen-section-title">Exact Resolution &amp; Auto-Fix Script:</div>
+    <pre>php artisan tinker --execute=&quot;
+// In User.php, ensure isRegistrar(): bool helper is present and recognized in BranchContext::canAccessAllBranches().
+// In TeacherController and teacher-table.blade.php, utilize withoutGlobalScopes() on branch and schoolClass relations.
+// Run backfill migration:
+Artisan::call(&#039;migrate&#039;);
+echo &#039;Registrar multi-campus visibility verified and active.&#039;;
+&quot;</pre>
+
+    <p><strong>Preventive Invariant Enforced:</strong> <em>Ensure multi-campus roles (Super Admin, Institution Admin, Registrar, Accountant) always bypass single-branch restrictions when loading cross-campus relationships via withoutGlobalScopes().</em></p>
+</div>
+<div class="screen-card">
+    <div class="screen-header">
+        <span class="screen-title">Fault 16: SQLSTATE[42S22]: Unknown Column &#039;phone&#039; in User Search Query</span>
+        <span class="badge badge-amber">HIGH</span>
+    </div>
+    <div class="callout callout-warning">
+        <div class="callout-title">Symptom &amp; Visual Failure:</div>
+        Administrator conducts a keyword search in User Directory (/admin/users?search=...) resulting in HTTP 500: &quot;SQLSTATE[42S22]: Column not found: 1054 Unknown column &#039;phone&#039; in &#039;where clause&#039;&quot;.
+    </div>
+    <p><strong>Root Cause Analysis:</strong> The root <code>users</code> database table does not store phone numbers directly. Phone numbers are maintained in dedicated related models (<code>teachers</code>, <code>students</code>, <code>guardians</code>). Attempting a direct <code>where(&#039;phone&#039;, &#039;like&#039;, ...)</code> fails at SQL execution.</p>
+    
+    <div class="screen-section-title">Diagnostic Artisan / Terminal Script for Sir:</div>
+    <pre>php artisan tinker --execute=&quot;
+$cols = Schema::getColumnListing(&#039;users&#039;);
+dump(&#039;Users Table Columns:&#039;, $cols);
+&quot;</pre>
+
+    <div class="screen-section-title">Exact Resolution &amp; Auto-Fix Script:</div>
+    <pre>php artisan tinker --execute=&quot;
+// In UserController::index, wrap phone searching in relational queries:
+// -&gt;orWhereHas(&#039;teacher&#039;, fn($q) =&gt; $q-&gt;where(&#039;phone&#039;, &#039;like&#039;, \&quot;%$search%\&quot;))
+// -&gt;orWhereHas(&#039;student&#039;, fn($q) =&gt; $q-&gt;where(&#039;phone&#039;, &#039;like&#039;, \&quot;%$search%\&quot;))
+// -&gt;orWhereHas(&#039;guardian&#039;, fn($q) =&gt; $q-&gt;where(&#039;phone&#039;, &#039;like&#039;, \&quot;%$search%\&quot;))
+echo &#039;Relational phone lookup active across all user categories.&#039;;
+&quot;</pre>
+
+    <p><strong>Preventive Invariant Enforced:</strong> <em>Always inspect database schema before querying attributes; query polymorphic or role-specific attributes through Eloquent relation queries.</em></p>
+</div>
 
 <!-- ============================================================================== -->
 <!-- SECTION 9: PRODUCTION RUNBOOK                                                  -->
@@ -6568,7 +6633,7 @@ gunzip < /backups/sms_backup_20261112_000000.sql.gz | mysql -u root -p igk_schoo
 </ul>
 
 <h3>10.4 Verified Modular Engineering Deliverables & Team Distribution Packages</h3>
-<p>To eliminate developer environment drift, circular dependencies, and runtime errors, the entire codebase has been packaged into 5 independent, fully-isolated, verified engineering packages plus 1 Core Shared Foundation package, stored under <code>docs/TEAM/packages/</code> and mirrored to <code>documents/TEAM/packages/</code>. Every package is completely autonomous and unzips directly into Sir's repository root with relative paths intact:</p>
+<p>To eliminate developer environment drift, circular dependencies, and runtime errors, the entire codebase has been packaged into 5 independent, fully-isolated, verified engineering packages plus 1 Core Shared Foundation package, hosted in the external documentation and deliverables directory <code>G:\ALL DOCS\packages/</code> (and <code>G:\ALL DOCS/</code>). This keeps Sir's Git repository clean and dedicated solely to system source files. Every package is completely autonomous and unzips directly into Sir's repository root with relative paths intact:</p>
 
 <table>
     <thead>

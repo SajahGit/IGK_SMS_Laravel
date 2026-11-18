@@ -1,7 +1,7 @@
 # Core Shared Architecture & Cross-Cutting Foundation
 
 **Shared Ownership:** Shared by all 5 engineers (Alass, Sumaiya, Rajiya, Hasfa, Shilfa)  
-**Deliverable Zip File:** `CORE_SHARED_SYSTEM_PACKAGE.zip` (located in `docs/TEAM/packages/` and `documents/TEAM/packages/`)  
+**Deliverable Zip File:** `CORE_SHARED_SYSTEM_PACKAGE.zip` (located in `G:\ALL DOCS\packages\` and `G:\ALL DOCS\`)  
 
 ---
 
@@ -9,10 +9,11 @@
 
 The Core Shared Architecture provides the foundational bedrock for the IGK School ERP. It ensures that every domain module (Admin, Teacher, Student, Reports, Finance) operates consistently without duplicating base infrastructure:
 
-1. **Multi-Tenant Campus Isolation (`BranchOwned`):**
+1. **Multi-Tenant Campus Isolation (`BranchOwned`) & Global Auto-Sort:**
    - Implemented as an Eloquent Global Scope in `app/Models/Scopes/BranchOwned.php`.
    - Automatically scopes database queries based on the authenticated user's `branch_id`.
-   - Global Administrators (Super Admin, Institution Admin) and Authorized Finance Officers (Accountants) bypass single-branch restrictions to access "All Campuses" via `BranchContext::canAccessAllBranches()`.
+   - Global Administrators (Super Admin, Institution Admin), Authorized Finance Officers (Accountants), and Academic Registrars bypass single-branch restrictions to access "All Campuses" via `BranchContext::canAccessAllBranches()`.
+   - Global Auto-Sort by Latest Activity is enforced across all operational models and index tables via `orderByDesc('updated_at')->latest('id')` with automated `touch()` cascading on record modifications.
 2. **Glassmorphic Design System & Night-Mode Immune Physical Printing:**
    - Powered by `public/css/glass.css` with dark/light theme switching remembered in `localStorage['igk-theme']`.
    - All printable outputs (A4 Report Cards, Payslips, Invoices, Receipts) utilize `@media print` rules enforcing white backgrounds, crisp dark typography, and zero translucent blur artifacts.
@@ -21,6 +22,7 @@ The Core Shared Architecture provides the foundational bedrock for the IGK Schoo
    - User model (`app/Models/User.php`) includes standardized role check helpers:
      * `isSuperAdmin()`
      * `isInstitutionAdmin()`
+     * `isRegistrar()`
      * `isTeacher()`
      * `isStudent()`
      * `isAccountant()`
@@ -59,7 +61,7 @@ The Core Shared Architecture provides the foundational bedrock for the IGK Schoo
 * `package.json` (Frontend dependencies)
 
 #### Database Foundations:
-* `database/migrations/` (All 61 structural database schema migrations)
+* `database/migrations/` (All 62 structural database schema migrations including backfill migrations)
 * `database/seeders/` (DatabaseSeeder, RolePermissionSeeder, UserSeeder, BranchSeeder, DemoSeeder)
 
 #### Environment & Tooling:
@@ -80,8 +82,9 @@ To prevent git merge conflicts in Fork:
 
 ### 4. Cross-Cutting UI & Query Standards
 
-1. **Reverse-Chronological Order (`latest('id')`):**
-   - Whenever records are listed on index views (Cafeteria, Hostels, Inventory, Transport, Classes, Subjects, Departments, Programs, Fee Structures, Invoices, Payments, Library, Procurement, Users, Announcements), queries MUST order by `latest('id')` or `orderByDesc('id')` by default so newly added records immediately appear at the top of the table.
+1. **Global Auto-Sort by Latest Activity (`orderByDesc('updated_at')->latest('id')`):**
+   - Whenever records are listed on index views across ALL modules (Teachers, Staff, Students, Classes, Subjects, Departments, Programs, Inventory, Cafeteria, Hostels, Transport, Guardians, Academic Years, Terms, Roles, Invoices, Payments, Fee Structures, and Exams), queries MUST order by `orderByDesc('updated_at')->latest('id')`.
+   - Every creation and modification touches the reliable timestamp so that newly created and edited records immediately move to the top of their respective lists.
 2. **Centralized Single Notification Alerts:**
    - Session flash banners (`success`, `status`, `warning`, `error`) are strictly centralized in `LayoutApp.blade.php` with 4-second auto-dismiss. Never place redundant in-page alert blocks in child view templates.
 3. **Unicode Separator Standard:**

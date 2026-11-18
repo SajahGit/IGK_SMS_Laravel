@@ -50,9 +50,11 @@ The previous assignment separated roles into basic buckets. As the system expand
 
 ## 3. Package Delivery Manifest
 
-All individual zip packages have been built and placed in both:
-1. `docs/TEAM/packages/`
-2. `documents/TEAM/packages/`
+All individual standalone zip packages have been built and placed outside the source repository into the centralized documentation and package delivery directory:
+1. `G:\ALL DOCS\packages\`
+2. `G:\ALL DOCS\`
+
+This architecture keeps the repository cleanly segregated: only system source code resides in the project tree, while all binary zip archives and compiled distribution packages are hosted in `ALL DOCS`.
 
 | Package File Name | Items Count | Uncompressed Scope |
 | :--- | :---: | :--- |
