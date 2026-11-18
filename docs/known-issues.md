@@ -52,7 +52,7 @@ All core regression and feature suites pass with 100% assertions:
 
 ## Engineering Deliverables & Team Packages
 
-The full codebase is structured into 5 isolated domains and 1 shared foundation in `documents/TEAM/`:
+The full codebase is structured into 5 isolated domains and 1 shared foundation in `docs/TEAM/`:
 * `ALASS_ADMIN_PACKAGE.zip` (Admin & Governance - 71 files)
 * `SUMAIYA_TEACHER_PACKAGE.zip` (Teacher & Exams - 57 files)
 * `RAJIYA_STUDENT_PACKAGE.zip` (Student & Guardian - 103 files)

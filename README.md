@@ -159,9 +159,15 @@ The system is architected into 5 specialized engineering domains, complete with 
 
 ## 📜 Documentation Index
 
-- [Team Responsibility Matrix & Packages](./docs/TEAM/TEAM_OVERVIEW_AND_RESPONSIBILITY_MATRIX.md)
+All operational and architectural documentation files are maintained inside the [`docs/`](./docs/) directory:
+
+- [Team Responsibility Matrix & Deliverables](./docs/TEAM/TEAM_OVERVIEW_AND_RESPONSIBILITY_MATRIX.md)
 - [Git & Fork Collaboration Guide](./docs/TEAM/GIT_FORK_COLLABORATION_AND_SETUP_GUIDE.md)
-- [Complete System & Code Map Guide](./IGK_SCHOOL_ERP_COMPLETE_SYSTEM_AND_PRESENTATION_GUIDE.md)
-- [Complete System PDF Documentation](./docs/IGK_ERP_COMPLETE_SYSTEM_DOCUMENTATION.pdf)
-- [System Architecture & Module Details](./docs/architecture.md)
-- [Sample Role Logins & QA Dataset](./sample%20dataset.md)
+- [Complete System & Code Map Presentation Guide](./docs/IGK_SCHOOL_ERP_COMPLETE_SYSTEM_AND_PRESENTATION_GUIDE.md)
+- [Complete System PDF Handbook (88 Pages)](./docs/IGK_ERP_COMPLETE_SYSTEM_DOCUMENTATION.pdf)
+- [Comprehensive System HTML Handbook](./docs/IGK_ERP_COMPLETE_SYSTEM_DOCUMENTATION.html)
+- [System Architecture & Module Invariants](./docs/architecture.md)
+- [Sample Role Logins & QA Test Dataset](./docs/sample%20dataset.md)
+- [Local Developer Setup Guide](./docs/README-SETUP.md)
+- [Manual Functional Test Checklist](./docs/IGK_SCHOOL_ERP_MANUAL_FUNCTIONAL_TEST_CHECKLIST.md)
+- [Known Issues & Bug Register](./docs/known-issues.md)
