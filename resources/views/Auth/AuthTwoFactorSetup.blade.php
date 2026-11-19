@@ -116,10 +116,11 @@
             const html = document.documentElement;
             const nextTheme = html.getAttribute('data-bs-theme') === 'dark' ? 'light' : 'dark';
             html.setAttribute('data-bs-theme', nextTheme);
-            localStorage.setItem('theme', nextTheme);
+            try { localStorage.setItem('igk-theme', nextTheme); } catch (e) {}
             themeIcon.className = nextTheme === 'dark' ? 'bi bi-sun' : 'bi bi-moon-stars';
         });
-        const saved = localStorage.getItem('theme');
+        let saved = null;
+        try { saved = localStorage.getItem('igk-theme'); } catch (e) {}
         if (saved) {
             document.documentElement.setAttribute('data-bs-theme', saved);
             themeIcon.className = saved === 'dark' ? 'bi bi-sun' : 'bi bi-moon-stars';

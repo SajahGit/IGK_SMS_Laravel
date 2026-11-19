@@ -76,7 +76,27 @@ class ExamController extends Controller
             $assignments = $query->get();
         }
 
-        return view('Teacher.TeacherExamsCreate', compact('assignments'));
+        $assignmentOptions = $assignments
+            ->filter(fn (ClassSubject $assignment) => $assignment->schoolClass && $assignment->subject)
+            ->map(fn (ClassSubject $assignment) => [
+                'id' => $assignment->id,
+                'class_id' => $assignment->class_id,
+                'class_name' => $assignment->schoolClass->full_name,
+                'subject_name' => $assignment->subject->name,
+                'term_name' => $assignment->term?->name ?? 'All terms',
+            ])
+            ->values();
+        $selectedAssignmentId = old('assignment', $assignmentOptions->first()['id'] ?? null);
+        $selectedClassId = $assignmentOptions->firstWhere('id', $selectedAssignmentId)['class_id']
+            ?? $assignmentOptions->first()['class_id']
+            ?? null;
+
+        return view('Teacher.TeacherExamsCreate', compact(
+            'assignments',
+            'assignmentOptions',
+            'selectedAssignmentId',
+            'selectedClassId'
+        ));
     }
 
     public function store(Request $request)

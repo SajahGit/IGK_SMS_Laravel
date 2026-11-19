@@ -79,7 +79,7 @@
                                     <div class="list-group-item">
                                         <label class="d-flex justify-content-between align-items-center mb-0">
                                             <div>
-                                                <input class="form-check-input me-2 fee-checkbox" type="checkbox" name="fee_structure_ids[]" value="{{ $fee->id }}" data-amount="{{ $fee->amount }}" data-currency="{{ $fee->currency }}" checked>
+                                                <input class="form-check-input me-2 fee-checkbox" type="checkbox" name="fee_structure_ids[]" value="{{ $fee->id }}" id="fee-{{ $fee->id }}" data-amount="{{ $fee->amount }}" data-currency="{{ $fee->currency }}" checked>
                                                 <span class="fw-semibold">{{ $fee->name }}</span>
                                                 <span class="badge bg-secondary ms-1">{{ $fee->currency }}</span>
                                                 @if ($fee->term)
@@ -94,7 +94,7 @@
                                                     @if ($item->is_mandatory)
                                                         <span class="badge bg-primary me-1">Mandatory</span>
                                                     @else
-                                                        <input class="form-check-input me-1 optional-item-checkbox" type="checkbox" name="fee_item_ids[]" value="{{ $item->id }}" data-amount="{{ $item->amount }}" data-currency="{{ $fee->currency }}" id="opt-{{ $item->id }}">
+                                                        <input class="form-check-input me-1 optional-item-checkbox" type="checkbox" name="fee_item_ids[]" value="{{ $item->id }}" data-parent-fee="fee-{{ $fee->id }}" data-amount="{{ $item->amount }}" data-currency="{{ $fee->currency }}" id="opt-{{ $item->id }}">
                                                         <span class="badge bg-secondary me-1">Optional</span>
                                                     @endif
                                                     <label for="opt-{{ $item->id }}" class="mb-0">{{ $item->name }}</label>
@@ -172,11 +172,18 @@
         function updateTotal() {
             var total = 0.0;
             var currencies = new Set();
+            document.querySelectorAll('.optional-item-checkbox').forEach(function (item) {
+                var parent = document.getElementById(item.dataset.parentFee);
+                item.disabled = !parent || !parent.checked;
+                if (item.disabled) item.checked = false;
+            });
             document.querySelectorAll('.fee-checkbox:checked').forEach(function (c) {
                 total += parseFloat(c.dataset.amount || 0);
                 currencies.add(c.dataset.currency || 'LKR');
             });
             document.querySelectorAll('.optional-item-checkbox:checked').forEach(function (c) {
+                var parent = document.getElementById(c.dataset.parentFee);
+                if (!parent || !parent.checked) return;
                 total += parseFloat(c.dataset.amount || 0);
                 currencies.add(c.dataset.currency || 'LKR');
             });

@@ -12,18 +12,21 @@
                 <input type="text" name="name" class="form-control" value="{{ old('name') }}" placeholder="e.g. Term 1 Test" required>
             </div>
             <div class="col-md-6">
-                <label class="form-label">Class and subject</label>
-                <select name="assignment" class="form-select" required>
-                    <option value="">Select</option>
-                    @forelse ($assignments as $a)
-                        @if ($a->schoolClass && $a->subject)
-                            <option value="{{ $a->id }}" @selected(old('assignment') == $a->id)>
-                                {{ $a->schoolClass->full_name }} - {{ $a->subject->name }} ({{ $a->term?->name ?? 'All terms' }})
-                            </option>
-                        @endif
+                <label for="exam_class_id" class="form-label">Class</label>
+                <select id="exam_class_id" class="form-select" required>
+                    @forelse ($assignmentOptions->unique('class_id') as $assignment)
+                        <option value="{{ $assignment['class_id'] }}" @selected($selectedClassId == $assignment['class_id'])>
+                            {{ $assignment['class_name'] }}
+                        </option>
                     @empty
-                        <option value="" disabled>No class assignments found for your account.</option>
+                        <option value="" selected disabled>No class assignments found for your account.</option>
                     @endforelse
+                </select>
+            </div>
+            <div class="col-md-6">
+                <label for="exam_assignment_id" class="form-label">Subject</label>
+                <select id="exam_assignment_id" name="assignment" class="form-select" required @disabled($assignmentOptions->isEmpty())>
+                    <option value="">Select Subject</option>
                 </select>
             </div>
             <div class="col-md-4">
@@ -41,4 +44,36 @@
         </div>
     </form>
 </div></div>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var assignments = {{ \Illuminate\Support\Js::from($assignmentOptions) }};
+        var classSelect = document.getElementById('exam_class_id');
+        var assignmentSelect = document.getElementById('exam_assignment_id');
+        var selectedAssignmentId = @json((string) $selectedAssignmentId);
+
+        function updateSubjects() {
+            var classId = classSelect.value;
+            var classAssignments = assignments.filter(function (assignment) {
+                return String(assignment.class_id) === classId;
+            });
+            assignmentSelect.replaceChildren(new Option('Select Subject', ''));
+            classAssignments.forEach(function (assignment) {
+                var label = assignment.subject_name + ' (' + assignment.term_name + ')';
+                assignmentSelect.add(new Option(label, assignment.id));
+            });
+            assignmentSelect.disabled = classAssignments.length === 0;
+            if (classAssignments.some(function (assignment) {
+                return String(assignment.id) === selectedAssignmentId;
+            })) {
+                assignmentSelect.value = selectedAssignmentId;
+            } else if (classAssignments.length > 0) {
+                assignmentSelect.value = String(classAssignments[0].id);
+            }
+            selectedAssignmentId = '';
+        }
+
+        classSelect.addEventListener('change', updateSubjects);
+        updateSubjects();
+    });
+</script>
 @endsection

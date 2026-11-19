@@ -144,6 +144,11 @@ class TeacherExamAndMarksWorkflowTest extends TestCase
         $response->assertSee('Create exam');
         $response->assertSee($this->class->full_name);
         $response->assertSee($this->subject->name);
+        $response->assertSee('id="exam_class_id"', false);
+        $response->assertSee('id="exam_assignment_id"', false);
+        $response->assertSee('value="'.$this->classSubject->id.'"', false);
+        $response->assertViewHas('selectedAssignmentId', $this->classSubject->id);
+        $response->assertViewHas('selectedClassId', $this->class->id);
     }
 
     public function test_teacher_can_create_exam_and_enter_marks_workflow(): void
