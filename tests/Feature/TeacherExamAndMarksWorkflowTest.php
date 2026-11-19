@@ -239,4 +239,69 @@ class TeacherExamAndMarksWorkflowTest extends TestCase
         $this->assertNotFalse($posFuture, 'Existing exam not found in list.');
         $this->assertLessThan($posFuture, $posNew, 'Newly created exam must appear at the very top of the list.');
     }
+
+    public function test_teacher_can_enter_and_update_marks_on_fresh_exam_even_when_term_results_were_previously_published(): void
+    {
+        // Simulate existing published term results for this term and class (from earlier assessments)
+        \App\Models\TermResult::create([
+            'term_id' => $this->term->id,
+            'class_id' => $this->class->id,
+            'student_id' => $this->student->id,
+            'gpa' => 3.80,
+            'result_status' => 'pass',
+            'publication_status' => 'published',
+            'generated_at' => now()->subDays(3),
+            'published_at' => now()->subDays(3),
+        ]);
+
+        // Teacher creates a brand new fresh exam
+        $this->actingAs($this->teacherUser)
+            ->post(route('teacher.exams.store'), [
+                'name' => 'Fresh Continuous Assessment Quiz',
+                'assignment' => $this->classSubject->id,
+                'exam_date' => now()->format('Y-m-d'),
+                'max_marks' => 50,
+            ])
+            ->assertRedirect(route('teacher.exams.index'));
+
+        $freshExam = Exam::where('name', 'Fresh Continuous Assessment Quiz')->firstOrFail();
+
+        // 1. Teacher must be able to open the marks entry screen without 403
+        $editResponse = $this->actingAs($this->teacherUser)
+            ->get(route('teacher.marks.edit', $freshExam));
+
+        $editResponse->assertOk();
+        $editResponse->assertSee('Fresh Continuous Assessment Quiz');
+        $editResponse->assertSee($this->student->admission_no);
+
+        // 2. Teacher must be able to enter marks successfully
+        $updateResponse = $this->actingAs($this->teacherUser)
+            ->post(route('teacher.marks.update', $freshExam), [
+                'marks' => [
+                    $this->student->id => 45.0,
+                ],
+            ]);
+
+        $updateResponse->assertRedirect(route('teacher.marks.show', $freshExam));
+
+        $this->assertDatabaseHas('results', [
+            'exam_id' => $freshExam->id,
+            'student_id' => $this->student->id,
+            'marks' => 45.0,
+        ]);
+
+        // 3. Teacher can edit marks again before the exam itself is published
+        $reEditResponse = $this->actingAs($this->teacherUser)
+            ->get(route('teacher.marks.edit', $freshExam));
+
+        $reEditResponse->assertOk();
+
+        // 4. Once the exam is published, marks become locked
+        $freshExam->update(['is_published' => true]);
+
+        $lockedResponse = $this->actingAs($this->teacherUser)
+            ->get(route('teacher.marks.edit', $freshExam));
+
+        $lockedResponse->assertStatus(403);
+    }
 }

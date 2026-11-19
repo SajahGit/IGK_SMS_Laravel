@@ -160,7 +160,7 @@
                                 <span class="badge bg-success"><i class="bi bi-globe me-1"></i> Published</span>
                                 <div class="small text-muted">{{ $exam->published_at ? $exam->published_at->format('d M, h:i A') : '' }}</div>
                             @else
-                                <span class="badge bg-secondary"><i class="bi bi-lock me-1"></i> Draft / Locked</span>
+                                <span class="badge bg-secondary"><i class="bi bi-pencil-square me-1"></i> Draft / Unpublished</span>
                             @endif
                         </td>
                         <td class="text-end">

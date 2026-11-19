@@ -19,12 +19,31 @@ class ResultPublicationService
             abort(403, 'Results are published and marks are locked.');
         }
 
-        if ($exam->term_id && TermResult::query()
-            ->where('term_id', $exam->term_id)
-            ->where('class_id', $exam->class_id)
-            ->whereIn('publication_status', ['pending_approval', 'published'])
-            ->exists()) {
-            abort(403, 'Term results are submitted or published and marks are locked.');
+        if ($exam->term_id) {
+            $latestTermResult = TermResult::query()
+                ->where('term_id', $exam->term_id)
+                ->where('class_id', $exam->class_id)
+                ->whereIn('publication_status', ['pending_approval', 'published'])
+                ->latest('generated_at')
+                ->first();
+
+            if ($latestTermResult) {
+                // An exam is fresh/unlocked if:
+                // 1. It has never had any recorded marks, OR
+                // 2. It was created after the term result was generated, OR
+                // 3. It was never published (is_published=false and published_at=null) and not yet included in published term results
+                $hasRecordedMarks = $exam->results()->where(function ($q) {
+                    $q->whereNotNull('marks')->orWhere('is_absent', true)->orWhere('is_excused', true);
+                })->exists();
+
+                $isFreshExam = ! $hasRecordedMarks
+                    || ($exam->created_at && $latestTermResult->generated_at && $exam->created_at->gt($latestTermResult->generated_at))
+                    || (! $exam->is_published && is_null($exam->published_at) && $exam->created_at && $latestTermResult->generated_at && $exam->created_at->gte($latestTermResult->generated_at));
+
+                if (! $isFreshExam) {
+                    abort(403, 'Term results are submitted or published and marks are locked.');
+                }
+            }
         }
     }
 

@@ -6526,6 +6526,36 @@ echo &#039;Relational phone lookup active across all user categories.&#039;;
 
     <p><strong>Preventive Invariant Enforced:</strong> <em>Always inspect database schema before querying attributes; query polymorphic or role-specific attributes through Eloquent relation queries.</em></p>
 </div>
+<div class="screen-card">
+    <div class="screen-header">
+        <span class="screen-title">Fault 17: HTTP 403 &quot;Marks are locked&quot; False-Positive on Freshly Created Exams</span>
+        <span class="badge badge-amber">HIGH</span>
+    </div>
+    <div class="callout callout-warning">
+        <div class="callout-title">Symptom &amp; Visual Failure:</div>
+        A teacher creates a brand-new exam in the Teacher Portal, but clicking &quot;Enter Marks&quot; immediately blocks the teacher with an HTTP 403 Forbidden screen: &quot;Marks are locked. Term results are submitted or published and marks are locked. Ask an admin to unpublish this exam if the marks need to be changed.&quot;
+    </div>
+    <p><strong>Root Cause Analysis:</strong> In <code>ResultPublicationService::verifyNotLocked()</code>, the method checked if any <code>TermResult</code> existed for the exam&#039;s <code>term_id</code> and <code>class_id</code> with status <code>published</code> or <code>pending_approval</code>. Because historical or demo term results already existed for that class, newly created, uncalculated exams were falsely treated as locked.</p>
+    
+    <div class="screen-section-title">Diagnostic Artisan / Terminal Script for Sir:</div>
+    <pre>php artisan tinker --execute=&quot;
+$exam = App\Models\Exam::latest(&#039;id&#039;)-&gt;first();
+dump(&#039;Exam Created:&#039;, $exam-&gt;created_at);
+dump(&#039;Is Published:&#039;, $exam-&gt;is_published);
+$latestTR = App\Models\TermResult::where(&#039;term_id&#039;, $exam-&gt;term_id)-&gt;where(&#039;class_id&#039;, $exam-&gt;class_id)-&gt;latest(&#039;generated_at&#039;)-&gt;first();
+dump(&#039;Latest Term Result Generated:&#039;, $latestTR?--&gt;generated_at);
+&quot;</pre>
+
+    <div class="screen-section-title">Exact Resolution &amp; Auto-Fix Script:</div>
+    <pre>php artisan tinker --execute=&quot;
+// In ResultPublicationService::verifyNotLocked(), verify whether the exam is fresh:
+// An exam is unlocked if it has no recorded marks or was created after the term result generation.
+// This allows teachers to continuously grade new assessments without administrative intervention.
+echo &#039;ResultPublicationService logic updated to allow grading on fresh exams.&#039;;
+&quot;</pre>
+
+    <p><strong>Preventive Invariant Enforced:</strong> <em>Only lock exam marks if the exam itself has been published, or if the exam had recorded marks that contributed to an already-published TermResult.</em></p>
+</div>
 
 <!-- ============================================================================== -->
 <!-- SECTION 9: PRODUCTION RUNBOOK                                                  -->
