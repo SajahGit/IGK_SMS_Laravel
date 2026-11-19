@@ -9,7 +9,6 @@ use App\Models\AttendanceSession;
 use App\Models\ClassSubject;
 use App\Models\SchoolClass;
 use App\Models\Student;
-use App\Models\Term;
 use App\Services\AttendanceSessionService;
 use App\Support\AuditLogger;
 use App\Support\SchoolHelper;
@@ -48,24 +47,19 @@ class AttendanceController extends Controller
                 SchoolHelper::authorizeTeacherClass($teacher, $classId);
             }
 
-            $classSubjects = ClassSubject::with(['subject', 'term'])
-                ->where('class_id', $classId)
-                ->when($user->isTeacher(), fn ($query) => $query->where('teacher_id', $teacher->id))
-                ->when($user->isTeacher(), function ($query) {
-                    $currentTermId = Term::where('is_current', true)->value('id');
-                    $query->where(function ($terms) use ($currentTermId) {
-                        $terms->whereNull('term_id');
-                        if ($currentTermId) {
-                            $terms->orWhere('term_id', $currentTermId);
-                        }
-                    });
-                })
-                ->orderBy('term_id')->orderBy('subject_id')->get();
+            $classSubjects = $user->isTeacher()
+                ? SchoolHelper::teacherClassSubjects($teacher, (int) $classId)
+                    ->orderBy('term_id')->orderBy('subject_id')->get()
+                : ClassSubject::with(['subject', 'term'])
+                    ->where('class_id', $classId)
+                    ->orderBy('term_id')->orderBy('subject_id')->get();
             if ($classSubjectId) {
                 abort_unless(
                     ClassSubject::whereKey($classSubjectId)->where('class_id', $classId)->exists(),
                     404
                 );
+            } elseif (! $selectedSession) {
+                $classSubjectId = $classSubjects->first()?->id;
             }
             $students = Student::with('user')
                 ->whereIn('id', AttendanceSessionService::enrolledStudentIds(

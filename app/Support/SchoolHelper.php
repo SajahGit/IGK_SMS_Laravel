@@ -2,6 +2,7 @@
 
 namespace App\Support;
 
+use App\Models\AcademicYear;
 use App\Models\Attendance;
 use App\Models\ClassSubject;
 use App\Models\GradeScale;
@@ -11,6 +12,7 @@ use App\Models\Teacher;
 use App\Models\Term;
 use App\Models\User;
 use App\Services\GradingService;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 
 /**
@@ -100,26 +102,58 @@ class SchoolHelper
     /** Class ids the teacher teaches (from class_subject). */
     public static function teacherClassIds(?Teacher $teacher): Collection
     {
-        if (! $teacher) {
+        if (! $teacher || $teacher->status !== 'active') {
             return collect();
         }
 
-        $query = ClassSubject::where('teacher_id', $teacher->id)
-            ->whereHas('teacher', fn ($q) => $q->where('status', 'active'))
-            ->whereHas('schoolClass');
+        return self::teacherAssignedClassSubjects($teacher)
+            ->pluck('class_id')
+            ->unique()
+            ->values();
+    }
 
-        $currentTermId = Term::where('is_current', true)->value('id');
-        if ($currentTermId) {
-            $currentTermClasses = (clone $query)->where(function ($q) use ($currentTermId) {
-                $q->whereNull('term_id')->orWhere('term_id', $currentTermId);
-            })->pluck('class_id')->unique()->values();
+    /** All class-subject assignments shown on the teacher dashboard. */
+    public static function teacherAssignedClassSubjects(?Teacher $teacher): Builder
+    {
+        $query = ClassSubject::query()
+            ->with(['schoolClass', 'subject', 'term'])
+            ->whereHas('schoolClass')
+            ->whereHas('subject');
 
-            if ($currentTermClasses->isNotEmpty()) {
-                return $currentTermClasses;
-            }
+        return $teacher
+            ? $query->where('teacher_id', $teacher->id)
+            : $query->whereRaw('1 = 0');
+    }
+
+    /** Subject offerings a teacher may use for the active academic year. */
+    public static function teacherClassSubjects(?Teacher $teacher, ?int $classId = null): Builder
+    {
+        if (! $teacher || $teacher->status !== 'active') {
+            return self::teacherAssignedClassSubjects($teacher)->whereRaw('1 = 0');
         }
 
-        return $query->pluck('class_id')->unique()->values();
+        $query = self::teacherAssignedClassSubjects($teacher);
+        if ($classId !== null) {
+            $query->where('class_id', $classId);
+        }
+
+        $currentAcademicYearId = AcademicYear::where('is_current', true)->value('id');
+
+        $currentOfferings = (clone $query)->where(function ($offerings) use ($currentAcademicYearId) {
+            $offerings->whereNull('term_id')
+                ->orWhereHas('term', function ($term) use ($currentAcademicYearId) {
+                    $term->where('is_current', true);
+                    if ($currentAcademicYearId) {
+                        $term->where('academic_year_id', $currentAcademicYearId);
+                    }
+                });
+        });
+
+        if (! (clone $currentOfferings)->exists()) {
+            return $query;
+        }
+
+        return $currentOfferings;
     }
 
     /** 403 unless the teacher teaches this class. */
@@ -134,17 +168,9 @@ class SchoolHelper
 
     public static function authorizeTeacherClassSubject(?Teacher $teacher, int $classId, int $classSubjectId): void
     {
-        $currentTermId = Term::where('is_current', true)->value('id');
         abort_unless(
-            $teacher && $teacher->status === 'active' && ClassSubject::whereKey($classSubjectId)
-                ->where('class_id', $classId)
-                ->where('teacher_id', $teacher->id)
-                ->where(function ($query) use ($currentTermId) {
-                    $query->whereNull('term_id');
-                    if ($currentTermId) {
-                        $query->orWhere('term_id', $currentTermId);
-                    }
-                })
+            self::teacherClassSubjects($teacher, $classId)
+                ->whereKey($classSubjectId)
                 ->exists(),
             403,
             'You do not teach this class subject.'

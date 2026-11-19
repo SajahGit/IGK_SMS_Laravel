@@ -6,7 +6,7 @@
 
 <form method="GET" action="{{ route($attendanceRoutePrefix.'.attendance.create') }}" class="row g-2 mb-4">
     <div class="col-md-4">
-        <select name="class_id" class="form-select" required>
+        <select id="attendance-class-select" name="class_id" class="form-select" required>
             <option value="">Select class</option>
             @foreach ($classes as $c)
                 <option value="{{ $c->id }}" @selected($classId == $c->id)>{{ $c->full_name }}</option>
@@ -14,12 +14,10 @@
         </select>
     </div>
     <div class="col-md-3">
-        <select name="class_subject_id" class="form-select">
-            @unless (auth()->user()->isTeacher())
-                <option value="">General class session</option>
-            @endunless
+        <select id="attendance-subject-select" name="class_subject_id" class="form-select" required>
+            <option value="" class="bg-slate-800 text-white">Select Subject</option>
             @foreach ($classSubjects as $classSubject)
-                <option value="{{ $classSubject->id }}" @selected($classSubjectId == $classSubject->id)>
+                <option value="{{ $classSubject->id }}" class="bg-slate-800 text-white" @selected($classSubjectId == $classSubject->id)>
                     {{ $classSubject->subject->name }}{{ $classSubject->term ? ' — '.$classSubject->term->name : '' }}
                 </option>
             @endforeach
@@ -48,7 +46,7 @@
         <div class="card shadow-sm">
             <div class="card-header d-flex justify-content-between">
                 <span>
-                    <strong>{{ $session?->session_label ?? ($classSubjects->firstWhere('id', $classSubjectId)?->subject?->name ?? 'General class session') }}</strong>
+                    <strong>{{ $session?->session_label ?? ($classSubjects->firstWhere('id', $classSubjectId)?->subject?->name ?? 'Select Subject') }}</strong>
                     · {{ \Illuminate\Support\Carbon::parse($date)->format('d M Y') }}
                     @if ($session?->start_time) · {{ substr($session->start_time, 0, 5) }} @endif
                     @if ($existing->isNotEmpty()) <span class="badge bg-info text-dark ms-2">Already marked - editing</span> @endif
@@ -85,4 +83,11 @@
         @endif
     </form>
 @endif
+<script>
+    document.getElementById('attendance-class-select').addEventListener('change', function () {
+        document.getElementById('attendance-subject-select').value = '';
+        this.form.noValidate = true;
+        this.form.submit();
+    });
+</script>
 @endsection

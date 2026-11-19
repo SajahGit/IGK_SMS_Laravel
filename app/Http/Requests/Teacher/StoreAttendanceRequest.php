@@ -28,12 +28,20 @@ class StoreAttendanceRequest extends FormRequest
             'class_id' => ['required', 'exists:classes,id'],
             'date' => ['required', 'date', 'before_or_equal:today'],
             'start_time' => ['required_without:attendance_session_id', 'nullable', 'date_format:H:i'],
-            'class_subject_id' => ['nullable', 'integer', 'exists:class_subject,id'],
+            'class_subject_id' => ['required', 'exists:class_subject,id'],
             'attendance_session_id' => ['nullable', 'integer', 'exists:attendance_sessions,id'],
             'status' => ['required', 'array'],
             'status.*' => [Rule::in(['present', 'absent', 'late', 'excused'])],
             'remarks' => ['nullable', 'array'],
             'remarks.*' => ['nullable', 'string', 'max:1000'],
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'class_subject_id.required' => 'Please select a subject you teach before recording attendance.',
+            'class_subject_id.exists' => 'Please select a subject you teach before recording attendance.',
         ];
     }
 

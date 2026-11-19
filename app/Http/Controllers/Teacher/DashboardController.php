@@ -5,7 +5,6 @@
 namespace App\Http\Controllers\Teacher;
 
 use App\Http\Controllers\Controller;
-use App\Models\ClassSubject;
 use App\Models\Exam;
 use App\Models\Student;
 use App\Support\SchoolHelper;
@@ -19,11 +18,7 @@ class DashboardController extends Controller
 
         return view('Teacher.TeacherDashboard', [
             'assignments' => $teacher
-                ? ClassSubject::with(['schoolClass', 'subject'])
-                    ->where('teacher_id', $teacher->id)
-                    ->whereHas('schoolClass')
-                    ->whereHas('subject')
-                    ->get()
+                ? SchoolHelper::teacherAssignedClassSubjects($teacher)->get()
                 : collect(),
             'classCount' => $classIds->count(),
             'studentCount' => Student::whereIn('class_id', $classIds)->count(),
