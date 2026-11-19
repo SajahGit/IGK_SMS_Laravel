@@ -187,7 +187,7 @@ class AccountsModuleCompletionTest extends TestCase
             $this->assertArrayHasKey('fee_structure_ids', $e->errors());
         }
 
-        InvoiceService::bulkGenerateForClass($class->id, $term2->id, today()->toDateString(), today()->addDays(30)->toDateString(), [$term1Fee->id, $allTermsFee->id]);
+        InvoiceService::bulkGenerateForClass($class->id, $term2->id, today()->toDateString(), today()->addDays(30)->toDateString(), [$allTermsFee->id]);
 
         $this->assertSame('1000.00', Invoice::firstOrFail()->total);
     }

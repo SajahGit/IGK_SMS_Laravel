@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Accountant;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Accountant\CancelInvoiceRequest;
 use App\Http\Requests\Accountant\GenerateInvoicesRequest;
+use App\Models\AcademicYear;
 use App\Models\FeeStructure;
 use App\Models\Invoice;
 use App\Models\SavedFilter;
@@ -72,26 +73,63 @@ class InvoiceController extends Controller
     {
         abort_unless($request->user()->isAdmin() || $request->user()->can('invoices.create'), 403);
 
-        $classes = SchoolClass::withCount('students')->orderBy('name')->orderBy('section')->get();
-        $terms = Term::orderBy('sequence')->get();
+        $classes = SchoolClass::with(['program', 'academicYear'])
+            ->withCount('students')->orderBy('name')->orderBy('section')->get();
         $selectedClassId = $request->query('class_id') ?: ($classes->first()?->id ?? null);
+        $class = $classes->firstWhere('id', (int) $selectedClassId)
+            ?? ($selectedClassId ? SchoolClass::with(['program', 'academicYear'])->find($selectedClassId) : null);
+        $termsQuery = Term::with('academicYear')->orderBy('sequence');
+        if ($class?->academic_year_id) {
+            $termsQuery->where('academic_year_id', $class->academic_year_id);
+        }
+        $terms = $termsQuery->get();
+        $selectedTermId = $request->query->has('term_id')
+            ? ($request->query('term_id') ? (int) $request->query('term_id') : null)
+            : $terms->firstWhere('is_current', true)?->id;
+        if ($selectedTermId && ! $terms->contains('id', $selectedTermId)) {
+            $selectedTermId = $terms->firstWhere('is_current', true)?->id;
+        }
 
         $feeStructures = collect();
+        $availableCurrencies = config('school.currencies', ['LKR']);
+        $billingCurrency = null;
         if ($selectedClassId) {
-            $class = SchoolClass::find($selectedClassId);
-            $termId = $request->query('term_id') ? (int) $request->query('term_id') : null;
+            $termId = $selectedTermId ? (int) $selectedTermId : null;
             $academicYearId = $termId
                 ? Term::whereKey($termId)->value('academic_year_id')
-                : $class?->academic_year_id;
+                : ($class?->academic_year_id ?? AcademicYear::where('is_current', true)->value('id'));
 
-            // SOP §15.1 / US-F1: program-wide structures for this program+year, plus
-            // (legacy, still supported) structures tied to this class directly.
             $feeStructures = FeeStructure::with('items')
                 ->billableFor($class?->program_id, $academicYearId, $selectedClassId, $termId)
                 ->get();
+
+            $programCurrencies = config('school.program_currencies', []);
+            $programCode = $class?->program?->code;
+            $billingCurrency = $programCode ? ($programCurrencies[$programCode] ?? null) : null;
+            if ($billingCurrency) {
+                $availableCurrencies = [strtoupper($billingCurrency)];
+            }
         }
 
-        return view('Accountant.AccountantInvoicesCreate', compact('classes', 'terms', 'selectedClassId', 'feeStructures') + [
+        $selectedCurrency = strtoupper((string) $request->query('currency', ''));
+        if (! in_array($selectedCurrency, $availableCurrencies, true)) {
+            $selectedCurrency = $billingCurrency
+                ? strtoupper($billingCurrency)
+                : ($feeStructures->first()?->currency ?? config('school.default_currency', 'LKR'));
+        }
+        $feeStructures = $feeStructures
+            ->where('currency', $selectedCurrency)
+            ->values();
+
+        return view('Accountant.AccountantInvoicesCreate', compact(
+            'classes',
+            'terms',
+            'selectedClassId',
+            'selectedTermId',
+            'selectedCurrency',
+            'availableCurrencies',
+            'feeStructures'
+        ) + [
             'financeRoutePrefix' => $this->financeRoutePrefix(),
         ]);
     }

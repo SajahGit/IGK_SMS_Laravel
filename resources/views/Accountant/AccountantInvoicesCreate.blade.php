@@ -23,7 +23,7 @@
 
                     <div class="mb-3">
                         <label for="class_select" class="form-label">Target Class <span class="text-danger">*</span></label>
-                        <select name="class_id" id="class_select" class="form-select" onchange="window.location.href = '{{ route($financeRoutePrefix.'.invoices.create') }}?class_id=' + this.value" required>
+                        <select name="class_id" id="class_select" class="form-select" required>
                             <option value="">Select Class to Invoice</option>
                             @foreach ($classes as $c)
                                 <option value="{{ $c->id }}" @selected($selectedClassId == $c->id)>
@@ -38,9 +38,18 @@
                         <select name="term_id" id="term_id" class="form-select">
                             <option value="">General (No specific term)</option>
                             @foreach ($terms as $t)
-                                <option value="{{ $t->id }}" @selected(old('term_id') == $t->id || $t->is_current)>
+                                <option value="{{ $t->id }}" @selected($selectedTermId == $t->id)>
                                     {{ $t->academicYear->name }} - {{ $t->name }} {{ $t->is_current ? '(Active Term)' : '' }}
                                 </option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="currency_select" class="form-label">Billing Currency</label>
+                        <select name="currency" id="currency_select" class="form-select">
+                            @foreach ($availableCurrencies as $currency)
+                                <option value="{{ $currency }}" @selected($selectedCurrency === $currency)>{{ $currency }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -72,6 +81,7 @@
                                             <div>
                                                 <input class="form-check-input me-2 fee-checkbox" type="checkbox" name="fee_structure_ids[]" value="{{ $fee->id }}" data-amount="{{ $fee->amount }}" data-currency="{{ $fee->currency }}" checked>
                                                 <span class="fw-semibold">{{ $fee->name }}</span>
+                                                <span class="badge bg-secondary ms-1">{{ $fee->currency }}</span>
                                                 @if ($fee->term)
                                                     <small class="text-muted">({{ $fee->term->name }})</small>
                                                 @endif
@@ -98,7 +108,7 @@
                         @else
                             <div class="alert alert-warning py-3">
                                 <i class="bi bi-exclamation-triangle me-1"></i>
-                                No active fee structures configured for this class.
+                                No active fee structures match this class, term, and currency.
                                 <a href="{{ route($financeRoutePrefix.'.fee-structures.index', ['class_id' => $selectedClassId]) }}" class="alert-link">Create fee structure</a> first.
                             </div>
                         @endif
@@ -112,7 +122,7 @@
                         <div class="d-flex justify-content-between align-items-center pt-3 border-top">
                             <div>
                                 <span class="text-muted">Total Invoice Amount Per Student:</span>
-                                <div class="fs-4 fw-bold text-primary" id="totalPreview">LKR 0.00</div>
+                                <div class="fs-4 fw-bold text-primary" id="totalPreview" data-currency="{{ $selectedCurrency }}">{{ $selectedCurrency }} 0.00</div>
                             </div>
                             <button type="submit" id="issueInvoices" class="btn btn-primary px-4 py-2">
                                 <i class="bi bi-receipt-cutoff me-1"></i> Issue Invoices
@@ -143,6 +153,22 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function () {
+        var createUrl = @json(route($financeRoutePrefix.'.invoices.create'));
+        function reloadFeeStructures() {
+            var params = new URLSearchParams();
+            var classId = document.getElementById('class_select').value;
+            var termId = document.getElementById('term_id').value;
+            var currency = document.getElementById('currency_select').value;
+            if (classId) params.set('class_id', classId);
+            params.set('term_id', termId);
+            if (currency) params.set('currency', currency);
+            window.location.href = createUrl + '?' + params.toString();
+        }
+
+        document.getElementById('class_select').addEventListener('change', reloadFeeStructures);
+        document.getElementById('term_id').addEventListener('change', reloadFeeStructures);
+        document.getElementById('currency_select').addEventListener('change', reloadFeeStructures);
+
         function updateTotal() {
             var total = 0.0;
             var currencies = new Set();
@@ -164,7 +190,7 @@
                     return;
                 }
                 el.classList.remove('text-danger');
-                var currency = currencies.size ? Array.from(currencies)[0] : 'LKR';
+                var currency = currencies.size ? Array.from(currencies)[0] : el.dataset.currency;
                 el.innerText = currency + ' ' + total.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,');
                 if (button) button.disabled = false;
             }

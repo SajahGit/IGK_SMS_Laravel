@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Events\InvoiceIssued;
+use App\Models\AcademicYear;
 use App\Models\FeeStructure;
 use App\Models\Invoice;
 use App\Models\Payment;
@@ -211,22 +212,42 @@ class InvoiceService
         bool $asDraft = false
     ): array {
         return DB::transaction(function () use ($classId, $termId, $issueDate, $dueDate, $feeStructureIds, $discount, $optionalItemIds, $asDraft) {
-            $class = SchoolClass::findOrFail($classId);
+            $class = SchoolClass::with('program')->findOrFail($classId);
+            $term = $termId ? Term::findOrFail($termId) : null;
+            if ($term && $class->academic_year_id && (int) $term->academic_year_id !== (int) $class->academic_year_id) {
+                throw ValidationException::withMessages([
+                    'term_id' => 'The selected term does not belong to the target class academic year.',
+                ]);
+            }
             $academicYearId = $termId
-                ? Term::whereKey($termId)->value('academic_year_id')
-                : $class->academic_year_id;
+                ? $term->academic_year_id
+                : ($class->academic_year_id ?? AcademicYear::where('is_current', true)->value('id'));
 
-            // SOP §15.1 / US-F1: a fee structure must exist for this program+year
-            // (program-wide structures), or — legacy, still supported — for this
-            // class+term directly.
             $fees = FeeStructure::with('items')
                 ->billableFor($class->program_id, $academicYearId, $classId, $termId)
                 ->whereIn('id', $feeStructureIds)
                 ->get();
 
-            if ($fees->isEmpty()) {
+            $selectedIds = collect($feeStructureIds)->map(fn ($id) => (int) $id)->unique();
+            if ($fees->isEmpty() || $fees->count() !== $selectedIds->count()) {
                 throw ValidationException::withMessages([
-                    'fee_structure_ids' => 'Please select at least one active fee structure that applies to this class and term.',
+                    'fee_structure_ids' => 'Every selected fee structure must be active and apply to the target class, program, academic year, and term.',
+                ]);
+            }
+
+            $currencies = $fees->pluck('currency')->map(fn ($currency) => strtoupper($currency))->unique()->values();
+            if ($currencies->count() !== 1) {
+                throw ValidationException::withMessages([
+                    'fee_structure_ids' => 'Select fee structures in one currency only.',
+                ]);
+            }
+            $programCode = $class->program?->code;
+            $billingCurrency = $programCode
+                ? config('school.program_currencies.'.$programCode)
+                : null;
+            if ($billingCurrency && $currencies->first() !== strtoupper($billingCurrency)) {
+                throw ValidationException::withMessages([
+                    'fee_structure_ids' => 'Selected fee structures must use '.$billingCurrency.' for this program.',
                 ]);
             }
 

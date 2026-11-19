@@ -101,10 +101,16 @@ class FeeStructure extends Model
             // structure (see booted()), so without the whereNull('class_id') guard this
             // would also match another class's legacy structure that happens to share
             // the same program + academic year.
-            $q->when($programId, fn ($qq) => $qq->orWhere(function ($qqq) use ($programId, $academicYearId) {
+            $q->when($programId, fn ($qq) => $qq->orWhere(function ($qqq) use ($programId, $academicYearId, $termId) {
                 $qqq->whereNull('class_id')
                     ->where('program_id', $programId)
-                    ->when($academicYearId, fn ($qqqq) => $qqqq->where('academic_year_id', $academicYearId));
+                    ->when($academicYearId, fn ($qqqq) => $qqqq->where('academic_year_id', $academicYearId))
+                    ->where(function ($terms) use ($termId) {
+                        $terms->whereNull('term_id');
+                        if ($termId) {
+                            $terms->orWhere('term_id', $termId);
+                        }
+                    });
             }));
 
             $q->when($classId, fn ($qq) => $qq->orWhere(function ($qqq) use ($classId, $termId) {
