@@ -111,7 +111,7 @@ tests/
 - Side effects via Events/Listeners
 - Heavy operations via queued jobs (`queue:work --tries=3 --max-time=3600`)
 - Queue connection: database
-- Scheduler: `schedule:run` every minute via cron
+- Scheduler: `schedule:run` every minute via cron; `school:sync-lifecycle` runs daily at 00:05 and is also triggered once daily by local web requests under a cache lock
 
 ---
 

@@ -14,13 +14,24 @@ Setting up an academic year, catalogue, classes, users/roles, fee structures, ex
 
 ## 1. Academic Year & Term
 
-1. Go to **Admin > Academic Years**.
-2. Create an academic year (e.g. "2026") and mark it as current.
-3. Go to **Admin > Terms**.
-4. Create terms (e.g. "Term 1") under the academic year.
-5. Only one academic year and one term can be current at a time (is_current invariant enforced).
+The `school:sync-lifecycle` command seeds and activates the date-matching year and term. It runs daily at 00:05; local web requests also trigger it once per day under a cache lock.
 
-> Changing the current year/term automatically unsets the previous current record.
+- The 2026–2027 terms run 2026-09-01–2026-12-18, 2027-01-18–2027-04-09, and 2027-04-26–2027-07-16.
+- The 2027–2028 terms run 2027-09-01–2027-12-17, 2028-01-17–2028-04-07, and 2028-04-24–2028-07-14.
+- Later academic years reuse the 2027–2028 month/day pattern.
+- Future terms remain upcoming until their date ranges begin. In calendar gaps, no term is current.
+- At term changes, active subject offerings, eligible student subject enrollments, and clash-free timetable slots are carried forward. Unpublished scheduled assessments and calendar announcements are created, and transitions are audited.
+- At each September year change, active students are promoted only when a next class with the same program, campus, and section exists. Year 13, DP Year 2, and Grade 12 students graduate; unmatched promotions are logged and skipped.
+
+To safely exercise the transitions in local/testing environments:
+
+```sh
+php artisan school:sync-lifecycle --simulate-date=2027-01-18
+```
+
+`--simulate-date` is rejected outside local/testing. Only one academic year and one term are current at a time.
+
+Admin-created year or term records remain supported; the lifecycle command reconciles their current state on its next run.
 
 ---
 

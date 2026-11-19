@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\User;
 use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
@@ -61,6 +62,28 @@ class InternationalDemoSeederTest extends TestCase
             'IBPYP', 'CAMPRIM', 'AMER-ELEM', 'IBMYP', 'CAMLS', 'AMER-MS',
             'CA-IGCSE', 'ED-IGCSE', 'US-HS', 'IBDP', 'CAM-AL', 'ED-AL',
         ])->count());
+        $this->assertSame(3, DB::table('branches')->count());
+        $this->assertSame(0, DB::table('classes')->whereNull('branch_id')->count());
+        $this->assertSame(0, DB::table('students')->whereNull('branch_id')->count());
+        $this->assertFalse(DB::table('classes as classes')
+            ->leftJoin('programs', 'programs.id', '=', 'classes.program_id')
+            ->leftJoin('academic_years', 'academic_years.id', '=', 'classes.academic_year_id')
+            ->leftJoin('branches', 'branches.id', '=', 'classes.branch_id')
+            ->whereNull('programs.id')
+            ->orWhereNull('academic_years.id')
+            ->orWhereNull('branches.id')
+            ->exists());
+        $this->assertFalse(DB::table('students as students')
+            ->leftJoin('classes', 'classes.id', '=', 'students.class_id')
+            ->leftJoin('programs', 'programs.id', '=', 'students.program_id')
+            ->leftJoin('academic_years', 'academic_years.id', '=', 'students.academic_year_id')
+            ->leftJoin('branches', 'branches.id', '=', 'students.branch_id')
+            ->whereNull('classes.id')
+            ->orWhereNull('programs.id')
+            ->orWhereNull('academic_years.id')
+            ->orWhereNull('branches.id')
+            ->orWhereColumn('students.branch_id', '!=', 'classes.branch_id')
+            ->exists());
         $languageCodes = ['SIN', 'HIN', 'JPN', 'SWA', 'MAL', 'ZUL', 'AFR', 'TAM', 'MAN', 'ARA', 'FRE', 'SPA'];
         $languageSubjectIds = DB::table('subjects')->whereIn('code', $languageCodes)->pluck('id');
         $this->assertCount(count($languageCodes), $languageSubjectIds);
@@ -144,6 +167,70 @@ class InternationalDemoSeederTest extends TestCase
             ->whereNotNull('students.program_id')
             ->whereColumn('students.program_id', '!=', 'classes.program_id')
             ->exists());
+        $this->assertSame(1, DB::table('academic_years')
+            ->where('name', '2026-2027')
+            ->whereDate('start_date', '2026-09-01')
+            ->whereDate('end_date', '2027-07-16')
+            ->count());
+        $this->assertSame(3, DB::table('terms')
+            ->where('academic_year_id', DB::table('academic_years')->where('name', '2026-2027')->value('id'))
+            ->count());
+        $currentTermId = DB::table('terms')->where('is_current', true)->value('id');
+        $timetableClash = DB::table('timetable_slots as first_slot')
+            ->join('class_subject as first_subject', 'first_subject.id', '=', 'first_slot.class_subject_id')
+            ->join('classes as first_class', 'first_class.id', '=', 'first_subject.class_id')
+            ->join('timetable_slots as second_slot', 'second_slot.id', '>', 'first_slot.id')
+            ->join('class_subject as second_subject', 'second_subject.id', '=', 'second_slot.class_subject_id')
+            ->join('classes as second_class', 'second_class.id', '=', 'second_subject.class_id')
+            ->where('first_subject.term_id', $currentTermId)
+            ->where('second_subject.term_id', $currentTermId)
+            ->whereColumn('first_slot.day_of_week', 'second_slot.day_of_week')
+            ->whereColumn('first_slot.start_time', '<', 'second_slot.end_time')
+            ->whereColumn('first_slot.end_time', '>', 'second_slot.start_time')
+            ->where(function ($query): void {
+                $query->whereColumn('first_subject.class_id', 'second_subject.class_id')
+                    ->orWhere(function ($teacherQuery): void {
+                        $teacherQuery->whereNotNull('first_subject.teacher_id')
+                            ->whereColumn('first_subject.teacher_id', 'second_subject.teacher_id');
+                    })
+                    ->orWhere(function ($roomQuery): void {
+                        $roomQuery->whereColumn('first_slot.room', 'second_slot.room')
+                            ->whereColumn('first_class.branch_id', 'second_class.branch_id');
+                    });
+            })
+            ->exists();
+        $this->assertFalse($timetableClash, 'Current-term timetable slots must not overlap by class, teacher, or room.');
+
+        $demoAccounts = [
+            'superadmin@school.test' => ['Super Admin', true, false],
+            'admin@school.test' => ['Institution Admin', true, false],
+            'registrar@school.test' => ['Registrar', true, false],
+            'teacher@school.test' => ['Teacher', true, false],
+            'accountant@school.test' => ['Accountant', true, false],
+            'student@school.test' => ['Student', false, true],
+        ];
+        $demoUserIds = [];
+        foreach ($demoAccounts as $email => [$roleName, $hasStaffProfile, $hasStudentProfile]) {
+            $userId = DB::table('users')->where('email', $email)->value('id');
+            $this->assertNotNull($userId, "Missing demo account {$email}.");
+            $demoUserIds[] = $userId;
+            $this->assertTrue(User::query()->findOrFail($userId)->hasRole($roleName), "Demo account {$email} is not assigned the {$roleName} role.");
+            if ($hasStaffProfile) {
+                $this->assertTrue(DB::table('employees')->where('user_id', $userId)->exists());
+            }
+            if ($hasStudentProfile) {
+                $this->assertTrue(DB::table('students')->where('user_id', $userId)->exists());
+            }
+        }
+        $this->assertCount(count($demoAccounts), array_unique($demoUserIds));
+        $this->assertSame(0, DB::table('class_subject')
+            ->leftJoin('classes', 'classes.id', '=', 'class_subject.class_id')
+            ->leftJoin('subjects', 'subjects.id', '=', 'class_subject.subject_id')
+            ->leftJoin('teachers', 'teachers.id', '=', 'class_subject.teacher_id')
+            ->whereNull('classes.id')
+            ->orWhereNull('subjects.id')
+            ->orWhereNull('teachers.id')
+            ->count());
 
         $counts = [
             'users',

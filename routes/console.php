@@ -20,6 +20,7 @@ Artisan::command('announcements:deliver', function () {
 
 Schedule::command('announcements:deliver')->everyMinute()->withoutOverlapping();
 Schedule::command('attendance:email-daily-absentees')->dailyAt('17:00')->withoutOverlapping();
+Schedule::command('school:sync-lifecycle')->dailyAt('00:05')->withoutOverlapping();
 
 // Automatic background jobs (need the queue worker + `schedule:run` cron from deploy/)
 Schedule::job(new SendOverdueInvoiceReminders)->dailyAt('08:00');

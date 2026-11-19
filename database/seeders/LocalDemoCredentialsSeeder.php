@@ -2,6 +2,8 @@
 
 namespace Database\Seeders;
 
+use App\Models\Department;
+use App\Models\Employee;
 use App\Models\Guardian;
 use App\Models\Student;
 use App\Models\Teacher;
@@ -24,6 +26,7 @@ class LocalDemoCredentialsSeeder extends Seeder
         }
 
         $this->ensureRoleLoginAccounts();
+        $this->ensureStaffProfiles();
 
         $users = User::query()
             ->where(function ($query): void {
@@ -141,5 +144,41 @@ class LocalDemoCredentialsSeeder extends Seeder
             ->orderBy('id')
             ->first();
         $source?->update([$foreignKey => $user->id]);
+    }
+
+    private function ensureStaffProfiles(): void
+    {
+        $departmentId = Department::query()->value('id');
+        foreach ([
+            'superadmin@school.test' => ['DEMO-SUPER-001', 'Super Administrator'],
+            'admin@school.test' => ['DEMO-ADMIN-001', 'Institution Administrator'],
+            'registrar@school.test' => ['DEMO-REG-001', 'Registrar'],
+            'accountant@school.test' => ['DEMO-ACC-001', 'Accountant'],
+        ] as $email => [$employeeNo, $jobTitle]) {
+            $user = User::query()->where('email', $email)->firstOrFail();
+            $employee = Employee::withoutGlobalScopes()->where('user_id', $user->id)->first()
+                ?? Employee::withoutGlobalScopes()->firstOrNew(['employee_no' => $employeeNo]);
+            $employee->forceFill([
+                'employee_no' => $employee->employee_no ?: $employeeNo,
+                'user_id' => $user->id,
+                'department_id' => $departmentId,
+                'job_title' => $jobTitle,
+                'hire_date' => '2024-01-01',
+                'employment_status' => 'active',
+                'base_salary' => '0.00',
+            ])->save();
+        }
+
+        foreach (['teacher@school.test', 'teacher2@school.test'] as $email) {
+            $teacher = Teacher::query()->whereHas('user', fn ($query) => $query->where('email', $email))->first();
+            if (! $teacher) {
+                continue;
+            }
+
+            Employee::withoutGlobalScopes()->where('teacher_id', $teacher->id)->update([
+                'user_id' => $teacher->user_id,
+                'updated_at' => now(),
+            ]);
+        }
     }
 }

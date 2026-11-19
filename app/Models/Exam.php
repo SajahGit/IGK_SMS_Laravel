@@ -23,6 +23,7 @@ class Exam extends Model
         'created_by',
         'is_published',
         'published_at',
+        'status',
     ];
 
     protected $attributes = [
@@ -30,6 +31,7 @@ class Exam extends Model
         'max_marks' => 100,
         'weight' => 100,
         'is_published' => false,
+        'status' => 'scheduled',
     ];
 
     protected function casts(): array

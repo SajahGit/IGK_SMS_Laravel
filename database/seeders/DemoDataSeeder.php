@@ -30,6 +30,7 @@ use App\Models\TransportRoute;
 use App\Models\TransportStop;
 use App\Models\TransportVehicle;
 use App\Models\User;
+use App\Services\AcademicLifecycleService;
 use App\Services\EnrollmentService;
 use App\Services\HrPayrollService;
 use App\Services\InventoryService;
@@ -40,10 +41,12 @@ use App\Services\ResultPublicationService;
 use App\Services\TermResultService;
 use App\Services\TransportService;
 use App\Support\Money;
+use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use RuntimeException;
 
 class DemoDataSeeder extends Seeder
@@ -76,22 +79,11 @@ class DemoDataSeeder extends Seeder
         $this->command?->info('Academic structure ready. Preparing international-school sample data...');
         $this->command?->info('Academic structure ready; preparing demo staff and students...');
 
-        $year = AcademicYear::firstOrCreate(
-            ['name' => '2026-2027'],
-            ['start_date' => '2026-09-01', 'end_date' => '2027-06-30', 'is_current' => true]
-        );
-        $term = Term::firstOrCreate(
-            ['academic_year_id' => $year->id, 'name' => 'Term 1'],
-            ['sequence' => 1, 'start_date' => '2026-09-01', 'end_date' => '2027-01-15', 'is_current' => true]
-        );
-        Term::firstOrCreate(
-            ['academic_year_id' => $year->id, 'name' => 'Term 2'],
-            ['sequence' => 2, 'start_date' => '2027-01-16', 'end_date' => '2027-06-30', 'is_current' => false]
-        );
-        AcademicYear::where('is_current', true)->whereKeyNot($year->id)->update(['is_current' => false]);
-        $year->update(['is_current' => true]);
-        Term::where('is_current', true)->whereKeyNot($term->id)->update(['is_current' => false]);
-        $term->update(['is_current' => true]);
+        app(AcademicLifecycleService::class)->sync(CarbonImmutable::today(config('app.timezone')));
+        $year = AcademicYear::query()->where('is_current', true)->first()
+            ?? AcademicYear::query()->where('name', '2026-2027')->firstOrFail();
+        $term = Term::query()->where('academic_year_id', $year->id)->where('is_current', true)->first()
+            ?? $year->terms()->firstOrFail();
 
         $programCodes = [
             'IBPYP', 'CAMPRIM', 'AMER-ELEM', 'IBMYP', 'CAMLS', 'AMER-MS',
@@ -185,10 +177,13 @@ class DemoDataSeeder extends Seeder
         }
         $this->seedTeachers($departments);
         $this->ensureWellbeingTeacher($departments);
-        $teachers = Teacher::query()->orderBy('id')->get();
         $admin = User::where('email', 'admin@school.test')->firstOrFail();
         $this->seedStudents($classes, $programs, $year, $admin);
+        $this->call(LocalDemoCredentialsSeeder::class);
+        $teachers = Teacher::query()->orderBy('id')->get();
         $this->seedOfferings($classes, $subjects, $teachers, $term);
+        $this->call(TeacherSubjectAssignmentSeeder::class);
+        $this->seedSampleTimetable($classes, $term);
         $this->command?->info('Student enrollments ready; generating attendance and HR data...');
         $this->seedStudentAttendance($classes, $term, $teachers, $admin);
         $this->seedStaffAttendance($teachers, $admin);
@@ -201,8 +196,6 @@ class DemoDataSeeder extends Seeder
         $this->seedProcurement($admin);
         $this->seedTransport($year);
         $this->call(HostelCafeteriaDemoSeeder::class);
-        $this->call(LocalDemoCredentialsSeeder::class);
-        $this->call(TeacherSubjectAssignmentSeeder::class);
         $this->call(LmsDemoSeeder::class);
     }
 
@@ -586,12 +579,28 @@ class DemoDataSeeder extends Seeder
             );
         }
 
-        $this->seedSampleTimetable($classes, $term);
     }
 
     /** @param Collection<int, SchoolClass> $classes */
     private function seedSampleTimetable(Collection $classes, Term $term): void
     {
+        $scheduled = DB::table('timetable_slots')
+            ->join('class_subject', 'class_subject.id', '=', 'timetable_slots.class_subject_id')
+            ->join('classes', 'classes.id', '=', 'class_subject.class_id')
+            ->where('class_subject.term_id', $term->id)
+            ->get([
+                'timetable_slots.class_subject_id',
+                'timetable_slots.day_of_week',
+                'timetable_slots.start_time',
+                'timetable_slots.end_time',
+                'timetable_slots.room',
+                'class_subject.class_id',
+                'class_subject.teacher_id',
+                'classes.branch_id',
+            ])
+            ->map(fn ($slot) => (array) $slot)
+            ->all();
+
         foreach ($classes as $class) {
             $offerings = ClassSubject::query()
                 ->where('class_id', $class->id)
@@ -600,20 +609,77 @@ class DemoDataSeeder extends Seeder
                 ->take(10)
                 ->get();
 
-            foreach (range(1, 5) as $day) {
-                foreach ($offerings->slice(($day - 1) * 2, 2)->values() as $period => $offering) {
-                    $start = $period === 0 ? '08:00:00' : '08:45:00';
-                    $end = date('H:i:s', strtotime($start.' +40 minutes'));
-                    TimetableSlot::firstOrCreate(
-                        [
-                            'class_subject_id' => $offering->id,
-                            'day_of_week' => $day,
-                            'start_time' => $start,
-                            'end_time' => $end,
-                        ],
-                        ['room' => 'Learning Centre '.$class->id]
-                    );
+            foreach ($offerings as $offering) {
+                if (collect($scheduled)->contains('class_subject_id', $offering->id)) {
+                    continue;
                 }
+
+                $room = 'Learning Centre '.($class->branch_id ?? 0).'-'.$class->id;
+                $assignment = null;
+                foreach (range(1, 5) as $day) {
+                    foreach (range(0, 11) as $period) {
+                        $start = CarbonImmutable::createFromTime(8, 0)
+                            ->addMinutes($period * 45);
+                        $end = $start->addMinutes(40);
+                        $startTime = $start->format('H:i:s');
+                        $endTime = $end->format('H:i:s');
+
+                        $clashes = collect($scheduled)->contains(function (array $slot) use (
+                            $class,
+                            $day,
+                            $endTime,
+                            $offering,
+                            $room,
+                            $startTime
+                        ): bool {
+                            if ((int) $slot['day_of_week'] !== $day
+                                || strcmp($slot['start_time'], $endTime) >= 0
+                                || strcmp($slot['end_time'], $startTime) <= 0) {
+                                return false;
+                            }
+
+                            return (int) $slot['class_id'] === $class->id
+                                || ($offering->teacher_id && (int) $slot['teacher_id'] === $offering->teacher_id)
+                                || ($slot['branch_id'] === $class->branch_id && $slot['room'] === $room);
+                        });
+
+                        if (! $clashes) {
+                            $assignment = [
+                                'class_subject_id' => $offering->id,
+                                'day_of_week' => $day,
+                                'start_time' => $startTime,
+                                'end_time' => $endTime,
+                                'room' => $room,
+                                'class_id' => $class->id,
+                                'teacher_id' => $offering->teacher_id,
+                                'branch_id' => $class->branch_id,
+                            ];
+                            break 2;
+                        }
+                    }
+                }
+
+                if (! $assignment) {
+                    Log::warning('Demo seeder skipped a class subject because no clash-free weekly timetable slot is available.', [
+                        'class_subject_id' => $offering->id,
+                        'class_id' => $class->id,
+                        'teacher_id' => $offering->teacher_id,
+                        'term_id' => $term->id,
+                    ]);
+
+                    continue;
+                }
+
+                TimetableSlot::query()->firstOrCreate(
+                    [
+                        'class_subject_id' => $offering->id,
+                        'day_of_week' => $assignment['day_of_week'],
+                        'start_time' => $assignment['start_time'],
+                        'end_time' => $assignment['end_time'],
+                    ],
+                    ['room' => $assignment['room']]
+                );
+                $scheduled[] = $assignment;
             }
         }
     }
@@ -754,14 +820,14 @@ class DemoDataSeeder extends Seeder
 
                 $exam = Exam::firstOrCreate(
                     [
-                        'name' => 'Term 1 - '.$offering->subject->code,
+                        'name' => $term->name.' - '.$offering->subject->code,
                         'class_id' => $class->id,
                         'subject_id' => $offering->subject_id,
                         'term_id' => $term->id,
                     ],
                     [
                         'type' => 'final',
-                        'exam_date' => '2027-01-10',
+                        'exam_date' => $term->start_date,
                         'max_marks' => 100,
                         'weight' => 100,
                         'created_by' => $admin->id,
