@@ -4,6 +4,8 @@ use App\Http\Controllers\Accountant\DashboardController;
 use App\Http\Controllers\Accountant\FeeStructureController;
 use App\Http\Controllers\Accountant\InvoiceController;
 use App\Http\Controllers\Accountant\PaymentController;
+use App\Http\Controllers\Accountant\PayrollController;
+use App\Http\Controllers\Accountant\SalaryDeductionController;
 use App\Http\Controllers\InstitutionAdmin\SavedFilterController;
 use App\Http\Controllers\Report\DefaultersReportController;
 use App\Http\Controllers\Report\FeeCollectionReportController;
@@ -38,3 +40,7 @@ Route::get('/reports/{report}/pdf', [ReportPdfController::class, 'download'])
     ->whereIn('report', ['fee-collection', 'defaulters', 'student-ledger'])
     ->middleware('throttle:exports')
     ->name('reports.pdf');
+
+Route::get('/payroll', [PayrollController::class, 'index'])->name('payroll.index');
+Route::get('/payroll/{payrollRun}', [PayrollController::class, 'show'])->name('payroll.show');
+Route::get('/salary-deductions', [SalaryDeductionController::class, 'index'])->name('salary-deductions.index');

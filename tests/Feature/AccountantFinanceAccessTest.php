@@ -47,6 +47,70 @@ class AccountantFinanceAccessTest extends TestCase
         $this->get(route('accountant.payments.create'))->assertOk();
     }
 
+    public function test_accountant_menu_and_read_only_finance_routes_are_available(): void
+    {
+        $this->assertFalse($this->accountant->can('payroll.read'));
+
+        $this->actingAs($this->accountant)
+            ->get(route('accountant.dashboard'))
+            ->assertOk()
+            ->assertSee('Procurement')
+            ->assertSee('Fee Structures')
+            ->assertSee('Invoices &amp; Billing', false)
+            ->assertSee('Record Payment')
+            ->assertSee('Chart of Accounts')
+            ->assertSee('Journal Entries')
+            ->assertSee('Trial Balance')
+            ->assertSee('General Ledger')
+            ->assertSee('Fee Collection')
+            ->assertSee('Defaulters List')
+            ->assertSee('Student Ledger')
+            ->assertSee('Payroll')
+            ->assertSee('Salary Deductions')
+            ->assertSee('Private Messages')
+            ->assertDontSee('Accounting &amp; Ledgers', false)
+            ->assertSeeInOrder([
+                'Finance',
+                'Procurement',
+                'Fee Structures',
+                'Invoices & Billing',
+                'Record Payment',
+                'Chart of Accounts',
+                'Journal Entries',
+                'Trial Balance',
+                'General Ledger',
+                'Reports',
+                'Fee Collection',
+                'Defaulters List',
+                'Student Ledger',
+                'Payroll & Deductions',
+                'Payroll',
+                'Salary Deductions',
+                'Communication',
+                'Private Messages',
+            ]);
+
+        foreach ([
+            'accountant.dashboard',
+            'procurement.orders.index',
+            'accountant.fee-structures.index',
+            'accountant.invoices.index',
+            'accountant.payments.create',
+            'admin.accounts.index',
+            'admin.journals.index',
+            'admin.accounting.trial-balance',
+            'admin.accounting.ledger',
+            'accountant.reports.fee-collection',
+            'accountant.reports.defaulters',
+            'accountant.reports.student-ledger',
+            'accountant.payroll.index',
+            'accountant.salary-deductions.index',
+            'messages.index',
+        ] as $routeName) {
+            $this->get(route($routeName))->assertOk();
+        }
+    }
+
     public function test_record_payment_invoice_dropdown_uses_a_unicode_middle_dot(): void
     {
         $student = $this->createStudentInvoice();

@@ -17,7 +17,7 @@
 <div class="card shadow-sm border-0"><div class="table-responsive"><table class="table table-hover mb-0 align-middle">
     <thead class="table-light"><tr><th>Order</th><th>Supplier</th><th>Order date</th><th>Expected</th><th>Status</th><th class="text-end">Actions</th></tr></thead><tbody>
     @forelse ($orders as $order)
-        <tr><td><a href="{{ route('procurement.orders.show', $order) }}">{{ $order->order_no }}</a></td><td>{{ $order->supplier->name }}</td><td>{{ $order->order_date->format('Y-m-d') }}</td><td>{{ $order->expected_date?->format('Y-m-d') ?: '—' }}</td><td><span class="badge bg-secondary">{{ ucwords(str_replace('_', ' ', $order->status)) }}</span></td><td class="text-end"><a href="{{ route('procurement.orders.show', $order) }}" class="btn btn-sm btn-outline-primary">View</a></td></tr>
+        <tr><td><a href="{{ route('procurement.orders.show', $order) }}">{{ $order->order_no }}</a></td><td>{{ $order->supplier?->name ?? '—' }}</td><td>{{ $order->order_date?->format('Y-m-d') ?? '—' }}</td><td>{{ $order->expected_date?->format('Y-m-d') ?: '—' }}</td><td><span class="badge bg-secondary">{{ ucwords(str_replace('_', ' ', $order->status)) }}</span></td><td class="text-end"><a href="{{ route('procurement.orders.show', $order) }}" class="btn btn-sm btn-outline-primary">View</a></td></tr>
     @empty<tr><td colspan="6" class="text-center text-muted py-4">No purchase orders found.</td></tr>@endforelse
     </tbody></table></div></div>
 <div class="mt-3">{{ $orders->links('pagination::bootstrap-5') }}</div>

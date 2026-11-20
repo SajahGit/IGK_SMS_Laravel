@@ -8,8 +8,10 @@ use App\Models\Branch;
 use App\Models\JournalEntry;
 use App\Services\JournalService;
 use App\Support\AuditLogger;
+use App\Support\BranchContext;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 use InvalidArgumentException;
 
@@ -17,10 +19,13 @@ class JournalEntryController extends Controller
 {
     public function index(Request $request): View
     {
+        $branchId = $request->user()->isAccountant()
+            ? BranchContext::activeBranchId($request->user())
+            : ($request->filled('branch_id') ? $request->integer('branch_id') : null);
         $entries = JournalEntry::withSum('lines as total_debit', 'debit')->with('branch')
             ->when($request->filled('from'), fn ($q) => $q->whereDate('entry_date', '>=', $request->date('from')))
             ->when($request->filled('to'), fn ($q) => $q->whereDate('entry_date', '<=', $request->date('to')))
-            ->when($request->filled('branch_id'), fn ($q) => $q->where('branch_id', $request->integer('branch_id')))
+            ->when($branchId !== null, fn ($q) => $q->where('branch_id', $branchId))
             ->orderByDesc('entry_date')->orderByDesc('id')->paginate(15)->withQueryString();
 
         return view('Accounting.JournalsIndex', ['entries' => $entries, 'branches' => Branch::orderBy('name')->get()]);
@@ -43,7 +48,7 @@ class JournalEntryController extends Controller
 
         $data = $request->validate([
             'entry_date' => ['required', 'date'],
-            'currency' => ['required', 'string', 'size:3', \Illuminate\Validation\Rule::in(config('school.currencies', ['LKR']))],
+            'currency' => ['required', 'string', 'size:3', Rule::in(config('school.currencies', ['LKR']))],
             'description' => ['required', 'string', 'max:255', 'regex:/\A(?=.*[A-Za-z]).+\z/s'],
             'reference' => ['nullable', 'string', 'max:30', 'regex:/\A[A-Z0-9-]*\z/'],
             'branch_id' => ['nullable', 'exists:branches,id'],
@@ -66,8 +71,10 @@ class JournalEntryController extends Controller
         return redirect()->route('admin.journals.show', $entry)->with('success', 'Journal entry posted.');
     }
 
-    public function show(JournalEntry $journal): View
+    public function show(JournalEntry $journal, Request $request): View
     {
+        $branchId = $request->user()->isAccountant() ? BranchContext::activeBranchId($request->user()) : null;
+        abort_unless($branchId === null || (int) $journal->branch_id === $branchId, 404);
         $journal->load('lines.account', 'branch');
 
         return view('Accounting.JournalsShow', ['entry' => $journal]);

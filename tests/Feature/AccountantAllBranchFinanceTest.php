@@ -2,10 +2,19 @@
 
 namespace Tests\Feature;
 
+use App\Models\Account;
 use App\Models\Branch;
+use App\Models\Employee;
 use App\Models\Invoice;
+use App\Models\JournalEntry;
+use App\Models\JournalLine;
+use App\Models\PayrollDeduction;
+use App\Models\PayrollEntry;
+use App\Models\PayrollRun;
+use App\Models\PurchaseOrder;
 use App\Models\SchoolClass;
 use App\Models\Student;
+use App\Models\Supplier;
 use App\Models\User;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -17,7 +26,9 @@ class AccountantAllBranchFinanceTest extends TestCase
     use RefreshDatabase;
 
     private User $accountant;
+
     private Branch $mainBranch;
+
     private Branch $kandyBranch;
 
     protected function setUp(): void
@@ -183,5 +194,137 @@ class AccountantAllBranchFinanceTest extends TestCase
 
         // Admin dashboard must remain forbidden for accountant
         $this->get(route('admin.dashboard'))->assertForbidden();
+    }
+
+    public function test_accountant_procurement_payroll_and_deductions_follow_selected_campus(): void
+    {
+        $mainSupplier = Supplier::create(['name' => 'Main Supplier']);
+        $kandySupplier = Supplier::create(['name' => 'Kandy Supplier']);
+        PurchaseOrder::create([
+            'order_no' => 'PO-MAIN-001',
+            'supplier_id' => $mainSupplier->id,
+            'branch_id' => $this->mainBranch->id,
+            'order_date' => today()->toDateString(),
+        ]);
+        PurchaseOrder::create([
+            'order_no' => 'PO-KANDY-001',
+            'supplier_id' => $kandySupplier->id,
+            'branch_id' => $this->kandyBranch->id,
+            'order_date' => today()->toDateString(),
+        ]);
+
+        $mainEmployee = Employee::create([
+            'employee_no' => 'EMP-MAIN-001',
+            'job_title' => 'Teacher',
+            'hire_date' => today()->toDateString(),
+            'base_salary' => '50000.00',
+            'branch_id' => $this->mainBranch->id,
+        ]);
+        $kandyEmployee = Employee::create([
+            'employee_no' => 'EMP-KANDY-001',
+            'job_title' => 'Teacher',
+            'hire_date' => today()->toDateString(),
+            'base_salary' => '60000.00',
+            'branch_id' => $this->kandyBranch->id,
+        ]);
+        $run = PayrollRun::create([
+            'period_start' => '2026-10-01',
+            'period_end' => '2026-10-31',
+            'status' => 'paid',
+            'generated_by' => $this->accountant->id,
+        ]);
+        foreach ([$mainEmployee, $kandyEmployee] as $employee) {
+            PayrollEntry::create([
+                'payroll_run_id' => $run->id,
+                'employee_id' => $employee->id,
+                'base_salary' => $employee->base_salary,
+                'net_pay' => $employee->base_salary,
+            ]);
+        }
+        PayrollDeduction::create([
+            'employee_id' => $mainEmployee->id,
+            'payroll_month' => '2026-10',
+            'type' => 'manual',
+            'amount' => '500.00',
+            'reason' => 'Main campus deduction',
+        ]);
+        PayrollDeduction::create([
+            'employee_id' => $kandyEmployee->id,
+            'payroll_month' => '2026-10',
+            'type' => 'manual',
+            'amount' => '600.00',
+            'reason' => 'Kandy campus deduction',
+        ]);
+
+        $this->actingAs($this->accountant);
+        $this->withSession([
+            'active_branch_id' => $this->kandyBranch->id,
+            'branch_context_initialized' => true,
+        ]);
+
+        $this->get(route('procurement.orders.index'))
+            ->assertOk()
+            ->assertSee('PO-KANDY-001')
+            ->assertDontSee('PO-MAIN-001');
+        $this->get(route('accountant.payroll.index'))
+            ->assertOk()
+            ->assertSee('2026-10-01')
+            ->assertSee('1</td>', false);
+        $this->get(route('accountant.payroll.show', $run))
+            ->assertOk()
+            ->assertSee('EMP-KANDY-001')
+            ->assertDontSee('EMP-MAIN-001');
+        $this->get(route('accountant.salary-deductions.index'))
+            ->assertOk()
+            ->assertSee('Kandy campus deduction')
+            ->assertDontSee('Main campus deduction');
+    }
+
+    public function test_accountant_ledgers_respect_selected_campus_and_currency(): void
+    {
+        $account = Account::create([
+            'code' => 'TEST-CASH',
+            'name' => 'Campus Test Cash',
+            'type' => 'asset',
+            'is_active' => true,
+        ]);
+        $entries = [
+            ['entry_no' => 'JE-MAIN-LKR', 'branch_id' => $this->mainBranch->id, 'currency' => 'LKR', 'debit' => '150.00'],
+            ['entry_no' => 'JE-KANDY-LKR', 'branch_id' => $this->kandyBranch->id, 'currency' => 'LKR', 'debit' => '100.00'],
+            ['entry_no' => 'JE-KANDY-USD', 'branch_id' => $this->kandyBranch->id, 'currency' => 'USD', 'debit' => '300.00'],
+        ];
+        foreach ($entries as $data) {
+            $entry = JournalEntry::create([
+                'entry_no' => $data['entry_no'],
+                'entry_date' => today()->toDateString(),
+                'currency' => $data['currency'],
+                'description' => 'Campus test posting',
+                'branch_id' => $data['branch_id'],
+                'status' => 'posted',
+            ]);
+            JournalLine::create([
+                'journal_entry_id' => $entry->id,
+                'account_id' => $account->id,
+                'debit' => $data['debit'],
+                'credit' => '0.00',
+            ]);
+        }
+
+        $this->actingAs($this->accountant);
+        $this->withSession([
+            'active_branch_id' => $this->kandyBranch->id,
+            'branch_context_initialized' => true,
+        ]);
+
+        $this->get(route('admin.accounting.trial-balance', ['currency' => 'LKR']))
+            ->assertOk()
+            ->assertSee('100.00')
+            ->assertDontSee('150.00')
+            ->assertDontSee('300.00');
+        $this->get(route('admin.accounting.ledger', ['account_id' => $account->id, 'currency' => 'LKR']))
+            ->assertOk()
+            ->assertSee('JE-KANDY-LKR')
+            ->assertDontSee('JE-MAIN-LKR')
+            ->assertDontSee('JE-KANDY-USD');
     }
 }

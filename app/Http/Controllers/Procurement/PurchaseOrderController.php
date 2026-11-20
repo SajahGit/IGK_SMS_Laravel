@@ -11,6 +11,7 @@ use App\Models\InventoryItem;
 use App\Models\PurchaseOrder;
 use App\Models\Supplier;
 use App\Services\ProcurementService;
+use App\Support\BranchContext;
 use App\Support\Money;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -22,7 +23,9 @@ class PurchaseOrderController extends Controller
     public function index(Request $request): View
     {
         $this->authorize('procurement.read');
+        $branchId = $request->user()->isAccountant() ? BranchContext::activeBranchId($request->user()) : null;
         $orders = PurchaseOrder::with('supplier')
+            ->when($branchId !== null, fn ($query) => $query->where('branch_id', $branchId))
             ->when($request->filled('status'), fn ($query) => $query->where('status', $request->string('status')))
             ->when($request->filled('search'), fn ($query) => $query->where('order_no', 'like', '%'.$request->string('search').'%'))
             ->orderByDesc('updated_at')
@@ -53,9 +56,11 @@ class PurchaseOrderController extends Controller
         return redirect()->route('procurement.orders.show', $order)->with('success', 'Draft purchase order created.');
     }
 
-    public function show(PurchaseOrder $order): View
+    public function show(PurchaseOrder $order, Request $request): View
     {
         $this->authorize('procurement.read');
+        $branchId = $request->user()->isAccountant() ? BranchContext::activeBranchId($request->user()) : null;
+        abort_unless($branchId === null || (int) $order->branch_id === $branchId, 404);
         $order->load(['supplier', 'creator', 'approver', 'receiver', 'items.inventoryItem']);
         $total = $order->items->reduce(
             fn (string $total, $line) => Money::add($total, Money::mul($line->unit_cost, $line->quantity_ordered)),

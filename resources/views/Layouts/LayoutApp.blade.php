@@ -106,19 +106,19 @@
                 ['Fee Structures', 'accountant.fee-structures.index', 'accountant.fee-structures.*', 'cash-stack'],
                 ['Invoices & Billing', 'accountant.invoices.index', 'accountant.invoices.*', 'receipt'],
                 ['Record Payment', 'accountant.payments.create', 'accountant.payments.*', 'credit-card'],
-            ],
-            'Accounting & Ledgers' => [
-                ['Branch Summary', 'admin.accounting.branch-summary', 'admin.accounting.branch-summary', 'buildings'],
                 ['Chart of Accounts', 'admin.accounts.index', 'admin.accounts.*', 'diagram-2'],
                 ['Journal Entries', 'admin.journals.index', 'admin.journals.*', 'journal-richtext'],
                 ['Trial Balance', 'admin.accounting.trial-balance', 'admin.accounting.trial-balance', 'calculator'],
                 ['General Ledger', 'admin.accounting.ledger', 'admin.accounting.ledger', 'journal-text'],
-                ['Income & Expense', 'admin.accounting.income-expense', 'admin.accounting.income-expense', 'clipboard-data'],
             ],
             'Reports' => [
                 ['Fee Collection', 'accountant.reports.fee-collection', 'accountant.reports.fee-collection*', 'cash-coin'],
                 ['Defaulters List', 'accountant.reports.defaulters', 'accountant.reports.defaulters*', 'exclamation-octagon'],
                 ['Student Ledger', 'accountant.reports.student-ledger', 'accountant.reports.student-ledger*', 'journal-text'],
+            ],
+            'Payroll & Deductions' => [
+                ['Payroll', 'accountant.payroll.index', 'accountant.payroll.*', 'cash-coin'],
+                ['Salary Deductions', 'accountant.salary-deductions.index', 'accountant.salary-deductions.*', 'scissors'],
             ],
         ],
         'registrar' => [
@@ -227,6 +227,7 @@
                             str_starts_with($route, 'admin.transport.') => 'transport.read',
                             str_starts_with($route, 'library.') => 'library.read',
                             str_starts_with($route, 'procurement.') => 'procurement.read',
+                            $menuRole === 'accountant' && in_array($route, ['admin.accounts.index', 'admin.journals.index', 'admin.accounting.trial-balance', 'admin.accounting.ledger'], true) => 'reports.financial',
                             $route === 'admin.users.index' => 'users.read',
                             $route === 'admin.students.index' => 'students.read',
                             $route === 'admin.students.create' => 'students.create',

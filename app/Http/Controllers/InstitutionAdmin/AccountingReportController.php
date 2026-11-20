@@ -6,9 +6,11 @@ use App\Http\Controllers\Controller;
 use App\Models\Account;
 use App\Models\Branch;
 use App\Models\JournalLine;
+use App\Support\BranchContext;
 use App\Support\Money;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class AccountingReportController extends Controller
@@ -18,12 +20,15 @@ class AccountingReportController extends Controller
         $from = $request->date('from')?->toDateString() ?? now()->startOfYear()->toDateString();
         $to = $request->date('to')?->toDateString() ?? today()->toDateString();
         $currency = $request->validate([
-            'currency' => ['nullable', 'string', 'size:3', \Illuminate\Validation\Rule::in(config('school.currencies', ['LKR']))],
+            'currency' => ['nullable', 'string', 'size:3', Rule::in(config('school.currencies', ['LKR']))],
         ])['currency'] ?? config('school.default_currency', 'LKR');
         abort_if($from > $to, 422, 'Start date must be on or before end date.');
+        $branchId = $request->user()->isAccountant()
+            ? BranchContext::activeBranchId($request->user())
+            : ($request->filled('branch_id') ? $request->integer('branch_id') : null);
 
         $accounts = Account::query()->whereIn('type', ['income', 'expense'])->orderBy('code')->get();
-        $rows = $accounts->map(function (Account $account) use ($from, $to, $currency, $request) {
+        $rows = $accounts->map(function (Account $account) use ($from, $to, $currency, $branchId) {
             $lines = JournalLine::query()
                 ->where('account_id', $account->id)
                 ->whereHas('entry', fn ($query) => $query
@@ -31,7 +36,7 @@ class AccountingReportController extends Controller
                     ->where('currency', $currency)
                     ->whereDate('entry_date', '>=', $from)
                     ->whereDate('entry_date', '<=', $to)
-                    ->when($request->filled('branch_id'), fn ($branch) => $branch->where('branch_id', $request->integer('branch_id'))));
+                    ->when($branchId !== null, fn ($branch) => $branch->where('branch_id', $branchId)));
             $normalCredit = $account->type === 'income';
             $amount = $normalCredit
                 ? bcsub((string) $lines->sum('credit'), (string) $lines->sum('debit'), 2)
@@ -54,11 +59,15 @@ class AccountingReportController extends Controller
     {
         $to = $request->input('to');
         $currency = $request->validate([
-            'currency' => ['nullable', 'string', 'size:3', \Illuminate\Validation\Rule::in(config('school.currencies', ['LKR']))],
+            'currency' => ['nullable', 'string', 'size:3', Rule::in(config('school.currencies', ['LKR']))],
         ])['currency'] ?? config('school.default_currency', 'LKR');
-        $rows = Account::orderBy('code')->get()->map(function (Account $account) use ($to, $currency) {
+        $branchId = $request->user()->isAccountant() ? BranchContext::activeBranchId($request->user()) : null;
+        $rows = Account::orderBy('code')->get()->map(function (Account $account) use ($to, $currency, $branchId) {
             $q = JournalLine::where('account_id', $account->id)
-                ->whereHas('entry', fn ($e) => $e->where('status', 'posted')->where('currency', $currency)->when($to, fn ($w) => $w->whereDate('entry_date', '<=', $to)));
+                ->whereHas('entry', fn ($e) => $e->where('status', 'posted')
+                    ->where('currency', $currency)
+                    ->when($to, fn ($w) => $w->whereDate('entry_date', '<=', $to))
+                    ->when($branchId !== null, fn ($w) => $w->where('branch_id', $branchId)));
             $debit = (string) ($q->sum('debit') ?: '0');
             $credit = (string) ($q->sum('credit') ?: '0');
             $net = bcsub($debit, $credit, 2);
@@ -79,8 +88,9 @@ class AccountingReportController extends Controller
     public function ledger(Request $request): View
     {
         $currency = $request->validate([
-            'currency' => ['nullable', 'string', 'size:3', \Illuminate\Validation\Rule::in(config('school.currencies', ['LKR']))],
+            'currency' => ['nullable', 'string', 'size:3', Rule::in(config('school.currencies', ['LKR']))],
         ])['currency'] ?? config('school.default_currency', 'LKR');
+        $branchId = $request->user()->isAccountant() ? BranchContext::activeBranchId($request->user()) : null;
         $accounts = Account::orderBy('code')->get();
         $account = $request->filled('account_id') ? Account::find($request->integer('account_id')) : null;
         $lines = collect();
@@ -92,7 +102,8 @@ class AccountingReportController extends Controller
                 ->whereHas('entry', fn ($e) => $e->where('status', 'posted')
                     ->where('currency', $currency)
                     ->when($request->filled('from'), fn ($w) => $w->whereDate('entry_date', '>=', $request->date('from')))
-                    ->when($request->filled('to'), fn ($w) => $w->whereDate('entry_date', '<=', $request->date('to'))))
+                    ->when($request->filled('to'), fn ($w) => $w->whereDate('entry_date', '<=', $request->date('to')))
+                    ->when($branchId !== null, fn ($w) => $w->where('branch_id', $branchId)))
                 ->get()->sortBy(fn ($l) => $l->entry->entry_date->format('Ymd').str_pad((string) $l->id, 10, '0', STR_PAD_LEFT))->values();
 
             foreach ($lines as $line) {

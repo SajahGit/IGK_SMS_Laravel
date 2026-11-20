@@ -163,6 +163,7 @@ class RolePermissionSeeder extends Seeder
             'fee_structures.create', 'fee_structures.read', 'fee_structures.update', 'fee_structures.delete',
             'invoices.create', 'invoices.read', 'invoices.update',
             'payments.create', 'payments.read',
+            'procurement.read',
             'announcements.read',
             'reports.read', 'reports.financial',
         ]);

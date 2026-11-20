@@ -67,7 +67,8 @@ tests/
 
 1. **Campus Scoping & Isolation**:
    - Primary entities (`ClassModel`, `Section`, `Admission`, `PayrollRun`) use the `BranchOwned` global scope to enforce strict tenant isolation per physical campus.
-   - Cross-branch access is permitted only for Super Administrators and authorized institution-level directors.
+   - Campus-wide roles use the active campus context; Accountant finance, journal, procurement, payroll, and deduction views must honor that selection.
+   - Payroll run visibility for Accountant is determined by the campus of its employees, since a run can contain entries from more than one campus or have no run-level campus assignment.
 2. **Student & Faculty Campus Assignment**:
    - `students.branch_id` and `teachers.branch_id` map each individual to their home campus.
    - When transferring campuses, `BranchTransferService` updates the home branch and logs an immutable audit trail in `branch_transfers`.
@@ -88,8 +89,8 @@ tests/
    - Stored with `pending` status until the monthly `HrPayrollService::generatePayroll()` execution absorbs it into the payroll run and transitions status to `applied`.
 3. **Super Admin Exclusivity & Connected Transparency**:
    - Dedicated controller: `App\Http\Controllers\SuperAdmin\SalaryDeductionController`.
-   - Route: `/admin/salary-deductions` (Super Admin exclusive).
-   - Removed from branch accountant view to prevent unauthorized tampering.
+   - Management route: `/admin/salary-deductions` (Super Admin exclusive); Accountant has a separate read-only, campus-scoped deduction history.
+   - Policy, creation, and deletion controls remain unavailable to Accountant.
    - Full visibility on `/teacher/profile`: Staff members can inspect itemized deductions (both attendance and manual) on their personal portal and payslips.
 
 ---
