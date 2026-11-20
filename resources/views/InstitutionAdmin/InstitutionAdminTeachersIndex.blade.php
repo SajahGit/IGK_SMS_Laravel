@@ -6,7 +6,9 @@
         <h3 class="mb-0">Teachers</h3>
         <small class="text-muted">Faculty profiles, campus assignments, and teaching workloads.</small>
     </div>
-    <a href="{{ route('admin.teachers.create') }}" class="btn btn-primary"><i class="bi bi-person-plus-fill me-1"></i>Add Teacher</a>
+    @can('staff.create')
+        <a href="{{ route('admin.teachers.create') }}" class="btn btn-primary"><i class="bi bi-person-plus-fill me-1"></i>Add Teacher</a>
+    @endcan
 </div>
 
 <form method="GET" class="row g-2 mb-3 no-print">

@@ -7,7 +7,7 @@
         <h3 class="mb-0">Class Timetable</h3>
         <small class="text-muted">Schedule weekly class sessions with automatic clash detection across class, teacher, and room.</small>
     </div>
-    @if ($selectedClassId)
+    @if ($selectedClassId && (auth()->user()->isAdmin() || auth()->user()->can('timetable.update')))
         @if ($classSubjects->isNotEmpty())
             <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createSlotModal">
                 <i class="bi bi-plus-lg me-1"></i> Add Timetable Slot
@@ -67,11 +67,13 @@
                             <div class="p-2 rounded border bg-body-tertiary position-relative">
                                 <div class="d-flex justify-content-between align-items-start mb-1">
                                     <span class="fw-bold text-primary">{{ $slot->classSubject->subject->name }}</span>
-                                    <form method="POST" action="{{ route('admin.timetable.destroy', $slot) }}" class="m-0" onsubmit="return confirm('Remove this slot?')">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button class="btn btn-sm btn-link text-danger p-0" title="Delete Slot"><i class="bi bi-trash"></i></button>
-                                    </form>
+                                    @if (auth()->user()->isAdmin() || auth()->user()->can('timetable.update'))
+                                        <form method="POST" action="{{ route('admin.timetable.destroy', $slot) }}" class="m-0" onsubmit="return confirm('Remove this slot?')">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button class="btn btn-sm btn-link text-danger p-0" title="Delete Slot"><i class="bi bi-trash"></i></button>
+                                        </form>
+                                    @endif
                                 </div>
                                 <div class="small text-muted"><i class="bi bi-person me-1"></i>{{ $slot->classSubject->teacher->user->name }}</div>
                                 <div class="d-flex justify-content-between align-items-center mt-2 small">
@@ -92,6 +94,7 @@
     </div>
 
     <!-- Create Slot Modal -->
+    @if (auth()->user()->isAdmin() || auth()->user()->can('timetable.update'))
     <div class="modal fade" id="createSlotModal" tabindex="-1" aria-labelledby="createSlotModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -165,8 +168,9 @@
             </div>
         </div>
     </div>
+    @endif
 
-    @if ($errors->any())
+    @if (($errors->any()) && (auth()->user()->isAdmin() || auth()->user()->can('timetable.update')))
         <script>
             document.addEventListener('DOMContentLoaded', function () {
                 var modalEl = document.getElementById('createSlotModal');

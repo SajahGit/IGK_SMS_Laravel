@@ -2,6 +2,8 @@
 
 namespace App\Http\Requests\Transport;
 
+use App\Models\Branch;
+use App\Support\BranchContext;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -11,6 +13,10 @@ class StoreTransportRouteRequest extends FormRequest
     {
         if (is_string($this->input('code'))) {
             $this->merge(['code' => strtoupper(trim($this->input('code')))]);
+        }
+
+        if (! $this->filled('branch_id') && BranchContext::activeBranchId($this->user()) !== null) {
+            $this->merge(['branch_id' => BranchContext::activeBranchId($this->user())]);
         }
     }
 
@@ -26,6 +32,11 @@ class StoreTransportRouteRequest extends FormRequest
         return [
             'code' => ['required', 'string', 'max:25', 'regex:/^[A-Z0-9-]+$/', Rule::unique('transport_routes', 'code')->ignore($this->route('transportRoute'))],
             'name' => ['required', 'string', 'max:80', 'regex:/^[a-zA-Z0-9\s()-]+$/'],
+            'branch_id' => [
+                Rule::requiredIf(BranchContext::hasActiveBranches() && BranchContext::activeBranchId($this->user()) === null),
+                'nullable',
+                'exists:branches,id',
+            ],
             'vehicle_id' => ['nullable', 'integer', 'exists:transport_vehicles,id'],
             'monthly_fee' => ['required', 'numeric', 'min:0', 'max:9999999999.99'],
             'is_active' => ['sometimes', 'boolean'],

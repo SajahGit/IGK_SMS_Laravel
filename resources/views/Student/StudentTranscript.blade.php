@@ -10,7 +10,7 @@
     @endif
 </div>
 <div class="card shadow-sm border-0 mb-3"><div class="card-body d-flex flex-wrap gap-4">
-    <div><div class="small text-muted">Cumulative GPA (CGPA)</div><strong class="fs-4">{{ $cgpa !== null ? number_format($cgpa, 2).' / 4.00' : '—' }}</strong></div>
+    <div><div class="small text-muted">Cumulative GPA (CGPA)</div><strong class="fs-4">{{ $cgpa !== null ? number_format($cgpa, 2).' / '.number_format($gradePointMax, 2) : '—' }}</strong></div>
     <div><div class="small text-muted">Total credits</div><strong class="fs-4">{{ $totalCredits }}</strong></div>
     <div><div class="small text-muted">Current class</div><strong class="fs-5">{{ $student->class?->full_name ?? '—' }}</strong></div>
 </div></div>

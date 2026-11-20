@@ -180,6 +180,11 @@ class SchoolHelper
     /** Classes a user may use in reports: authorized administrators = all, teachers = own classes. */
     public static function allowedClasses(User $user): Collection
     {
+        if ($user->isTeacher()) {
+            return SchoolClass::whereIn('id', self::teacherClassIds($user->teacher))
+                ->orderBy('name')->orderBy('section')->get();
+        }
+
         if ($user->isAdmin() || $user->can('reports.academic') || $user->can('reports.financial')) {
             return SchoolClass::orderBy('name')->orderBy('section')->get();
         }

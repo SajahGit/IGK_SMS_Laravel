@@ -28,7 +28,7 @@
             <td style="width: 30%;">Class: {{ $student->class?->full_name ?? '—' }}</td>
         </tr>
     </table>
-    <p class="summary">Cumulative GPA: {{ $cgpa !== null ? number_format($cgpa, 2).' / 4.00' : '—' }} &bull; Total Credits: {{ $totalCredits }}</p>
+    <p class="summary">Cumulative GPA: {{ $cgpa !== null ? number_format($cgpa, 2).' / '.number_format($gradePointMax, 2) : '—' }} &bull; Total Credits: {{ $totalCredits }}</p>
     @foreach($years as $year)
         <h2 class="year">Academic Year {{ $year['academic_year']?->name ?? 'Unknown' }} &mdash; GPA {{ $year['gpa'] !== null ? number_format($year['gpa'], 2) : '—' }}</h2>
         @foreach($year['terms'] as $term)

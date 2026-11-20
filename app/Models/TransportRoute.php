@@ -11,6 +11,7 @@ class TransportRoute extends Model
     protected $fillable = [
         'code',
         'name',
+        'branch_id',
         'vehicle_id',
         'monthly_fee',
         'is_active',

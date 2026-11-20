@@ -2,9 +2,11 @@
 
 namespace App\Services;
 
+use App\Models\GradeScale;
 use App\Models\Student;
 use App\Models\SubjectResult;
 use App\Models\TermResult;
+use App\Services\GradeScaleService;
 
 class TranscriptService
 {
@@ -62,6 +64,7 @@ class TranscriptService
             'years' => $years,
             'totalCredits' => $totalCredits,
             'cgpa' => $totalCredits > 0 ? round($totalWeightedPoints / $totalCredits, 2, PHP_ROUND_HALF_UP) : null,
+            'gradePointMax' => (float) (GradeScaleService::items(GradeScale::where('is_default', true)->first())->max('grade_point') ?? 4),
         ];
     }
 }

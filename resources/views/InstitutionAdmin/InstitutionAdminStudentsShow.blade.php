@@ -306,13 +306,13 @@
                     <tbody>
                         @forelse ($student->invoices as $inv)
                             <tr>
-                                <td><strong>{{ $inv->invoice_number }}</strong></td>
+                                <td><strong>{{ $inv->invoice_no }}</strong></td>
                                 <td>{{ $inv->issue_date ? \Carbon\Carbon::parse($inv->issue_date)->format('d M Y') : '—' }}</td>
                                 <td>{{ $inv->due_date ? \Carbon\Carbon::parse($inv->due_date)->format('d M Y') : '—' }}</td>
-                                <td>{{ number_format($inv->total_amount, 2) }}</td>
-                                <td class="text-success">{{ number_format($inv->paid_amount, 2) }}</td>
-                                <td class="fw-semibold {{ ($inv->total_amount - $inv->paid_amount) > 0 ? 'text-danger' : 'text-success' }}">
-                                    {{ number_format($inv->total_amount - $inv->paid_amount, 2) }}
+                                <td>{{ number_format((float) $inv->total, 2) }}</td>
+                                <td class="text-success">{{ number_format((float) $inv->amount_paid, 2) }}</td>
+                                <td class="fw-semibold {{ (float) $inv->balance > 0 ? 'text-danger' : 'text-success' }}">
+                                    {{ number_format((float) $inv->balance, 2) }}
                                 </td>
                                 <td>
                                     @php

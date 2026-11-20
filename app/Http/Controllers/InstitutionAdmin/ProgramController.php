@@ -73,6 +73,10 @@ class ProgramController extends Controller
     {
         $this->authorize('delete', $program);
 
+        if ($program->classes()->withoutGlobalScopes()->exists() || $program->students()->withoutGlobalScopes()->exists()) {
+            return back()->with('error', 'Cannot delete a program while it has classes or students.');
+        }
+
         $before = $program->toArray();
         $program->delete();
         AuditLogger::log('deleted_program', $program, $before, null);

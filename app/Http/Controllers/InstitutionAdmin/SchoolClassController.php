@@ -34,7 +34,9 @@ class SchoolClassController extends Controller
 
         $data = $request->validate([
             'name' => ['required', 'string', 'max:50', 'regex:/\A[A-Za-z][A-Za-z0-9\s-]*\z/'],
-            'section' => ['required', 'string', 'max:10', 'regex:/\A[A-Z0-9]+\z/', Rule::unique('classes')->where('name', $request->name)],
+            'section' => ['required', 'string', 'max:10', 'regex:/\A[A-Z0-9]+\z/', Rule::unique('classes')->where(fn ($query) => $query
+                ->where('name', $request->name)
+                ->where('branch_id', $request->input('branch_id')))],
             'capacity' => ['required', 'integer', 'min:1', 'max:200'],
             'program_id' => ['nullable', 'exists:programs,id'],
             'academic_year_id' => ['nullable', 'exists:academic_years,id'],
@@ -62,7 +64,9 @@ class SchoolClassController extends Controller
         $data = $request->validate([
             'name' => ['required', 'string', 'max:50', 'regex:/\A[A-Za-z][A-Za-z0-9\s-]*\z/'],
             'section' => ['required', 'string', 'max:10', 'regex:/\A[A-Z0-9]+\z/',
-                Rule::unique('classes')->where('name', $request->name)->ignore($schoolClass->id)],
+                Rule::unique('classes')->where(fn ($query) => $query
+                    ->where('name', $request->name)
+                    ->where('branch_id', $request->input('branch_id')))->ignore($schoolClass->id)],
             'capacity' => ['required', 'integer', 'min:1', 'max:200'],
             'program_id' => ['nullable', 'exists:programs,id'],
             'academic_year_id' => ['nullable', 'exists:academic_years,id'],

@@ -25,6 +25,7 @@
             @forelse ($teachers as $teacher)
                 @php($record = $attendance->get($teacher->id))
                 @php($formId = 'staff-attendance-'.$teacher->id)
+                @php($isSubmittedRow = (string) old('teacher_id') === (string) $teacher->id)
                 <tr>
                     <td class="staff-attendance-col-staff">
                         {{ $teacher->user->name }}
@@ -36,13 +37,13 @@
                         </form>
                     </td>
                     <td class="staff-attendance-col-time">
-                        <input form="{{ $formId }}" aria-label="Check-in time for {{ $teacher->user->name }}" type="time" name="check_in" value="{{ old('check_in', $record?->check_in ? substr($record->check_in, 0, 5) : '') }}" class="form-control form-control-sm" required>
+                        <input form="{{ $formId }}" aria-label="Check-in time for {{ $teacher->user->name }}" type="time" name="check_in" value="{{ $isSubmittedRow ? old('check_in') : ($record?->check_in ? substr($record->check_in, 0, 5) : '') }}" class="form-control form-control-sm" required>
                     </td>
                     <td class="staff-attendance-col-time">
-                        <input form="{{ $formId }}" aria-label="Check-out time for {{ $teacher->user->name }}" type="time" name="check_out" value="{{ old('check_out', $record?->check_out ? substr($record->check_out, 0, 5) : '') }}" class="form-control form-control-sm">
+                        <input form="{{ $formId }}" aria-label="Check-out time for {{ $teacher->user->name }}" type="time" name="check_out" value="{{ $isSubmittedRow ? old('check_out') : ($record?->check_out ? substr($record->check_out, 0, 5) : '') }}" class="form-control form-control-sm">
                     </td>
                     <td class="staff-attendance-col-notes">
-                        <input form="{{ $formId }}" aria-label="Notes for {{ $teacher->user->name }}" type="text" name="notes" value="{{ old('notes', $record?->notes) }}" maxlength="255" class="form-control form-control-sm" placeholder="Notes (optional)">
+                        <input form="{{ $formId }}" aria-label="Notes for {{ $teacher->user->name }}" type="text" name="notes" value="{{ $isSubmittedRow ? old('notes') : $record?->notes }}" maxlength="255" class="form-control form-control-sm" placeholder="Notes (optional)">
                     </td>
                     <td class="staff-attendance-col-action">
                         <button form="{{ $formId }}" class="btn btn-sm btn-outline-primary">{{ $record ? 'Update' : 'Save' }}</button>

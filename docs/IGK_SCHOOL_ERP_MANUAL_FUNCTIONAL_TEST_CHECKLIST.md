@@ -1,6 +1,7 @@
 ﻿# IGK SCHOOL ERP - MANUAL FUNCTIONAL TESTING CHECKLIST
 
 **Generated:** 2026-11-02  
+**Updated:** 2026-11-20
 **Project Path:** E:\Laravel-Projects\Architectured Final S  
 **Framework:** Laravel 12.70.0 (PHP 8.5.11)  
 **Database:** Application uses MySQL (archi) - DO NOT modify/use real data  
@@ -8,6 +9,8 @@
 **Audit Type:** READ-ONLY | No code/config/tests/migrations modified
 
 **Instructions:** Use safe test records only. Leave Actual result, Pass/Fail, and evidence fields blank. Do not run migrations or touch the archi database. Do not modify application code, existing tests or configuration. Focus on manual verification gaps. All 40 automated tests pass (205 assertions). Automated tests cover core flows; manual testing focuses on UI workflows, role scoping edge cases, security validations, and business rule enforcement not fully exercised by automated tests..
+
+**QA closure update (2026-11-20):** `docs/QA/` has 0 open bugs and 0 failed test cases. All form/menu dropdown behavior must open downward and remain within the viewport; upward-opening/floating legacy menus are not acceptable. PDF/CSV, RBAC, journal, fee, transport, cafeteria, transcript, report, and live-browser checks are part of the released QA verification state.
 
 ---
 

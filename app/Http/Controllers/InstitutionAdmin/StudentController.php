@@ -60,7 +60,7 @@ class StudentController extends Controller
 
             $students->chunkById(500, function ($batch) use ($output) {
                 foreach ($batch as $student) {
-                    fputcsv($output, array_map(fn ($value) => $this->safeCsvField($value), [
+                    $row = array_map(fn ($value) => $this->safeCsvField($value), [
                         $student->admission_no,
                         $student->user->name,
                         $student->user->email,
@@ -68,8 +68,10 @@ class StudentController extends Controller
                         $student->primaryGuardian->first()?->user?->name,
                         $student->primaryGuardian->first()?->phone,
                         $student->phone,
-                        $student->dob?->format('Y-m-d'),
-                    ]));
+                    ]);
+                    $row[] = $student->dob ? '="'.$student->dob->format('Y-m-d').'"' : '';
+
+                    fputcsv($output, $row);
                 }
             });
 
@@ -146,8 +148,8 @@ class StudentController extends Controller
             'percentage' => $attendanceTotal > 0 ? round(($attendancePresent / $attendanceTotal) * 100, 1) : 0,
         ];
 
-        $totalBilled = $student->invoices->sum('total_amount');
-        $totalPaid = $student->invoices->sum('paid_amount');
+        $totalBilled = $student->invoices->sum('total');
+        $totalPaid = $student->invoices->sum('amount_paid');
         $invoicesSummary = [
             'total_billed' => $totalBilled,
             'total_paid' => $totalPaid,

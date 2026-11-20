@@ -34,6 +34,7 @@ class ClassResultSummaryReportController extends Controller
 
         return response()->streamDownload(function () use ($rows, $subjects) {
             $out = fopen('php://output', 'w');
+            fwrite($out, "\xEF\xBB\xBF");
             fputcsv($out, array_merge(['Rank in section', 'Class/Section', 'Admission No', 'Student'], array_map(fn ($subject) => $subject->name, $subjects->all()), ['GPA', 'Pass/Fail']));
             foreach ($rows as $row) {
                 $grades = $subjects->map(fn ($subject) => $row['subjects'][$subject->id]['grade'] ?? '—')->all();

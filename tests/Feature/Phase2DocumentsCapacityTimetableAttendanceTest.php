@@ -426,4 +426,40 @@ class Phase2DocumentsCapacityTimetableAttendanceTest extends TestCase
             'room' => 'Hall 4',
         ]);
     }
+
+    public function test_registrar_can_store_timetable_slot_with_academic_permissions(): void
+    {
+        $this->artisan('db:seed', ['--class' => RolePermissionSeeder::class])->assertExitCode(0);
+        $registrar = User::create([
+            'name' => 'Registrar',
+            'email' => 'registrar-timetable@s.t',
+            'password' => 'password',
+            'role' => 'registrar',
+        ]);
+        $registrar->syncRoles(['Registrar']);
+
+        $class = SchoolClass::create(['name' => 'Grade 7', 'section' => 'A']);
+        $subject = Subject::create(['name' => 'Mathematics', 'code' => 'MATH']);
+        $teacherUser = User::create(['name' => 'Teacher', 'email' => 'teacher-timetable@s.t', 'password' => 'password', 'role' => 'teacher']);
+        $teacher = Teacher::create(['user_id' => $teacherUser->id, 'phone' => '999']);
+        $classSubject = ClassSubject::create([
+            'class_id' => $class->id,
+            'subject_id' => $subject->id,
+            'teacher_id' => $teacher->id,
+        ]);
+
+        $this->actingAs($registrar)->post(route('admin.timetable.store'), [
+            'class_subject_id' => $classSubject->id,
+            'day_of_week' => 5,
+            'start_time' => '10:00',
+            'end_time' => '10:45',
+            'room' => 'Room 204',
+        ])->assertRedirect(route('admin.timetable.index', ['class_id' => $class->id]));
+
+        $this->assertDatabaseHas('timetable_slots', [
+            'class_subject_id' => $classSubject->id,
+            'day_of_week' => 5,
+            'room' => 'Room 204',
+        ]);
+    }
 }

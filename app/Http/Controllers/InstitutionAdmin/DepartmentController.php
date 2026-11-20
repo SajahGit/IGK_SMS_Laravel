@@ -63,6 +63,10 @@ class DepartmentController extends Controller
     {
         $this->authorize('delete', $department);
 
+        if ($department->programs()->exists()) {
+            return back()->with('error', 'Cannot delete a department while it has active programs.');
+        }
+
         $before = $department->toArray();
         $department->delete();
         AuditLogger::log('deleted_department', $department, $before, null);

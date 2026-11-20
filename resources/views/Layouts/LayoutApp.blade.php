@@ -213,7 +213,9 @@
 
         <nav class="nav-scroll">
             @foreach ($menu as $group => $items)
-                <div class="nav-group">{{ $group }}</div>
+                @php
+                    $groupHeadingShown = false;
+                @endphp
                 @foreach ($items as [$label, $route, $pattern, $icon])
                     @php
                         $permission = match (true) {
@@ -262,6 +264,12 @@
                             || (! $permission && ($user->isAdmin() || str_starts_with($route, $roleRoutePrefix)));
                     @endphp
                     @if (\Illuminate\Support\Facades\Route::has($route) && $canSeeRoute)
+                        @unless ($groupHeadingShown)
+                            <div class="nav-group">{{ $group }}</div>
+                            @php
+                                $groupHeadingShown = true;
+                            @endphp
+                        @endunless
                         <a class="nav-glass {{ request()->routeIs($pattern) ? 'active' : '' }}" href="{{ route($route) }}">
                             <i class="bi bi-{{ $icon }}"></i><span>{{ $label }}</span>
                         </a>

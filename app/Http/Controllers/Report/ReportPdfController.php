@@ -81,6 +81,11 @@ class ReportPdfController extends Controller
     .sidebar, .sidebar-backdrop, .topbar, .app-footer, footer, .no-print, button, input, select, textarea, form, .sticky-top, .sticky-bottom, .sticky-footer, .pagination, .alert { display: none !important; }
     .app-shell, .app-main, .content { display: block !important; position: static !important; width: 100% !important; margin: 0 !important; padding: 0 !important; }
     .card { box-shadow: none !important; border: 0 !important; background: transparent !important; }
+    .stat-card { display: inline-block !important; width: 32% !important; vertical-align: top !important; border: 1px solid #94a3b8 !important; padding: 6px !important; }
+    .stat-icon { display: none !important; }
+    .stat-label { color: #334155 !important; font-weight: bold !important; }
+    .badge { display: inline-block !important; color: #0f172a !important; background: #e2e8f0 !important; border: 1px solid #64748b !important; padding: 2px 5px !important; }
+    .text-primary, .text-info, .text-success, .text-danger, .text-warning, .text-secondary { color: #0f172a !important; }
     .table-responsive { overflow: visible !important; width: 100% !important; display: block !important; }
     table { width: 100% !important; min-width: 0 !important; border-collapse: collapse !important; font-size: 8.5px !important; margin-top: 8px !important; }
     th, td { min-width: 0 !important; border: 1px solid #94a3b8 !important; padding: 4px 6px !important; color: #0f172a !important; }

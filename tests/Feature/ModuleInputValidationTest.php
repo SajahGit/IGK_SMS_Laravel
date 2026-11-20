@@ -142,6 +142,7 @@ class ModuleInputValidationTest extends TestCase
             'lines' => [
                 ['account_id' => $accountId, 'debit' => '1.00', 'credit' => '0', 'memo' => 'Transfer out'],
                 ['account_id' => $accountId, 'debit' => '0', 'credit' => '1.00', 'memo' => 'Transfer in'],
+                ['account_id' => '', 'debit' => '0.00', 'credit' => '0.00', 'memo' => ''],
             ],
         ])->assertSessionHasNoErrors();
 

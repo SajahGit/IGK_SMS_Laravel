@@ -20,7 +20,7 @@
             @csrf
             <div class="card-header bg-transparent"><strong>Create token</strong></div>
             <div class="card-body">
-                <div class="mb-3"><label class="form-label" for="token-name">Token name</label><input id="token-name" name="name" class="form-control" maxlength="80" required></div>
+                <div class="mb-3"><label class="form-label" for="token-name">Token name</label><input id="token-name" name="name" class="form-control" maxlength="80" placeholder="e.g. Mobile app integration" autocomplete="off" required></div>
                 <fieldset class="mb-3"><legend class="form-label">Permissions</legend>
                     @foreach ($allowedAbilities as $ability)
                         <label class="form-check"><input class="form-check-input" type="checkbox" name="abilities[]" value="{{ $ability }}" @checked($ability === 'profile:read')><span class="form-check-label">{{ $ability }}</span></label>
@@ -36,7 +36,7 @@
             <div class="card-header bg-transparent"><strong>Active tokens</strong></div>
             <div class="table-responsive"><table class="table align-middle mb-0"><thead><tr><th>Name</th><th>Permissions</th><th>Last used</th><th>Expires</th><th></th></tr></thead><tbody>
                 @forelse ($tokens as $token)
-                    <tr><td>{{ $token->name }}</td><td>{{ implode(', ', $token->abilities ?? []) }}</td><td>{{ $token->last_used_at?->diffForHumans() ?? 'Never' }}</td><td>{{ $token->expires_at?->toDateString() ?? 'No expiry' }}</td><td class="text-end"><form method="POST" action="{{ route('account.api-tokens.destroy', $token->id) }}">@csrf @method('DELETE')<button class="btn btn-sm btn-outline-danger">Revoke</button></form></td></tr>
+                    <tr><td class="text-break" style="overflow-wrap:anywhere">{{ $token->name }}</td><td>{{ implode(', ', $token->abilities ?? []) }}</td><td>{{ $token->last_used_at?->diffForHumans() ?? 'Never' }}</td><td>{{ $token->expires_at?->toDateString() ?? 'No expiry' }}</td><td class="text-end"><form method="POST" action="{{ route('account.api-tokens.destroy', $token->id) }}">@csrf @method('DELETE')<button class="btn btn-sm btn-outline-danger">Revoke</button></form></td></tr>
                 @empty
                     <tr><td colspan="5" class="text-center text-muted py-4">No active tokens.</td></tr>
                 @endforelse

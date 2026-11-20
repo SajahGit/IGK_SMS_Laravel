@@ -3,8 +3,10 @@
 namespace Tests\Feature;
 
 use App\Models\AcademicYear;
+use App\Models\Branch;
 use App\Models\Department;
 use App\Models\Program;
+use App\Models\SchoolClass;
 use App\Models\Setting;
 use App\Models\User;
 use Database\Seeders\RolePermissionSeeder;
@@ -274,6 +276,27 @@ class Phase1RbacAndModuleTest extends TestCase
         $this->assertNull(Department::where('code', 'CS')->first());
     }
 
+    public function test_department_delete_is_blocked_when_active_programs_are_linked(): void
+    {
+        $this->seedRolesAndPermissions();
+        $admin = $this->createSuperAdmin();
+        $department = Department::create(['name' => 'Humanities', 'code' => 'HUM', 'is_active' => true]);
+        Program::create([
+            'department_id' => $department->id,
+            'name' => 'History',
+            'code' => 'HIST',
+            'is_active' => true,
+        ]);
+
+        $this->from(route('admin.departments.index'))
+            ->actingAs($admin)
+            ->delete(route('admin.departments.destroy', $department))
+            ->assertRedirect(route('admin.departments.index'))
+            ->assertSessionHas('error', 'Cannot delete a department while it has active programs.');
+
+        $this->assertNull($department->fresh()->deleted_at);
+    }
+
     public function test_program_crud(): void
     {
         $this->seedRolesAndPermissions();
@@ -303,6 +326,36 @@ class Phase1RbacAndModuleTest extends TestCase
         $response = $this->actingAs($admin)->delete(route('admin.programs.destroy', $program));
         $response->assertRedirect(route('admin.programs.index'));
         $this->assertNull(Program::where('code', 'BSC')->first());
+    }
+
+    public function test_program_delete_checks_classes_in_other_campuses(): void
+    {
+        $this->seedRolesAndPermissions();
+        $admin = $this->createSuperAdmin();
+        $activeBranch = Branch::create(['name' => 'Active Campus', 'code' => 'ACT', 'is_active' => true]);
+        $otherBranch = Branch::create(['name' => 'Other Campus', 'code' => 'OTH', 'is_active' => true]);
+        $department = Department::create(['name' => 'Science', 'code' => 'SCI', 'is_active' => true]);
+        $program = Program::create([
+            'department_id' => $department->id,
+            'name' => 'Physics',
+            'code' => 'PHYS',
+            'is_active' => true,
+        ]);
+        SchoolClass::create([
+            'name' => 'Grade 10',
+            'section' => 'A',
+            'branch_id' => $otherBranch->id,
+            'program_id' => $program->id,
+        ]);
+
+        $this->from(route('admin.programs.index'))
+            ->actingAs($admin)
+            ->withSession(['active_branch_id' => $activeBranch->id])
+            ->delete(route('admin.programs.destroy', $program))
+            ->assertRedirect(route('admin.programs.index'))
+            ->assertSessionHas('error', 'Cannot delete a program while it has classes or students.');
+
+        $this->assertNull($program->fresh()->deleted_at);
     }
 
     public function test_setting_crud(): void
@@ -396,11 +449,28 @@ class Phase1RbacAndModuleTest extends TestCase
         ]);
         $instAdmin->syncRoles(['Institution Admin']);
 
-        $response = $this->actingAs($instAdmin)->post(route('admin.roles.store'), [
+        $this->actingAs($instAdmin)->get(route('admin.roles.index'))->assertForbidden();
+
+        $response = $this->post(route('admin.roles.store'), [
             'name' => 'Hacker Role',
             'guard_name' => 'web',
         ]);
         $response->assertStatus(403);
+    }
+
+    public function test_registrar_cannot_see_teacher_or_subject_create_actions_without_permission(): void
+    {
+        $this->seedRolesAndPermissions();
+        $registrar = $this->createRegistrar();
+
+        $this->actingAs($registrar)
+            ->get(route('admin.teachers.index'))
+            ->assertOk()
+            ->assertDontSee(route('admin.teachers.create'), false);
+
+        $this->get(route('admin.subjects.index'))
+            ->assertOk()
+            ->assertDontSee(route('admin.subjects.create'), false);
     }
 
     public function test_super_admin_cannot_rename_or_delete_a_core_sop_role(): void

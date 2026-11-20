@@ -6,6 +6,19 @@
 
 ---
 
+## QA Bug Report Closure - 2026-11-20
+
+The complete `docs/QA/` register was re-audited against the current implementation. The QA records now show:
+
+- **Logged bug entries:** 31
+- **Open bugs:** 0
+- **Failed QA test cases:** 0
+- **Dropdown policy:** Every enhanced form/menu dropdown opens downward with a `bottom-start`/`top: 100%` placement and no Popper upward flip.
+- **PDF, CSV, RBAC, transport, inventory, transcript, invoice, and reporting fixes:** Verified against existing feature suites and live browser routes.
+- **Full-suite caveat:** The 600-second full-suite process reached the PHP process timeout before completion; the focused and additional QA suites above pass completely.
+
+This closure supplements, and does not replace, the historical resolved issues table below.
+
 ## Resolved Issues
 
 | ID | Module | Resolution Summary | Status |

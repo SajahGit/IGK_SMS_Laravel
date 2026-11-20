@@ -201,6 +201,8 @@ class CafeteriaController extends Controller
             return $inventoryItem;
         });
 
+        $item->refresh();
+
         return redirect()->route('admin.cafeteria.index')->with('success', "Fresh inventory stock '{$item->name}' ({$item->quantity_on_hand} {$item->unit}) created.");
     }
 

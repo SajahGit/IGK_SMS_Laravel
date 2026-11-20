@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\AcademicYear;
 use App\Models\Attendance;
+use App\Models\Branch;
 use App\Models\Exam;
 use App\Models\Result;
 use App\Models\SchoolClass;
@@ -241,6 +242,16 @@ class Phase1AuthAndAcademicTest extends TestCase
             'end_date' => '2026-01-01',
         ]);
         $termResponse->assertSessionHasErrors(['name', 'sequence', 'end_date']);
+
+        $outsideYearResponse = $this->post(route('admin.terms.store'), [
+            'academic_year_id' => $year->id,
+            'name' => 'Outside Date Term',
+            'sequence' => 3,
+            'start_date' => '2025-12-31',
+            'end_date' => '2026-03-31',
+        ]);
+        $outsideYearResponse->assertSessionHasErrors('start_date');
+        $this->assertDatabaseMissing('terms', ['name' => 'Outside Date Term']);
     }
 
     public function test_class_and_subject_codes_are_normalized_and_fit_their_limits(): void
@@ -265,6 +276,41 @@ class Phase1AuthAndAcademicTest extends TestCase
         ]);
         $subjectResponse->assertSessionHasNoErrors();
         $this->assertDatabaseHas('subjects', ['name' => 'Applied Science', 'code' => 'SCIENCE-2026']);
+    }
+
+    public function test_class_section_uniqueness_is_scoped_to_branch(): void
+    {
+        $admin = $this->institutionAdmin([
+            'name' => 'Branch Classes Admin',
+            'email' => 'branch_classes_admin@school.test',
+        ]);
+        $mainCampus = Branch::create(['name' => 'Main Campus', 'code' => 'MAIN', 'is_active' => true]);
+        $jaffnaCampus = Branch::create(['name' => 'Jaffna Campus', 'code' => 'JAF', 'is_active' => true]);
+        SchoolClass::create([
+            'name' => 'Grade 7',
+            'section' => 'A',
+            'branch_id' => $mainCampus->id,
+        ]);
+
+        $this->actingAs($admin)->post(route('admin.classes.store'), [
+            'name' => 'Grade 7',
+            'section' => 'A',
+            'branch_id' => $jaffnaCampus->id,
+            'capacity' => 40,
+        ])->assertSessionHasNoErrors();
+
+        $this->assertDatabaseHas('classes', [
+            'name' => 'Grade 7',
+            'section' => 'A',
+            'branch_id' => $jaffnaCampus->id,
+        ]);
+
+        $this->post(route('admin.classes.store'), [
+            'name' => 'Grade 7',
+            'section' => 'A',
+            'branch_id' => $jaffnaCampus->id,
+            'capacity' => 40,
+        ])->assertSessionHasErrors('section');
     }
 
     public function test_schema_upgrades(): void

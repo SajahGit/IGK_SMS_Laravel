@@ -1,4 +1,59 @@
 (function () {
+    function forceDropdownsDownward() {
+        document.querySelectorAll('.dropup, .dropstart, .dropright').forEach(function (container) {
+            container.classList.remove('dropup', 'dropstart', 'dropright');
+            container.classList.add('dropdown');
+        });
+
+        document.querySelectorAll('[data-bs-toggle="dropdown"]').forEach(function (toggle) {
+            var container = toggle.closest('.dropup, .dropstart, .dropright');
+            if (container) {
+                container.classList.remove('dropup', 'dropstart', 'dropright');
+                container.classList.add('dropdown');
+            }
+
+            var menu = toggle.nextElementSibling;
+            if (menu && menu.classList.contains('dropdown-menu')) {
+                menu.style.top = '100%';
+                menu.style.bottom = 'auto';
+                menu.style.marginTop = '4px';
+            }
+
+            if (window.bootstrap && window.bootstrap.Dropdown) {
+                window.bootstrap.Dropdown.getOrCreateInstance(toggle, {
+                    popperConfig: function (defaultConfig) {
+                        var config = typeof defaultConfig === 'function' ? defaultConfig() : defaultConfig;
+                        config.placement = 'bottom-start';
+                        config.strategy = 'fixed';
+                        config.modifiers = (config.modifiers || []).concat([
+                            { name: 'flip', enabled: false },
+                            { name: 'preventOverflow', options: { boundary: 'viewport', altAxis: true } }
+                        ]);
+                        return config;
+                    }
+                });
+            }
+        });
+    }
+
+    forceDropdownsDownward();
+    document.addEventListener('shown.bs.dropdown', function (event) {
+        var toggle = event.target;
+        var container = toggle.closest('.dropdown');
+        if (container) container.classList.remove('dropup', 'dropstart', 'dropright');
+        var menu = toggle.nextElementSibling;
+        if (menu && menu.classList.contains('dropdown-menu')) {
+            menu.style.top = '100%';
+            menu.style.bottom = 'auto';
+        }
+    });
+    new MutationObserver(forceDropdownsDownward).observe(document.documentElement, {
+        childList: true,
+        subtree: true,
+        attributes: true,
+        attributeFilter: ['class']
+    });
+
     // ---- theme toggle (dark / light), remembered in the browser ----
     var root = document.documentElement;
     function setTheme(t) {
@@ -454,12 +509,10 @@
 
         function updatePlacement() {
             var rect = button.getBoundingClientRect();
-            var spaceBelow = window.innerHeight - rect.bottom;
-            if (spaceBelow < 250 && rect.top > 250) {
-                wrapper.classList.add('dropup');
-            } else {
-                wrapper.classList.remove('dropup');
-            }
+            var spaceBelow = Math.max(24, window.innerHeight - rect.bottom - 8);
+            wrapper.classList.remove('dropup');
+            menu.style.maxHeight = spaceBelow + 'px';
+            optionsWrap.style.maxHeight = Math.max(24, spaceBelow - searchWrap.offsetHeight - 16) + 'px';
         }
 
         function closeDropdown() {

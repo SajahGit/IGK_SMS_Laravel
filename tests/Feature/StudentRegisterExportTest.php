@@ -42,6 +42,7 @@ class StudentRegisterExportTest extends TestCase
             'user_id' => $studentUser->id,
             'class_id' => $class->id,
             'admission_no' => 'ADM-008',
+            'dob' => '1995-03-12',
         ]);
         $otherStudent = User::create([
             'name' => '=1+1',
@@ -62,6 +63,8 @@ class StudentRegisterExportTest extends TestCase
         $this->assertStringContainsString('text/csv', $response->headers->get('Content-Type'));
         $this->assertStringContainsString('student-register.csv', $response->headers->get('Content-Disposition'));
         $this->assertStringContainsString('ADM-008', $response->streamedContent());
+        $rows = array_map('str_getcsv', explode("\n", trim($response->streamedContent())));
+        $this->assertSame('="1995-03-12"', $rows[1][7]);
         $this->assertStringNotContainsString('=1+1', $response->streamedContent());
 
         $formulaResponse = $this->get(route('admin.students.export', ['class_id' => $class->id, 'q' => '=1+1']));

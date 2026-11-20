@@ -47,6 +47,13 @@ class TransportService
             $before = $route->exists ? $route->toArray() : null;
             $vehicleId = $data['vehicle_id'] ?? null;
 
+            if ($route->exists && $route->branch_id !== ($data['branch_id'] ?? $route->branch_id)
+                && $route->assignments()->where('status', 'active')->exists()) {
+                throw ValidationException::withMessages([
+                    'branch_id' => 'A route with active student assignments cannot be moved to another campus.',
+                ]);
+            }
+
             if (! $vehicleId && $route->exists && $route->assignments()->where('status', 'active')->exists()) {
                 throw ValidationException::withMessages([
                     'vehicle_id' => 'An active route with student assignments must keep an assigned vehicle.',

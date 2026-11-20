@@ -1,0 +1,8 @@
+﻿Metric,Count,Notes
+Total Test Cases,163,163 cases re-audited; all 163 currently pass
+Passed,163,All QA test execution cases pass
+Failed,0,No failed QA cases remain
+Total Logged Bugs,31,31 entries present in the Bug Report CSV
+Open Bugs,0,No open QA bugs
+Fixed Bugs,31,All QA Bug Report entries verified fixed
+Critical / High Bugs,0,No critical or high bugs remain

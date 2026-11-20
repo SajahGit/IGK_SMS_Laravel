@@ -32,6 +32,7 @@ class EnrollmentRegisterReportController extends Controller
 
         return response()->streamDownload(function () use ($rows) {
             $out = fopen('php://output', 'w');
+            fwrite($out, "\xEF\xBB\xBF");
             fputcsv($out, ['Term', 'Program', 'Section', 'Subject', 'Teacher', 'Student Count', 'Student List']);
             foreach ($rows as $row) {
                 fputcsv($out, [

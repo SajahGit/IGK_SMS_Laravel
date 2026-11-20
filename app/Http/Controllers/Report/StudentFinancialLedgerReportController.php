@@ -118,7 +118,7 @@ class StudentFinancialLedgerReportController extends Controller
                 }
 
                 fputcsv($out, [
-                    $event['date'],
+                    "='".$event['date']."'",
                     $event['description'],
                     ucfirst($event['type']),
                     $charge,

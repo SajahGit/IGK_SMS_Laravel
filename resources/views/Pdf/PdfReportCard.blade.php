@@ -81,8 +81,8 @@
                     <tr>
                         <td class="col-sub">{{ $subjectResult->subject->name }}<br><span class="muted">{{ $subjectResult->subject->code }} — Term result</span></td>
                         <td class="col-cred center">{{ $credits ?: '—' }}</td>
-                        <td class="col-num center">—</td>
-                        <td class="col-num center">{{ $subjectResult->result_status === 'excused' ? 'Excused' : '—' }}</td>
+                        <td class="col-num center">100</td>
+                        <td class="col-num center">{{ $subjectResult->result_status === 'graded' ? \App\Support\SchoolHelper::formatMarks($subjectResult->percentage) : ucfirst($subjectResult->result_status) }}</td>
                         <td class="col-num center">{{ $subjectResult->percentage === null ? '—' : $subjectResult->percentage.'%' }}</td>
                         <td class="col-num center">{{ $subjectResult->result_status === 'graded' ? $subjectResult->grade : ucfirst($subjectResult->result_status) }}</td>
                         <td class="col-gp center">{{ $subjectResult->grade_point === null ? '—' : number_format((float) $subjectResult->grade_point, 2) }}</td>

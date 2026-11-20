@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\InstitutionAdmin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Branch;
 use App\Http\Requests\Transport\StoreStudentTransportAssignmentRequest;
 use App\Http\Requests\Transport\StoreTransportRouteRequest;
 use App\Http\Requests\Transport\StoreTransportStopRequest;
@@ -14,7 +15,9 @@ use App\Models\TransportRoute;
 use App\Models\TransportStop;
 use App\Models\TransportVehicle;
 use App\Services\TransportService;
+use App\Support\BranchContext;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 class TransportController extends Controller
@@ -46,8 +49,12 @@ class TransportController extends Controller
     {
         $transportRoute = null;
         $vehicles = TransportVehicle::query()->where('status', 'active')->orderBy('registration_number')->get();
+        $showBranchSelector = BranchContext::hasActiveBranches() && BranchContext::activeBranchId() === null;
+        $branches = $showBranchSelector
+            ? Branch::withoutGlobalScope('assigned-branch')->where('is_active', true)->orderBy('name')->get()
+            : collect();
 
-        return view('InstitutionAdmin.TransportRouteForm', compact('transportRoute', 'vehicles'));
+        return view('InstitutionAdmin.TransportRouteForm', compact('transportRoute', 'vehicles', 'branches', 'showBranchSelector'));
     }
 
     public function routeStore(StoreTransportRouteRequest $request): RedirectResponse
@@ -66,8 +73,12 @@ class TransportController extends Controller
             ->when($transportRoute->vehicle_id, fn ($query, $id) => $query->orWhere('id', $id))
             ->orderBy('registration_number')
             ->get();
+        $showBranchSelector = BranchContext::hasActiveBranches() && BranchContext::activeBranchId() === null;
+        $branches = $showBranchSelector
+            ? Branch::withoutGlobalScope('assigned-branch')->where('is_active', true)->orderBy('name')->get()
+            : collect();
 
-        return view('InstitutionAdmin.TransportRouteForm', compact('transportRoute', 'vehicles'));
+        return view('InstitutionAdmin.TransportRouteForm', compact('transportRoute', 'vehicles', 'branches', 'showBranchSelector'));
     }
 
     public function routeUpdate(StoreTransportRouteRequest $request, TransportRoute $transportRoute): RedirectResponse
@@ -146,10 +157,11 @@ class TransportController extends Controller
     {
         $assignment = null;
         $students = $this->activeStudents();
-        $routes = TransportRoute::query()->where('is_active', true)->with('stops')->orderBy('name')->get();
+        $routes = TransportRoute::query()->where('is_active', true)->with(['stops', 'vehicle'])->orderBy('name')->get();
         $academicYears = AcademicYear::query()->orderByDesc('start_date')->get();
+        $seatUsage = $this->seatUsageByVehicleAndYear();
 
-        return view('InstitutionAdmin.TransportAssignmentForm', compact('assignment', 'students', 'routes', 'academicYears'));
+        return view('InstitutionAdmin.TransportAssignmentForm', compact('assignment', 'students', 'routes', 'academicYears', 'seatUsage'));
     }
 
     public function assignmentEdit(StudentTransportAssignment $assignment): View
@@ -159,12 +171,13 @@ class TransportController extends Controller
         $routes = TransportRoute::query()
             ->where('is_active', true)
             ->orWhere('id', $assignment->transport_route_id)
-            ->with('stops')
+            ->with(['stops', 'vehicle'])
             ->orderBy('name')
             ->get();
         $academicYears = AcademicYear::query()->orderByDesc('start_date')->get();
+        $seatUsage = $this->seatUsageByVehicleAndYear($assignment);
 
-        return view('InstitutionAdmin.TransportAssignmentForm', compact('assignment', 'students', 'routes', 'academicYears'));
+        return view('InstitutionAdmin.TransportAssignmentForm', compact('assignment', 'students', 'routes', 'academicYears', 'seatUsage'));
     }
 
     public function assignmentStore(StoreStudentTransportAssignmentRequest $request): RedirectResponse
@@ -205,5 +218,20 @@ class TransportController extends Controller
             ->whereHas('user')
             ->orderBy('admission_no')
             ->get();
+    }
+
+    private function seatUsageByVehicleAndYear(?StudentTransportAssignment $exceptAssignment = null): array
+    {
+        return DB::table('student_transport_assignments as assignments')
+            ->join('transport_routes as routes', 'routes.id', '=', 'assignments.transport_route_id')
+            ->where('assignments.status', 'active')
+            ->when($exceptAssignment, fn ($query) => $query->where('assignments.id', '!=', $exceptAssignment->id))
+            ->select('routes.vehicle_id', 'assignments.academic_year_id')
+            ->selectRaw('COUNT(*) as assigned')
+            ->groupBy('routes.vehicle_id', 'assignments.academic_year_id')
+            ->get()
+            ->groupBy('vehicle_id')
+            ->map(fn ($rows) => $rows->mapWithKeys(fn ($row) => [$row->academic_year_id => (int) $row->assigned])->all())
+            ->all();
     }
 }

@@ -4,6 +4,19 @@
 >
 > **Important:** This is a source-code orientation guide, not a guarantee that every listed feature is production-ready. Confirm behavior against the code, tests, and current issue list before presenting a feature as complete.
 
+## 0. Current QA closure snapshot (2026-11-20)
+
+The current implementation has completed the QA register in `docs/QA/`. The Bug Report CSV contains 31 logged entries and all are marked Fixed, all 163 Test Execution cases are marked Pass, Open Bugs is 0, Failed is 0, and there are 0 critical/high open bugs.
+
+Global UI behavior now forces Bootstrap and searchable custom dropdown menus downward, using bottom-start placement/top:100% positioning and disabling upward Popper flipping. Native browser `<select>` controls remain governed by the platform but all application-enhanced form selects use the project-wide searchable downward menu.
+
+The exact QA evidence is in:
+
+- `docs/QA/IGK SMS - QA Testing & Bug Report - Bug Report.csv`
+- `docs/QA/IGK SMS - QA Testing & Bug Report - Test Execution.csv`
+- `docs/QA/IGK SMS - QA Testing & Bug Report - RBAC Matrix.csv`
+- `docs/QA/IGK SMS - QA Testing & Bug Report - Summary.csv`
+
 ## 1. Project at a glance
 
 IGK School ERP is a Laravel web application for school administration. It groups users by role and provides academic, student, guardian, teacher, finance, library, operations, and reporting workflows. The browser requests are handled by Laravel routes and middleware, validated by request classes, processed by controllers/services/models, persisted in the configured database, and rendered through Blade views or returned as files/API responses.

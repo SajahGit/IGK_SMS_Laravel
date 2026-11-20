@@ -1,4 +1,4 @@
-@extends('Layouts.LayoutApp')
+@extends(($pdfExport ?? false) ? 'Layouts.LayoutPdf' : 'Layouts.LayoutApp')
 @section('title', 'Class Attendance Summary')
 
 @section('content')

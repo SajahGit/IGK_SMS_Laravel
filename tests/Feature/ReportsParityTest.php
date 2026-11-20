@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Http\Controllers\Report\DefaultersReportController;
+use App\Http\Controllers\Report\EnrollmentRegisterReportController;
 use App\Http\Controllers\Report\FeeCollectionReportController;
 use App\Http\Controllers\Report\StudentReportController;
 use App\Models\AcademicYear;
@@ -200,6 +201,22 @@ class ReportsParityTest extends TestCase
             ->assertSee('Maths')
             ->assertSee('ADM001')
             ->assertSee('Student Count');
+
+        $request = Request::create('/reports/enrollment/pdf', 'GET', ['class_id' => $class->id]);
+        $request->setUserResolver(fn () => $admin);
+        $request->attributes->set('pdf_export_limit', 500);
+        $html = app(EnrollmentRegisterReportController::class)
+            ->index($request)
+            ->with('pdfExport', true)
+            ->render();
+
+        $this->assertStringContainsString('ADM001 - S1', $html);
+        $this->assertStringNotContainsString('enrollModal', $html);
+        $this->assertStringNotContainsString('bootstrap.min.css', $html);
+
+        $this->get(route('reports.pdf', ['report' => 'enrollment', 'class_id' => $class->id]))
+            ->assertOk()
+            ->assertHeader('content-type', 'application/pdf');
     }
 
     public function test_r2_enrollment_register_requires_academic_permission(): void

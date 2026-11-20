@@ -65,13 +65,18 @@ class RoleController extends Controller
     {
         $this->authorize('update', $role);
 
-        $before = $role->only(['name', 'guard_name']);
+        $before = $role->only(['name', 'guard_name']) + [
+            'permissions' => $role->permissions->pluck('name')->all(),
+        ];
         $role->update([
             'name' => $request->name,
             'guard_name' => $request->guard_name,
         ]);
+        $role->syncPermissions($request->input('permissions', []));
         $role->touch();
-        AuditLogger::log('updated_role', $role, $before, $role->only(['name', 'guard_name']));
+        AuditLogger::log('updated_role', $role, $before, $role->only(['name', 'guard_name']) + [
+            'permissions' => $role->fresh()->permissions->pluck('name')->all(),
+        ]);
 
         return redirect()->route('admin.roles.index')
             ->with('success', 'Role updated successfully.');

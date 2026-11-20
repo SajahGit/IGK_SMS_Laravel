@@ -41,6 +41,21 @@ class JournalEntryController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
+        $lines = $request->input('lines', []);
+        if (is_array($lines)) {
+            $hasEnteredAmount = static fn ($value): bool => $value !== null
+                && $value !== ''
+                && (! is_numeric($value) || (float) $value !== 0.0);
+
+            $request->merge([
+                'lines' => array_values(array_filter($lines, fn ($line) => is_array($line)
+                    && (filled($line['account_id'] ?? null)
+                        || filled($line['memo'] ?? null)
+                        || $hasEnteredAmount($line['debit'] ?? null)
+                        || $hasEnteredAmount($line['credit'] ?? null)))),
+            ]);
+        }
+
         $reference = $request->input('reference');
         if (is_string($reference)) {
             $request->merge(['reference' => strtoupper($reference)]);

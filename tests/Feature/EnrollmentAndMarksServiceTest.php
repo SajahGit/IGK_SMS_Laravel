@@ -50,6 +50,33 @@ class EnrollmentAndMarksServiceTest extends TestCase
         $this->assertDatabaseHas('students', ['admission_no' => $student->admission_no]);
     }
 
+    public function test_program_codes_with_a_shared_prefix_generate_distinct_admission_numbers(): void
+    {
+        [$class, $guardian] = $this->createEnrollmentContext('Grade 10', 'A', 5);
+        $department = Department::create(['name' => 'Cambridge', 'code' => 'CAM']);
+        $lowerSecondary = Program::create([
+            'department_id' => $department->id,
+            'name' => 'Cambridge Lower Secondary',
+            'code' => 'CAM-LS',
+        ]);
+        Program::create([
+            'department_id' => $department->id,
+            'name' => 'Cambridge Advanced Level',
+            'code' => 'CAM-AL',
+        ]);
+        $class->update(['program_id' => $lowerSecondary->id]);
+
+        $student = EnrollmentService::enrollStudent([
+            'name' => 'Kavya Perera',
+            'email' => 'kavya@example.test',
+            'password' => 'SecretPass123!',
+            'class_id' => $class->id,
+            'guardian_ids' => [$guardian->id],
+        ]);
+
+        $this->assertSame('2026-CAMLS-0001', $student->admission_no);
+    }
+
     public function test_enrollment_automatically_enrols_student_in_class_subjects(): void
     {
         [$class, $guardian] = $this->createEnrollmentContext('Grade 10', 'A');

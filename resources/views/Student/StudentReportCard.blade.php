@@ -95,8 +95,8 @@
                                     <small class="text-muted"><code>{{ $subjectResult->subject->code }}</code> &middot; Weighted term result</small>
                                 </td>
                                 <td class="text-center">{{ $subjectResult->credit_hours ?? '—' }}</td>
-                                <td class="text-center">—</td>
-                                <td class="text-center">{{ $subjectResult->result_status === 'excused' ? 'Excused' : '—' }}</td>
+                                <td class="text-center">100</td>
+                                <td class="text-center">{{ $subjectResult->result_status === 'graded' ? \App\Support\SchoolHelper::formatMarks($subjectResult->percentage) : ucfirst($subjectResult->result_status) }}</td>
                                 <td class="text-center">{{ $subjectResult->percentage === null ? '—' : $subjectResult->percentage.'%' }}</td>
                                 <td class="text-center">
                                     <span class="badge bg-{{ \App\Support\SchoolHelper::gradeBadge($subjectResult->grade ?? 'F') }} px-2 py-1">
@@ -290,6 +290,14 @@
         border: 1px solid #94a3b8 !important;
         color: #0f172a !important;
         background-color: #f8fafc !important;
+    }
+    .report-header .badge {
+        display: inline-block !important;
+        background: #eaf2ff !important;
+        color: #123b73 !important;
+        border: 1px solid #94a3b8 !important;
+        padding: 4px 10px !important;
+        line-height: 1.4 !important;
     }
     .signatures, .signature-line {
         page-break-inside: avoid !important;

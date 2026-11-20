@@ -31,6 +31,13 @@ class UpdateRoleRequest extends FormRequest
                 ...($role && in_array($role->name, $coreRoles, true) ? [Rule::in([$role->name])] : []),
             ],
             'guard_name' => ['required', 'string', 'max:20', 'in:web,api'],
+            'permissions' => ['sometimes', 'array'],
+            'permissions.*' => [
+                'required',
+                'string',
+                'distinct',
+                Rule::exists('permissions', 'name')->where('guard_name', $this->input('guard_name', $role?->guard_name)),
+            ],
         ];
     }
 }

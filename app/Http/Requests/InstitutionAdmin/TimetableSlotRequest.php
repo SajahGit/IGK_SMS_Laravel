@@ -9,7 +9,7 @@ class TimetableSlotRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return auth()->check() && auth()->user()->isAdmin();
+        return auth()->check() && (auth()->user()->isAdmin() || auth()->user()->can('timetable.update'));
     }
 
     public function rules(): array

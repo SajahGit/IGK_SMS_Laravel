@@ -12,8 +12,8 @@
         @if ($assignment) @method('PUT') @endif
         <div class="row g-3">
             <div class="col-md-6"><label class="form-label">Student <span class="text-danger">*</span></label><select name="student_id" class="form-select" required><option value="">Choose student</option>@foreach ($students as $student)<option value="{{ $student->id }}" @selected((string) old('student_id', $assignment?->student_id) === (string) $student->id)>{{ $student->admission_no }} — {{ $student->user->name }} ({{ $student->class?->full_name ?? 'No class' }})</option>@endforeach</select>@error('student_id')<div class="text-danger small">{{ $message }}</div>@enderror</div>
-            <div class="col-md-6"><label class="form-label">Academic year <span class="text-danger">*</span></label><select name="academic_year_id" class="form-select" required><option value="">Choose academic year</option>@foreach ($academicYears as $academicYear)<option value="{{ $academicYear->id }}" @selected((string) old('academic_year_id', $assignment?->academic_year_id) === (string) $academicYear->id)>{{ $academicYear->name }}</option>@endforeach</select>@error('academic_year_id')<div class="text-danger small">{{ $message }}</div>@enderror</div>
-            <div class="col-md-6"><label class="form-label">Route <span class="text-danger">*</span></label><select name="transport_route_id" class="form-select" required><option value="">Choose route</option>@foreach ($routes as $transportRoute)<option value="{{ $transportRoute->id }}" @selected((string) old('transport_route_id', $assignment?->transport_route_id) === (string) $transportRoute->id)>{{ $transportRoute->code }} — {{ $transportRoute->name }}{{ $transportRoute->vehicle ? ' / '.$transportRoute->vehicle->registration_number : '' }}</option>@endforeach</select>@error('transport_route_id')<div class="text-danger small">{{ $message }}</div>@enderror</div>
+            <div class="col-md-6"><label class="form-label">Academic year <span class="text-danger">*</span></label><select id="transport-academic-year" name="academic_year_id" class="form-select" required><option value="">Choose academic year</option>@foreach ($academicYears as $academicYear)<option value="{{ $academicYear->id }}" @selected((string) old('academic_year_id', $assignment?->academic_year_id) === (string) $academicYear->id)>{{ $academicYear->name }}</option>@endforeach</select>@error('academic_year_id')<div class="text-danger small">{{ $message }}</div>@enderror</div>
+            <div class="col-md-6"><label class="form-label">Route <span class="text-danger">*</span></label><select id="transport-route" name="transport_route_id" class="form-select" required><option value="">Choose route</option>@foreach ($routes as $transportRoute)@php($routeLabel = $transportRoute->code.' — '.$transportRoute->name.($transportRoute->vehicle ? ' / '.$transportRoute->vehicle->registration_number : ''))<option value="{{ $transportRoute->id }}" data-label="{{ $routeLabel }}" data-capacity="{{ $transportRoute->vehicle?->capacity ?? 0 }}" data-seats-by-year="{{ json_encode($seatUsage[$transportRoute->vehicle_id] ?? []) }}" @disabled(! $transportRoute->vehicle) @selected((string) old('transport_route_id', $assignment?->transport_route_id) === (string) $transportRoute->id)>{{ $routeLabel }}{{ $transportRoute->vehicle ? ' ('.$transportRoute->vehicle->capacity.' seats)' : ' (No vehicle assigned)' }}</option>@endforeach</select>@error('transport_route_id')<div class="text-danger small">{{ $message }}</div>@enderror<div class="form-text">Routes at full vehicle capacity are disabled for the selected academic year.</div></div>
             <div class="col-md-6"><label class="form-label">Pickup / drop-off stop <span class="text-danger">*</span></label><select name="transport_stop_id" class="form-select" required><option value="">Choose stop</option>@foreach ($routes as $transportRoute)@foreach ($transportRoute->stops as $stop)<option value="{{ $stop->id }}" @selected((string) old('transport_stop_id', $assignment?->transport_stop_id) === (string) $stop->id)>{{ $transportRoute->name }} — {{ $stop->sequence }}. {{ $stop->name }}</option>@endforeach @endforeach</select>@error('transport_stop_id')<div class="text-danger small">{{ $message }}</div>@enderror</div>
             <div class="col-md-4"><label class="form-label">Start date <span class="text-danger">*</span></label><input type="date" name="start_date" class="form-control" required value="{{ old('start_date', $assignment?->start_date?->format('Y-m-d') ?? today()->toDateString()) }}">@error('start_date')<div class="text-danger small">{{ $message }}</div>@enderror</div>
             <div class="col-md-4"><label class="form-label">End date</label><input type="date" name="end_date" class="form-control" value="{{ old('end_date', $assignment?->end_date?->format('Y-m-d')) }}">@error('end_date')<div class="text-danger small">{{ $message }}</div>@enderror</div>
@@ -24,4 +24,26 @@
         <div class="mt-4"><button class="btn btn-primary">{{ $assignment ? 'Save Assignment' : 'Assign Student' }}</button> <a href="{{ route('admin.transport.index') }}" class="btn btn-outline-secondary">Cancel</a></div>
     </form>
 </div></div>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var yearSelect = document.getElementById('transport-academic-year');
+        var routeSelect = document.getElementById('transport-route');
+        if (!yearSelect || !routeSelect) return;
+
+        function updateRouteAvailability() {
+            Array.from(routeSelect.options).forEach(function (option) {
+                if (!option.value || !option.dataset.capacity) return;
+                var capacity = Number(option.dataset.capacity);
+                var usage = JSON.parse(option.dataset.seatsByYear || '{}');
+                var assigned = Number(usage[yearSelect.value] || 0);
+                var full = capacity > 0 && assigned >= capacity;
+                option.disabled = full && option.value !== routeSelect.value;
+                option.textContent = option.dataset.label + (full ? ' (Full: ' + assigned + '/' + capacity + ')' : ' (' + assigned + '/' + capacity + ' seats)');
+            });
+        }
+
+        yearSelect.addEventListener('change', updateRouteAvailability);
+        updateRouteAvailability();
+    });
+</script>
 @endsection
