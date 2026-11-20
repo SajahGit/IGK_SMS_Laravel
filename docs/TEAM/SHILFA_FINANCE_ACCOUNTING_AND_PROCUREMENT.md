@@ -37,22 +37,17 @@ Shilfa owns the financial operations of the institution, including student billi
    - Supplier directories, Purchase Orders (PO), and Goods Received Notes (GRN).
    - Global Auto-Sort on Purchase Orders and Suppliers.
    - Campus badges on all invoice listings and payment forms.
-6. **Double-Entry General Ledger & Financial Reports:**
-   - **Chart of Accounts (`/admin/accounts`):** Five master account classes (Asset, Liability, Equity, Income, Expense).
-   - **Journal Entries (`/admin/journals`):** Double-entry journal voucher creation with debit/credit equilibrium check and branch tagging.
-   - **1-Click Auto-Posting:** Synchronizes unposted issued invoices and receipts directly into ledger journals.
-   - **Trial Balance (`/admin/accounting/trial-balance`):** Complete ledger equilibrium audit.
-   - **General Ledger (`/admin/accounting/ledger`):** Detailed transaction audit per account.
-   - **Income & Expense Statement (`/admin/accounting/income-expense`):** Surplus/deficit operating figures.
-   - **Branch Financial Summary (`/admin/accounting/branch-summary`):** High-level financial breakdown by campus.
-7. **Procurement & Stock Control (`/procurement`):**
-   - Supplier / Vendor records management.
-   - Purchase orders (PO) creation, approvals, and 2-stage receiving.
-   - Automated stock movement transactions updating consumable inventory balances.
+8. **Campus-Scoped Payroll & Salary Deduction Transparency (`/accountant/payroll`, `/accountant/salary-deductions`):**
+   - Dedicated read-only access for Accountants to inspect staff payroll runs and statutory deductions.
+   - Strictly scoped to the accountant's active campus context or all campuses.
+   - Payslip transparency view and itemized salary deduction breakdowns.
+9. **Global Downward Dropdown Menus & QA Policy:**
+   - Action menus and searchable form dropdowns open strictly downward (`bottom-start`) with upward flip disabled, preventing menu cutoff across billing tables and payment modals.
+   - 100% QA closure across all financial test execution cases (`docs/QA/`).
 
 ---
 
-### 2. Complete File Inventory (68 Files)
+### 2. Complete File Inventory (73 Files)
 
 #### Routes:
 * `routes/accountant.php`
@@ -64,6 +59,8 @@ Shilfa owns the financial operations of the institution, including student billi
 * `app/Http/Controllers/Accountant/FeeStructureController.php`
 * `app/Http/Controllers/Accountant/InvoiceController.php`
 * `app/Http/Controllers/Accountant/PaymentController.php`
+* `app/Http/Controllers/Accountant/PayrollController.php`
+* `app/Http/Controllers/Accountant/SalaryDeductionController.php`
 * `app/Http/Controllers/InstitutionAdmin/AccountController.php`
 * `app/Http/Controllers/InstitutionAdmin/AccountingReportController.php`
 * `app/Http/Controllers/InstitutionAdmin/JournalEntryController.php`
@@ -115,7 +112,7 @@ Shilfa owns the financial operations of the institution, including student billi
 * `app/Models/SavedFilter.php`
 
 #### Blade Views:
-* `resources/views/Accountant/` (AccountantDashboard, AccountantFeeStructuresIndex, AccountantInvoicesIndex, AccountantInvoicesCreate, AccountantInvoicesShow, AccountantPaymentsCreate, AccountantReceiptShow)
+* `resources/views/Accountant/` (AccountantDashboard, AccountantFeeStructuresIndex, AccountantInvoicesIndex, AccountantInvoicesCreate, AccountantInvoicesShow, AccountantPaymentsCreate, AccountantReceiptShow, PayrollIndex, PayrollShow, SalaryDeductionsIndex)
 * `resources/views/Accounting/` (AccountsIndex, AccountsForm, JournalsIndex, JournalsForm, JournalsShow, CashflowForm, TrialBalance, Ledger, IncomeExpense)
 * `resources/views/Procurement/` (PurchaseOrdersIndex, PurchaseOrderForm, PurchaseOrderShow, SuppliersIndex, SupplierForm)
 * `resources/views/InstitutionAdmin/InventoryIndex.blade.php`

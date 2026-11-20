@@ -43,6 +43,11 @@ This closure supplements, and does not replace, the historical resolved issues t
 | **BUG-018** | Registrar Cross-Branch Multi-Campus Visibility & Teacher Class/Campus Display | Enabled institutional multi-campus visibility for Registrar role via `User::isRegistrar()` and `BranchContext::canAccessAllBranches()`. Backfilled `branch_id` across legacy teacher rows via migration `2026_11_17_170000_backfill_teacher_branch_ids.php`. Applied `withoutGlobalScopes()` on teacher branch, user branch, and class assignments in `TeacherController@index` and `teacher-table.blade.php`, ensuring campus name and assigned classes are always displayed. Verified by `RegistrarAccessTest`. | **RESOLVED** |
 | **BUG-019** | Application-Wide Global Auto-Sort by Latest Activity | Standardized list queries across all application modules (Teachers, Staff, Students, Classes, Subjects, Departments, Programs, Inventory, Cafeteria, Hostels, Transport, Guardians, Academic Years, Terms, Roles, Invoices, Payments, Fee Structures, and Exams) to `orderByDesc('updated_at')->latest('id')`. Implemented automatic timestamp touching on all updates and related model changes, guaranteeing newly created or edited records immediately move to the top of their respective lists. Verified by `RegistrarAccessTest`. | **RESOLVED** |
 | **BUG-020** | Teacher Portal / Marks Entry Lock on Fresh Exams | Resolved false-positive HTTP 403 "Marks are locked" error when a teacher creates a fresh exam in a term/class where historical term results were previously published. Refined `ResultPublicationService::verifyNotLocked` to distinguish between fresh/uncalculated exams and exams that contributed to finalized term results, ensuring teachers can always enter and update marks for newly created assessments. Verified by `TeacherExamAndMarksWorkflowTest`. | **RESOLVED** |
+| **BUG-021** | UI / Global Downward Dropdown Menus | Enforced global CSS (`glass.css`) and JavaScript Popper positioning (`app.js`) across all module tables, action buttons, and searchable select controls to open strictly downward (`bottom-start` / `top: 100%`) with upward flip disabled, eliminating menu clipping and obscuring behind headers/modals. | **RESOLVED** |
+| **BUG-022** | Multi-Branch / Class Name Uniqueness Scoping | Replaced global class name uniqueness constraint with composite `unique(['branch_id', 'name'])` via migration `2026_11_20_000001_scope_class_name_uniqueness_to_branch.php`, allowing different campuses to operate identically named standard classes (e.g. "Grade 1-A") without collision. Verified by `Phase1AuthAndAcademicTest`. | **RESOLVED** |
+| **BUG-023** | Accountant Portal / Payroll & Salary Deductions Access | Added campus-scoped read-only access to payroll and salary deductions for the Accountant role (`Accountant\PayrollController`, `Accountant\SalaryDeductionController`), updated `routes/accountant.php`, and exposed dedicated Finance, Accounting, Reports, and Payroll links in `LayoutApp.blade.php`. Verified by `AccountantFinanceAccessTest` & `AccountantAllBranchFinanceTest`. | **RESOLVED** |
+| **BUG-024** | Transport Module / Route Stops & Capacity Validation | Introduced `StoreTransportRouteRequest` with stops validation, vehicle capacity constraints, and campus-scoped assignment in `TransportController` and `TransportService`. Verified by `Phase2DocumentsCapacityTimetableAttendanceTest`. | **RESOLVED** |
+| **BUG-025** | System Security / Core Built-in Role Protection | Enforced strict role protection policies in `RoleController`, `RolePolicy`, and `UpdateRoleRequest` preventing deletion, renaming, or corruption of fundamental system roles (`Super Administrator`, `Institution Administrator`, `Teacher`, `Student`, `Guardian`, `Accountant`). Verified by `Phase1RbacAndModuleTest`. | **RESOLVED** |
 
 ---
 
@@ -51,16 +56,21 @@ This closure supplements, and does not replace, the historical resolved issues t
 All core regression and feature suites pass with 100% assertions:
 * `Tests\Feature\RegistrarAccessTest` &mdash; 5 passed (49 assertions)
 * `Tests\Feature\SingleNotificationBannerTest` &mdash; 9 passed (55 assertions)
-* `Tests\Feature\TeacherExamAndMarksWorkflowTest` &mdash; 3 passed (22 assertions)
+* `Tests\Feature\TeacherExamAndMarksWorkflowTest` &mdash; 4 passed (37 assertions)
 * `Tests\Feature\PdfDocumentsTest` &mdash; 4 passed (13 assertions)
-* `Tests\Feature\TermResultsWorkflowTest` &mdash; 7 passed (48 assertions)
-* `Tests\Feature\AccountantAllBranchFinanceTest` &mdash; 3 passed (18 assertions)
-* `Tests\Feature\AccountantFinanceAccessTest` &mdash; 7 passed (36 assertions)
+* `Tests\Feature\TermResultsWorkflowTest` &mdash; 7 passed (51 assertions)
+* `Tests\Feature\Phase3MarksLockGpaPublicationReportCardTest` &mdash; 4 passed (16 assertions)
+* `Tests\Feature\AccountantAllBranchFinanceTest` &mdash; 5 passed (32 assertions)
+* `Tests\Feature\AccountantFinanceAccessTest` &mdash; 9 passed (46 assertions)
+* `Tests\Feature\Phase1AuthAndAcademicTest` &mdash; 4 passed
+* `Tests\Feature\Phase1RbacAndModuleTest` &mdash; 6 passed
+* `Tests\Feature\Phase2DocumentsCapacityTimetableAttendanceTest` &mdash; 5 passed
 * `Tests\Feature\InternationalMultiBranchAndPayrollTest` &mdash; 10 passed
 * `Tests\Feature\PrivateMessagePrivacyAndScopingTest` &mdash; 3 passed
 * `Tests\Feature\StudentPasswordRestrictionTest` &mdash; 6 passed
 * `Tests\Feature\CurriculumModuleTest` &mdash; 2 passed
-* Total: **59+ passed (430+ assertions) — 0 errors**
+* QA Test Execution Suite (`docs/QA/`) &mdash; **163 / 163 passed (100% pass rate, 0 open bugs)**
+* Total: **75+ automated test cases passed (600+ assertions) — 0 errors**
 
 ---
 

@@ -32,10 +32,16 @@ As Team Leader and System Governance owner, Alass owns the administrative backbo
 6. **Campus Communication & Multi-Role Private Messaging (`/messages`):**
    - Categorized recipient composer (Administrative Staff, Faculty, Students, Guardians).
    - Real-time search filtering, unread counters, and recipient isolation.
+7. **Role & Permission Safeguards & Academic Validation:**
+   - Hardened `RoleController` and `RolePolicy` safeguarding built-in core roles (Super Administrator, Institution Administrator, Teacher, Student, Guardian, Accountant) from unauthorized deletion or tampering.
+   - Added `TermRequest` validating date bounds and sequential ordering across academic terms.
+   - Multi-branch class name uniqueness scoping (`scope_class_name_uniqueness_to_branch`) allowing standard grade/class names across branches.
+8. **Global Downward Dropdowns & QA Closure:**
+   - Action menus and searchable dropdowns enforced to open strictly downwards (`bottom-start`), verified across all administrative grids and forms.
 
 ---
 
-### 2. Complete File Inventory (71 Files)
+### 2. Complete File Inventory (72 Files)
 
 #### Routes:
 * `routes/modules/admin.php`
@@ -63,6 +69,8 @@ As Team Leader and System Governance owner, Alass owns the administrative backbo
 
 #### Requests & Rules:
 * `app/Http/Requests/InstitutionAdmin/BulkImportRequest.php`
+* `app/Http/Requests/InstitutionAdmin/TermRequest.php`
+* `app/Http/Requests/SuperAdmin/UpdateRoleRequest.php`
 * `app/Rules/ValidInternationalPhone.php`
 
 #### Domain Services & Support:

@@ -471,6 +471,7 @@
         <li class="toc-item"><span class="toc-title">9. Universal Production Deployment, Backup & Maintenance Runbook</span><span class="toc-page">Page 82</span></li>
         <li class="toc-item"><span class="toc-title">10. Institutional Engineering Governance & Team Workstream Allocation</span><span class="toc-page">Page 85</span></li>
         <li class="toc-item" style="padding-left: 15px;"><span class="toc-title">10.4 Verified Modular Engineering Deliverables & Team Distribution Packages</span><span class="toc-page">Page 88</span></li>
+        <li class="toc-item" style="padding-left: 15px;"><span class="toc-title">10.5 Official QA Bug Register & Full Test Execution Closure Snapshot (2026-11-20)</span><span class="toc-page">Page 89</span></li>
     </ul>
 </div>
 
@@ -6556,6 +6557,96 @@ echo &#039;ResultPublicationService logic updated to allow grading on fresh exam
 
     <p><strong>Preventive Invariant Enforced:</strong> <em>Only lock exam marks if the exam itself has been published, or if the exam had recorded marks that contributed to an already-published TermResult.</em></p>
 </div>
+<div class="screen-card">
+    <div class="screen-header">
+        <span class="screen-title">Fault 18: Upward Dropdown Menu Clipping and Viewport Overlap Across Table Lists &amp; Forms</span>
+        <span class="badge badge-amber">MEDIUM</span>
+    </div>
+    <div class="callout callout-warning">
+        <div class="callout-title">Symptom &amp; Visual Failure:</div>
+        In lower table rows and dense forms across Students, Exams, Attendance, and Finance, clicking action buttons or custom selects causes dropdown menus to flip upwards (&quot;dropup&quot;), clipping behind table headers, page titles, or navigation bars, obscuring action choices.
+    </div>
+    <p><strong>Root Cause Analysis:</strong> Popper.js default collision modifier detects viewport boundary proximity and dynamically flips the menu to <code>top-start</code>. In modal and table card contexts, the upward positioning clips under parent container overflow or behind sticky elements.</p>
+    
+    <div class="screen-section-title">Diagnostic &amp; Front-End Inspection:</div>
+    <pre>// Inspect DOM element computed style on opened dropdown:
+// data-popper-placement=&quot;top-start&quot; &lt;-- Flipping detected
+// Expected: Strictly data-popper-placement=&quot;bottom-start&quot; across all viewports.</pre>
+
+    <div class="screen-section-title">Exact Resolution &amp; Implementation:</div>
+    <pre>// 1. In public/css/glass.css:
+.dropdown-menu[data-bs-popper] {
+    top: 100% !important;
+    bottom: auto !important;
+    margin-top: 0.25rem !important;
+}
+// 2. In public/js/app.js:
+// Enforce downward popperConfig:
+popperConfig(defaultBsPopperConfig) {
+    return {
+        ...defaultBsPopperConfig,
+        placement: &#039;bottom-start&#039;,
+        modifiers: [
+            ...(defaultBsPopperConfig.modifiers || []).filter(m =&gt; m.name !== &#039;flip&#039;),
+            { name: &#039;flip&#039;, enabled: false }
+        ]
+    };
+}</pre>
+
+    <p><strong>Preventive Invariant Enforced:</strong> <em>All operational dropdown menus, action button popups, and enhanced searchable form selects must render strictly downward with flip disabled.</em></p>
+</div>
+<div class="screen-card">
+    <div class="screen-header">
+        <span class="screen-title">Fault 19: Cross-Campus Class Name Collision During Multi-Branch Expansion</span>
+        <span class="badge badge-amber">HIGH</span>
+    </div>
+    <div class="callout callout-warning">
+        <div class="callout-title">Symptom &amp; Visual Failure:</div>
+        When an Institution Admin attempts to create standard classes (e.g. &quot;Grade 1-A&quot;) in Kandy Campus when &quot;Grade 1-A&quot; already exists in Main Campus, the database rejects the submission with <code>SQLSTATE[23000]: Integrity constraint violation: 1062 Duplicate entry &#039;Grade 1-A&#039; for key &#039;school_classes_name_unique&#039;</code>.
+    </div>
+    <p><strong>Root Cause Analysis:</strong> The original migration applied a global unique constraint on <code>classes.name</code> rather than a composite unique index scoped by campus (<code>branch_id</code> + <code>name</code>).</p>
+    
+    <div class="screen-section-title">Diagnostic Artisan / Terminal Script for Sir:</div>
+    <pre>php artisan tinker --execute=&quot;
+dump(DB::select(&#039;SHOW INDEX FROM classes WHERE Key_name LIKE \&quot;%name%\&quot;&#039;));
+&quot;</pre>
+
+    <div class="screen-section-title">Exact Resolution &amp; Migration:</div>
+    <pre>php artisan tinker --execute=&quot;
+// Migration 2026_11_20_000001_scope_class_name_uniqueness_to_branch.php:
+Schema::table(&#039;classes&#039;, function (Blueprint $table) {
+    $table-&gt;dropUnique([&#039;name&#039;]);
+    $table-&gt;unique([&#039;branch_id&#039;, &#039;name&#039;]);
+});
+echo &#039;Class name uniqueness scoped strictly per branch.&#039;;
+&quot;</pre>
+
+    <p><strong>Preventive Invariant Enforced:</strong> <em>Organizational entities (classes, departments, timetable slots) in multi-campus architectures must always enforce composite uniqueness scoped by branch_id.</em></p>
+</div>
+<div class="screen-card">
+    <div class="screen-header">
+        <span class="screen-title">Fault 20: Accountant Portal Sidebar Navigation &amp; Campus-Scoped Payroll Visibility</span>
+        <span class="badge badge-amber">MEDIUM</span>
+    </div>
+    <div class="callout callout-warning">
+        <div class="callout-title">Symptom &amp; Visual Failure:</div>
+        Accountants logging into the financial area could not review staff payroll history, salary slip calculations, or salary deductions to verify monthly expenditure, facing missing sidebar links and 403 Forbidden redirects.
+    </div>
+    <p><strong>Root Cause Analysis:</strong> Payroll management was tied strictly to Super Admin / Institution Admin authorization (<code>/admin/payroll</code>), lacking an Accountant-scoped read-only controller and sidebar navigation integration.</p>
+    
+    <div class="screen-section-title">Diagnostic Artisan / Terminal Script for Sir:</div>
+    <pre>php artisan route:list --path=accountant</pre>
+
+    <div class="screen-section-title">Exact Resolution &amp; Implementation:</div>
+    <pre>php artisan tinker --execute=&quot;
+// 1. Added campus-scoped Accountant\PayrollController and Accountant\SalaryDeductionController
+// 2. Registered routes: GET /accountant/payroll, GET /accountant/payroll/{id}, GET /accountant/salary-deductions
+// 3. Exposed dedicated Finance, Accounting, Reports, and Payroll links in LayoutApp.blade.php
+echo &#039;Accountant financial navigation and payroll transparency active.&#039;;
+&quot;</pre>
+
+    <p><strong>Preventive Invariant Enforced:</strong> <em>Financial roles require transparent read-only audit visibility into all operational cash outlays including payroll and deductions, strictly scoped to their assigned campus context.</em></p>
+</div>
 
 <!-- ============================================================================== -->
 <!-- SECTION 9: PRODUCTION RUNBOOK                                                  -->
@@ -6679,22 +6770,22 @@ gunzip < /backups/sms_backup_20261112_000000.sql.gz | mysql -u root -p igk_schoo
         <tr>
             <td><code>ALASS_ADMIN_PACKAGE.zip</code></td>
             <td><strong>Alass</strong><br><span class="badge badge-blue">Team Leader</span></td>
-            <td class="text-center"><strong>71 items</strong></td>
-            <td>Super Admin & Institution Admin desks, Multi-Campus Branch Switching, Users directory & RBAC security, HR & statutory payroll processing (EPF/ETF), Super Admin salary deductions console, system settings, forensic audit trail, and private multi-role messaging.</td>
+            <td class="text-center"><strong>72 items</strong></td>
+            <td>Super Admin & Institution Admin desks, Multi-Campus Branch Switching, Users directory & RBAC security, HR & statutory payroll processing (EPF/ETF), Super Admin salary deductions console, system settings, forensic audit trail, private multi-role messaging, core role protection, and multi-branch class name scoping.</td>
             <td class="text-center"><span class="badge badge-green">VERIFIED 100%</span></td>
         </tr>
         <tr>
             <td><code>SUMAIYA_TEACHER_PACKAGE.zip</code></td>
             <td><strong>Sumaiya</strong><br><span class="badge badge-amber">Core Engineer</span></td>
             <td class="text-center"><strong>57 items</strong></td>
-            <td>Teacher desk portal, faculty self-service, class-subject allocation, automated timetable clash detector, daily attendance roll call, biometric sync endpoints, exam paper configuration, marks boundary validation, and batch GPA publishing.</td>
+            <td>Teacher desk portal, faculty self-service, class-subject allocation, automated timetable clash detector, daily attendance roll call, biometric sync endpoints, exam paper configuration, marks boundary validation, batch GPA publishing, and fresh exam grading enablement.</td>
             <td class="text-center"><span class="badge badge-green">VERIFIED 100%</span></td>
         </tr>
         <tr>
             <td><code>RAJIYA_STUDENT_PACKAGE.zip</code></td>
             <td><strong>Rajiya</strong><br><span class="badge badge-green">Core Engineer</span></td>
             <td class="text-center"><strong>103 items</strong></td>
-            <td>Admissions registration & document onboarding, Student master profiles & SIS portal, multi-child Guardian portal & family context switcher, academic catalog (Departments, Programs, Curricula, Classes), student campus transfers, transcripts, hostels, transport, and cafeteria.</td>
+            <td>Admissions registration & document onboarding, Student master profiles & SIS portal, multi-child Guardian portal & family context switcher, academic catalog (Departments, Programs, Curricula, Classes), student campus transfers, transcripts, hostels, transport route stops & capacity, and cafeteria.</td>
             <td class="text-center"><span class="badge badge-green">VERIFIED 100%</span></td>
         </tr>
         <tr>
@@ -6707,23 +6798,32 @@ gunzip < /backups/sms_backup_20261112_000000.sql.gz | mysql -u root -p igk_schoo
         <tr>
             <td><code>SHILFA_FINANCE_PACKAGE.zip</code></td>
             <td><strong>Shilfa</strong><br><span class="badge badge-purple">Core Engineer</span></td>
-            <td class="text-center"><strong>68 items</strong></td>
-            <td>Fee structures catalog & billing rules, cohort student invoicing engine, counter cashier payments & printable official receipts, PayHere online gateway integration, double-entry general ledger (Chart of Accounts, Journal entries, Trial Balance, Ledger, Income & Expense, Branch Summary), and Procurement supply chain.</td>
+            <td class="text-center"><strong>73 items</strong></td>
+            <td>Fee structures catalog & billing rules, cohort student invoicing engine, counter cashier payments & printable official receipts, PayHere online gateway integration, double-entry general ledger (Chart of Accounts, Journal entries, Trial Balance, Ledger, Income & Expense, Branch Summary), Procurement supply chain, and campus-scoped Payroll & Salary Deductions read access.</td>
             <td class="text-center"><span class="badge badge-green">VERIFIED 100%</span></td>
         </tr>
         <tr>
             <td><code>CORE_SHARED_SYSTEM_PACKAGE.zip</code></td>
             <td><strong>All Team</strong><br><span class="badge badge-blue">Foundation</span></td>
-            <td class="text-center"><strong>20 items</strong></td>
-            <td>Base Laravel 12 kernel, application bootstrap, shared <code>LayoutApp</code> views, <code>glass.css</code>, <code>app.js</code>, <code>User</code> model, <code>BranchOwned</code> global tenant scope, all 61 database schema migrations, and master seeders.</td>
+            <td class="text-center"><strong>21 items</strong></td>
+            <td>Base Laravel 12 kernel, application bootstrap, shared <code>LayoutApp</code> views, <code>glass.css</code> (with downward dropdown rules), <code>app.js</code> (with flip-disabled Popper positioning), <code>User</code> model, <code>BranchOwned</code> global tenant scope, all 62 database schema migrations, and master seeders.</td>
             <td class="text-center"><span class="badge badge-green">VERIFIED 100%</span></td>
         </tr>
     </tbody>
 </table>
 
+<h3>10.5 Official QA Bug Register & Full Test Execution Closure Snapshot (2026-11-20)</h3>
+<p>The institutional Quality Assurance inspection has officially closed all entries across the QA registers located in <code>docs/QA/</code>:</p>
+<ul>
+    <li><strong>Bug Register Audit:</strong> 31 logged defects audited &mdash; <strong>31 Fixed, 0 Open (100% Resolution)</strong>. Recorded in <code>docs/QA/IGK SMS - QA Testing &amp; Bug Report - Bug Report.csv</code>.</li>
+    <li><strong>Test Case Execution:</strong> 163 exhaustive test execution cases across all 11 system roles &mdash; <strong>163 Passed, 0 Failed</strong>. Recorded in <code>docs/QA/IGK SMS - QA Testing &amp; Bug Report - Test Execution.csv</code>.</li>
+    <li><strong>RBAC Matrix Audit:</strong> 100% verified route boundary insulation across Super Admin, Admin, Registrar, Accountant, Teacher, Student, Guardian, Librarian, Cafeteria, Transport, and Hostel. Recorded in <code>docs/QA/IGK SMS - QA Testing &amp; Bug Report - RBAC Matrix.csv</code>.</li>
+    <li><strong>Universal Downward Dropdown UI Policy:</strong> Globally enforced downward placement (<code>bottom-start</code> / <code>top: 100%</code>) with upward Popper flip disabled across all tables, action menus, and enhanced searchable dropdowns.</li>
+</ul>
+
 <div class="callout callout-success">
-    <div class="callout-title">Architectural Certification & Git Fork Invariant Guarantee</div>
-    All 6 distribution packages have been verified through automated packaging with zero missing files. Detailed individual markdown guides, test verification commands, and step-by-step Fork Git GUI instructions are documented in <code>docs/TEAM/</code> and hosted in <code>G:\ALL DOCS\</code> for immediate deployment.
+    <div class="callout-title">Architectural Certification &amp; Git Fork Invariant Guarantee</div>
+    All 6 distribution packages have been verified through automated packaging with zero missing files. Detailed individual markdown guides, test verification commands, QA registers, and step-by-step Fork Git GUI instructions are documented in <code>docs/TEAM/</code> and hosted in <code>G:\ALL DOCS\</code> for immediate deployment.
 </div>
 
 </body>
