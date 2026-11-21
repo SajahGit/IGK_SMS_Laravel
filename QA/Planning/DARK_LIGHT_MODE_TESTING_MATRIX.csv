@@ -1,0 +1,3 @@
+Test_ID,Theme,Role,Page_Category,Status,Expected_Result,Actual_Result,Evidence_File
+THEME-001,Dark,All 8,All accessible pages,NOT TESTED,Readable controls and text,,
+THEME-002,Light,All 8,All accessible pages,NOT TESTED,Readable controls and text,,

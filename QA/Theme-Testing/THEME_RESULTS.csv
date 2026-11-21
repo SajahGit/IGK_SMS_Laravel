@@ -1,0 +1,17 @@
+Test_ID,Role,Page,Theme,Action,Status,Viewport,Evidence_File,Remarks
+THEME-001,Super Admin,/admin/dashboard,Light,Render dashboard,PARTIAL,1366x768,QA/Evidence/Screenshots/Super-Admin/TC-Super-Admin-DASHBOARD-LIGHT-desktop-light-1366.png,Theme shown; contrast not asserted
+THEME-002,Super Admin,/admin/dashboard,Dark,Toggle and reload persistence,PASS,1366x768,QA/Evidence/Screenshots/Super-Admin/TC-Super-Admin-DASHBOARD-DARK-desktop-light-1366.png,Dashboard only
+THEME-003,Institution Admin,/admin/dashboard,Light,Render dashboard,PARTIAL,1366x768,QA/Evidence/Screenshots/Institution-Admin/TC-Institution-Admin-DASHBOARD-LIGHT-desktop-light-1366.png,Theme shown; contrast not asserted
+THEME-004,Institution Admin,/admin/dashboard,Dark,Toggle and reload persistence,PASS,1366x768,QA/Evidence/Screenshots/Institution-Admin/TC-Institution-Admin-DASHBOARD-DARK-desktop-light-1366.png,Dashboard only
+THEME-005,Registrar,/registrar/dashboard,Light,Render dashboard,PARTIAL,1366x768,QA/Evidence/Screenshots/Registrar/TC-Registrar-DASHBOARD-LIGHT-desktop-light-1366.png,Theme shown; contrast not asserted
+THEME-006,Registrar,/registrar/dashboard,Dark,Toggle and reload persistence,PASS,1366x768,QA/Evidence/Screenshots/Registrar/TC-Registrar-DASHBOARD-DARK-desktop-light-1366.png,Dashboard only
+THEME-007,Teacher,/teacher/dashboard,Light,Render dashboard,PARTIAL,1366x768,QA/Evidence/Screenshots/Teacher/TC-Teacher-DASHBOARD-LIGHT-desktop-light-1366.png,Theme shown; contrast not asserted
+THEME-008,Teacher,/teacher/dashboard,Dark,Toggle and reload persistence,PASS,1366x768,QA/Evidence/Screenshots/Teacher/TC-Teacher-DASHBOARD-DARK-desktop-light-1366.png,Dashboard only
+THEME-009,Accountant,/accountant/dashboard,Light,Render dashboard,PARTIAL,1366x768,QA/Evidence/Screenshots/Accountant/TC-Accountant-DASHBOARD-LIGHT-desktop-light-1366.png,Theme shown; contrast not asserted
+THEME-010,Accountant,/accountant/dashboard,Dark,Toggle and reload persistence,PASS,1366x768,QA/Evidence/Screenshots/Accountant/TC-Accountant-DASHBOARD-DARK-desktop-light-1366.png,Dashboard only
+THEME-011,Student,/student/dashboard,Light,Render dashboard,PARTIAL,1366x768,QA/Evidence/Screenshots/Student/TC-Student-DASHBOARD-LIGHT-desktop-light-1366.png,Theme shown; contrast not asserted
+THEME-012,Student,/student/dashboard,Dark,Toggle and reload persistence,PASS,1366x768,QA/Evidence/Screenshots/Student/TC-Student-DASHBOARD-DARK-desktop-light-1366.png,Dashboard only
+THEME-013,Guardian,/guardian/dashboard,Light,Render dashboard,PARTIAL,1366x768,QA/Evidence/Screenshots/Guardian/TC-Guardian-DASHBOARD-LIGHT-desktop-light-1366.png,Theme shown; contrast not asserted
+THEME-014,Guardian,/guardian/dashboard,Dark,Toggle and reload persistence,PASS,1366x768,QA/Evidence/Screenshots/Guardian/TC-Guardian-DASHBOARD-DARK-desktop-light-1366.png,Dashboard only
+THEME-015,Librarian,/library/dashboard,Light,Render dashboard,PARTIAL,1366x768,QA/Evidence/Screenshots/Librarian/TC-Librarian-DASHBOARD-LIGHT-desktop-light-1366.png,Theme shown; contrast not asserted
+THEME-016,Librarian,/library/dashboard,Dark,Toggle and reload persistence,PASS,1366x768,QA/Evidence/Screenshots/Librarian/TC-Librarian-DASHBOARD-DARK-desktop-light-1366.png,Dashboard only

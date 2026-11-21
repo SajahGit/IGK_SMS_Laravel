@@ -1,0 +1,9 @@
+Test_ID,Role,Role_Key,Dashboard_Route,Login_Test,Logout_Test,Page_Coverage,CRUD_Coverage,Auth_Coverage,Responsive_Coverage,Theme_Coverage,Status
+ROLE-001,Super Admin,super-admin,/admin/dashboard,PASS,PASS,PARTIAL,NOT TESTED,PARTIAL,PARTIAL,PARTIAL,PARTIAL
+ROLE-002,Institution Admin,admin,/admin/dashboard,PASS,PASS,PARTIAL,NOT TESTED,PARTIAL,PARTIAL,PARTIAL,PARTIAL
+ROLE-003,Registrar,registrar,/registrar/dashboard,PASS,PASS,PARTIAL,NOT TESTED,PARTIAL,PARTIAL,PARTIAL,PARTIAL
+ROLE-004,Teacher,teacher,/teacher/dashboard,PASS,PASS,PARTIAL,NOT TESTED,PARTIAL,PARTIAL,PARTIAL,PARTIAL
+ROLE-005,Accountant,accountant,/accountant/dashboard,PASS,PASS,PARTIAL,NOT TESTED,PARTIAL,PARTIAL,PARTIAL,PARTIAL
+ROLE-006,Student,student,/student/dashboard,PASS,PASS,PARTIAL,NOT TESTED,PARTIAL,PARTIAL,PARTIAL,PARTIAL
+ROLE-007,Guardian,guardian/parent,/guardian/dashboard,PASS,PASS,PARTIAL,NOT TESTED,PARTIAL,PARTIAL,PARTIAL,PARTIAL
+ROLE-008,Librarian,librarian,/library/dashboard,PASS,PASS,PARTIAL,NOT TESTED,PARTIAL,PARTIAL,PARTIAL,PARTIAL

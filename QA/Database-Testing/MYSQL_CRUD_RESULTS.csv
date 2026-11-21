@@ -1,0 +1,6 @@
+Test_ID,Database,Role,Module,QA_Record,Operation,Expected_Result,Actual_Result,Status,Evidence_File
+CRUD-001,school_management_system_testing_new_db,Institution Admin,Academic,QA_STUDENT_001,Create/Read/Update/Delete,QA record persists and is removed after cleanup,NOT EXECUTED,NOT TESTED,
+CRUD-002,school_management_system_testing_new_db,Institution Admin,Academic,QA_TEACHER_001,Create/Read/Update/Delete,QA record persists and is removed after cleanup,NOT EXECUTED,NOT TESTED,
+CRUD-003,school_management_system_testing_new_db,Institution Admin,Academic,QA_PARENT_001,Create/Read/Update/Delete,QA record persists and is removed after cleanup,NOT EXECUTED,NOT TESTED,
+CRUD-004,school_management_system_testing_new_db,Teacher,Exams,QA_EXAM_001,Create/Read/Update/Delete,Exam is created only in the testing database and remains authorized,NOT EXECUTED,NOT TESTED,
+CRUD-005,school_management_system_testing_new_db,Accountant,Finance,QA_INVOICE_001,Create/Read/Issue/Cancel,No real payment or original database mutation,NOT EXECUTED,NOT TESTED,

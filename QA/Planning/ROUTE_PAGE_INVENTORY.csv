@@ -1,0 +1,10 @@
+Test_ID,Role,Module,Page,Route,Method,Access_Expectation,Status,Evidence_File,Remarks
+ROUTE-001,All,Shared,API Tokens,/account/api-tokens,GET,Authenticated,NOT TESTED,,
+ROUTE-002,Super Admin,Admin,Admin Dashboard,/admin/dashboard,GET,Super Admin,NOT TESTED,,
+ROUTE-003,Institution Admin,Admin,Admin Dashboard,/admin/dashboard,GET,Institution Admin,NOT TESTED,,
+ROUTE-004,Registrar,Registrar,Registrar Dashboard,/registrar/dashboard,GET,Registrar,NOT TESTED,,
+ROUTE-005,Teacher,Teacher,Teacher Dashboard,/teacher/dashboard,GET,Teacher,NOT TESTED,,
+ROUTE-006,Accountant,Accountant,Accountant Dashboard,/accountant/dashboard,GET,Accountant,NOT TESTED,,
+ROUTE-007,Student,Student,Student Dashboard,/student/dashboard,GET,Student,NOT TESTED,,
+ROUTE-008,Guardian,Guardian,Guardian Dashboard,/guardian/dashboard,GET,Guardian,NOT TESTED,,
+ROUTE-009,Librarian,Library,Library Dashboard,/library/dashboard,GET,Library permission,NOT TESTED,,

@@ -1,0 +1,6 @@
+Test_ID,Device,Screen_Size,Theme,Roles,Status,Actual_Result,Evidence_File
+RESP-001,Desktop,1920x1080,Dark,All 8,NOT TESTED,,
+RESP-002,Laptop,1366x768,Light,All 8,NOT TESTED,,
+RESP-003,Tablet,768x1024,Light,All 8,NOT TESTED,,
+RESP-004,Mobile,390x844,Dark,All 8,NOT TESTED,,
+RESP-005,Mobile,360x800,Light,All 8,NOT TESTED,,

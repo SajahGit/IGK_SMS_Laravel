@@ -1,0 +1,9 @@
+Test_ID,Role,Protected_Area,Test_Type,Expected_Result,Status,Actual_Result,Evidence_File
+AUTH-001,Super Admin,All permitted routes,Authorized access,Allowed,NOT TESTED,,
+AUTH-002,Institution Admin,Super Admin-only role management,Direct URL,Forbidden,NOT TESTED,,
+AUTH-003,Registrar,Finance write routes,Direct POST/PUT/DELETE,Forbidden,NOT TESTED,,
+AUTH-004,Teacher,Unassigned classes and exams,Direct URL,Forbidden or scoped data only,NOT TESTED,,
+AUTH-005,Accountant,Academic administration routes,Direct URL,Forbidden,NOT TESTED,,
+AUTH-006,Student,Another student's data,Direct URL,Forbidden,NOT TESTED,,
+AUTH-007,Guardian,Unlinked child data,Direct URL,Forbidden,NOT TESTED,,
+AUTH-008,Librarian,Admin and non-library routes,Direct URL,Forbidden except permitted library functions,NOT TESTED,,

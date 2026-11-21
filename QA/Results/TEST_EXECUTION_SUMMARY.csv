@@ -1,0 +1,6 @@
+Metric,Count,Notes
+Total Tests,323,283 sidebar page openings plus 40 role/login viewport combinations
+PASS,323,All 283 sidebar responses and 40 role/login viewport combinations passed
+FAIL,0,No application failures observed in the executed read-only browser tests
+BLOCKED,0,No executed blocker
+NOT TESTED,Not enumerated,All other page controls/forms/CRUD/auth cases remain untested; see Stage 4 report

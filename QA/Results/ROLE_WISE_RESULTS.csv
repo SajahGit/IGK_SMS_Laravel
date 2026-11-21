@@ -1,0 +1,9 @@
+Role,Planned_Test_Count,Executed_Test_Count,PASS,FAIL,BLOCKED,NOT_TESTED,Status
+Super Admin,0,112,112,0,0,0,PARTIAL - 5 viewport logins plus 107 sidebar visits at 1366x768
+Institution Admin,0,106,106,0,0,0,PARTIAL - 5 viewport logins plus 101 sidebar visits at 1366x768
+Registrar,0,29,29,0,0,0,PARTIAL - 5 viewport logins plus 24 sidebar visits at 1366x768
+Teacher,0,19,19,0,0,0,PARTIAL - 5 viewport logins plus 14 sidebar visits at 1366x768
+Accountant,0,19,19,0,0,0,PARTIAL - 5 viewport logins plus 14 sidebar visits at 1366x768
+Student,0,18,18,0,0,0,PARTIAL - 5 viewport logins plus 13 sidebar visits at 1366x768
+Guardian,0,8,8,0,0,0,PARTIAL - 5 viewport logins plus 3 sidebar visits at 1366x768
+Librarian,0,12,12,0,0,0,PARTIAL - 5 viewport logins plus 7 sidebar visits at 1366x768

@@ -1,0 +1,6 @@
+QA_Record_ID,Record_Type,Role,Database,Created_By,Created_At,Updated_At,Deleted_At,Status,Name_Prefix
+QA_REC-001,Student,Institution Admin,school_management_system_testing_new_db,NOT ASSIGNED,NOT EXECUTED,NOT EXECUTED,NOT EXECUTED,NOT TESTED,QA_STUDENT_
+QA_REC-002,Teacher,Institution Admin,school_management_system_testing_new_db,NOT ASSIGNED,NOT EXECUTED,NOT EXECUTED,NOT EXECUTED,NOT TESTED,QA_TEACHER_
+QA_REC-003,Guardian,Institution Admin,school_management_system_testing_new_db,NOT ASSIGNED,NOT EXECUTED,NOT EXECUTED,NOT EXECUTED,NOT TESTED,QA_PARENT_
+QA_REC-004,Exam,Teacher,school_management_system_testing_new_db,NOT ASSIGNED,NOT EXECUTED,NOT EXECUTED,NOT EXECUTED,NOT TESTED,QA_EXAM_
+QA_REC-005,Invoice,Accountant,school_management_system_testing_new_db,NOT ASSIGNED,NOT EXECUTED,NOT EXECUTED,NOT EXECUTED,NOT TESTED,QA_INVOICE_

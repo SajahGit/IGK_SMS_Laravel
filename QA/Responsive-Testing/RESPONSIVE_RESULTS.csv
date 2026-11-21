@@ -1,0 +1,41 @@
+Test_ID,Role,Device,Screen_Size,Theme,Page,Action,Status,Evidence_File,Remarks
+RESP-001,Super Admin,Desktop,1920x1080,Dark,Dashboard,Login and dashboard load,PASS,,No detailed layout assertions
+RESP-002,Institution Admin,Desktop,1920x1080,Dark,Dashboard,Login and dashboard load,PASS,,No detailed layout assertions
+RESP-003,Registrar,Desktop,1920x1080,Dark,Dashboard,Login and dashboard load,PASS,,No detailed layout assertions
+RESP-004,Teacher,Desktop,1920x1080,Dark,Dashboard,Login and dashboard load,PASS,,No detailed layout assertions
+RESP-005,Accountant,Desktop,1920x1080,Dark,Dashboard,Login and dashboard load,PASS,,No detailed layout assertions
+RESP-006,Student,Desktop,1920x1080,Dark,Dashboard,Login and dashboard load,PASS,,No detailed layout assertions
+RESP-007,Guardian,Desktop,1920x1080,Dark,Dashboard,Login and dashboard load,PASS,,No detailed layout assertions
+RESP-008,Librarian,Desktop,1920x1080,Dark,Dashboard,Login and dashboard load,PASS,,No detailed layout assertions
+RESP-009,Super Admin,Laptop,1366x768,Light,Dashboard,Login and dashboard load,PASS,,No detailed layout assertions
+RESP-010,Institution Admin,Laptop,1366x768,Light,Dashboard,Login and dashboard load,PASS,,No detailed layout assertions
+RESP-011,Registrar,Laptop,1366x768,Light,Dashboard,Login and dashboard load,PASS,,No detailed layout assertions
+RESP-012,Teacher,Laptop,1366x768,Light,Dashboard,Login and dashboard load,PASS,,No detailed layout assertions
+RESP-013,Accountant,Laptop,1366x768,Light,Dashboard,Login and dashboard load,PASS,,No detailed layout assertions
+RESP-014,Student,Laptop,1366x768,Light,Dashboard,Login and dashboard load,PASS,,No detailed layout assertions
+RESP-015,Guardian,Laptop,1366x768,Light,Dashboard,Login and dashboard load,PASS,,No detailed layout assertions
+RESP-016,Librarian,Laptop,1366x768,Light,Dashboard,Login and dashboard load,PASS,,No detailed layout assertions
+RESP-017,Super Admin,Tablet,768x1024,Light,Dashboard,Login and dashboard load,PASS,,No detailed layout assertions
+RESP-018,Institution Admin,Tablet,768x1024,Light,Dashboard,Login and dashboard load,PASS,,No detailed layout assertions
+RESP-019,Registrar,Tablet,768x1024,Light,Dashboard,Login and dashboard load,PASS,,No detailed layout assertions
+RESP-020,Teacher,Tablet,768x1024,Light,Dashboard,Login and dashboard load,PASS,,No detailed layout assertions
+RESP-021,Accountant,Tablet,768x1024,Light,Dashboard,Login and dashboard load,PASS,,No detailed layout assertions
+RESP-022,Student,Tablet,768x1024,Light,Dashboard,Login and dashboard load,PASS,,No detailed layout assertions
+RESP-023,Guardian,Tablet,768x1024,Light,Dashboard,Login and dashboard load,PASS,,No detailed layout assertions
+RESP-024,Librarian,Tablet,768x1024,Light,Dashboard,Login and dashboard load,PASS,,No detailed layout assertions
+RESP-025,Super Admin,Mobile,390x844,Dark,Dashboard,Login and dashboard load,PASS,,No detailed layout assertions
+RESP-026,Institution Admin,Mobile,390x844,Dark,Dashboard,Login and dashboard load,PASS,,No detailed layout assertions
+RESP-027,Registrar,Mobile,390x844,Dark,Dashboard,Login and dashboard load,PASS,,No detailed layout assertions
+RESP-028,Teacher,Mobile,390x844,Dark,Dashboard,Login and dashboard load,PASS,,No detailed layout assertions
+RESP-029,Accountant,Mobile,390x844,Dark,Dashboard,Login and dashboard load,PASS,,No detailed layout assertions
+RESP-030,Student,Mobile,390x844,Dark,Dashboard,Login and dashboard load,PASS,,No detailed layout assertions
+RESP-031,Guardian,Mobile,390x844,Dark,Dashboard,Login and dashboard load,PASS,,No detailed layout assertions
+RESP-032,Librarian,Mobile,390x844,Dark,Dashboard,Login and dashboard load,PASS,,No detailed layout assertions
+RESP-033,Super Admin,Mobile,360x800,Light,Dashboard,Login and dashboard load,PASS,,No detailed layout assertions
+RESP-034,Institution Admin,Mobile,360x800,Light,Dashboard,Login and dashboard load,PASS,,No detailed layout assertions
+RESP-035,Registrar,Mobile,360x800,Light,Dashboard,Login and dashboard load,PASS,,No detailed layout assertions
+RESP-036,Teacher,Mobile,360x800,Light,Dashboard,Login and dashboard load,PASS,,No detailed layout assertions
+RESP-037,Accountant,Mobile,360x800,Light,Dashboard,Login and dashboard load,PASS,,No detailed layout assertions
+RESP-038,Student,Mobile,360x800,Light,Dashboard,Login and dashboard load,PASS,,No detailed layout assertions
+RESP-039,Guardian,Mobile,360x800,Light,Dashboard,Login and dashboard load,PASS,,No detailed layout assertions
+RESP-040,Librarian,Mobile,360x800,Light,Dashboard,Login and dashboard load,PASS,,No detailed layout assertions

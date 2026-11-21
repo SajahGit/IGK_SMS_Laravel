@@ -1,0 +1,9 @@
+Test_ID,Role,Email,Password_Source,Expected_Result,Status,Device,Theme,Evidence_File
+TC-AUTH-001,Super Admin,superadmin@school.test,QA_PASSWORD_or_password,Dashboard opens; restricted areas remain guarded,NOT TESTED,,
+TC-AUTH-002,Institution Admin,admin@school.test,QA_PASSWORD_or_password,Dashboard opens; role management create/update/delete are denied,NOT TESTED,,
+TC-AUTH-003,Registrar,registrar@school.test,QA_PASSWORD_or_password,Registrar dashboard opens; finance writes remain denied,NOT TESTED,,
+TC-AUTH-004,Teacher,teacher@school.test,QA_PASSWORD_or_password,Teacher dashboard opens; assigned scope is enforced,NOT TESTED,,
+TC-AUTH-005,Accountant,accountant@school.test,QA_PASSWORD_or_password,Accountant dashboard opens; academic writes remain denied,NOT TESTED,,
+TC-AUTH-006,Student,student@school.test,QA_PASSWORD_or_password,Student dashboard opens; own data only,NOT TESTED,,
+TC-AUTH-007,Guardian,guardian@school.test,QA_PASSWORD_or_password,Guardian dashboard opens; linked children only,NOT TESTED,,
+TC-AUTH-008,Librarian,librarian@school.test,QA_PASSWORD_or_password,Library dashboard opens; no admin or non-library bypass,NOT TESTED,,
