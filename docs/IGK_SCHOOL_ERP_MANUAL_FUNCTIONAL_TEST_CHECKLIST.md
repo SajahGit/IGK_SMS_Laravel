@@ -1,18 +1,33 @@
 ﻿# IGK SCHOOL ERP - MANUAL FUNCTIONAL TESTING CHECKLIST
 
 **Generated:** 2026-11-02  
-**Updated:** 2026-11-20
+**Updated:** 2026-11-21
 **Project Path:** E:\Laravel-Projects\Architectured Final S  
 **Framework:** Laravel 12.70.0 (PHP 8.5.11)  
-**Database:** Application uses MySQL (archi) - DO NOT modify/use real data  
-**Test Environment:** Automated tests use SQLite in-memory (40 passed, 205 assertions, 0 failures, 0 errors)  
-**Audit Type:** READ-ONLY | No code/config/tests/migrations modified
+**QA database:** Use `school_management_system_testing_new_db` for all new QA writes; never write to `school_management_system_db`
+**Test Environment:** Automated tests use SQLite in-memory; see the dated execution report below
+**Audit Type:** Scoped browser QA and safe, tagged test data only; no migrations, seeders, resets, or destructive SQL
 
-**Instructions:** Use safe test records only. Leave Actual result, Pass/Fail, and evidence fields blank. Do not run migrations or touch the archi database. Do not modify application code, existing tests or configuration. Focus on manual verification gaps. All 40 automated tests pass (205 assertions). Automated tests cover core flows; manual testing focuses on UI workflows, role scoping edge cases, security validations, and business rule enforcement not fully exercised by automated tests..
+**Instructions:** This checklist remains a reusable template; its per-case result and evidence fields are intentionally blank. For live QA, use uniquely tagged records in the confirmed testing database only, preserve all original data, and do not run migrations, seeders, resets, or destructive SQL.
 
 **QA closure update (2026-11-20):** `docs/QA/` has 0 open bugs and 0 failed test cases. All form/menu dropdown behavior must open downward and remain within the viewport; upward-opening/floating legacy menus are not acceptable. PDF/CSV, RBAC, journal, fee, transport, cafeteria, transcript, report, and live-browser checks are part of the released QA verification state.
 
 ---
+
+## Execution report — 2026-11-21
+
+- **Automated:** Full PHPUnit suite completed with 303 tests: 302 passed, 0 failed, 1 skipped, and 2603 assertions. The skip is `ConcurrentPaymentsTest`, guarded for opt-in real-database parallel testing; it uses `DatabaseMigrations` and is not safe to run on the confirmed school database. The focused PDF regression suite passed 16 tests and 117 assertions.
+- **Browser roles:** 75 sidebar destinations returned HTTP 200 across Registrar, Teacher, Accountant, Student, Guardian, and Librarian. Super Admin and Institution Admin login reached the two-factor challenge after the default password (`password`); their dashboards were not entered to avoid changing existing admin accounts. Exam Coordinator has no linked account.
+- **Responsive and exports:** Four representative pages passed 48 viewport/theme checks (320, 390, 768, 1024, 1366, and 1920px; light and dark). Subject Performance PDF and CSV downloads both returned HTTP 200 with their expected formats. Print behavior was checked with browser print emulation.
+- **Database CRUD:** One tagged QA student was created, read, edited, and deleted through the Registrar UI in `school_management_system_db`. The tagged account and student are absent; student count is 243 and class 4 enrollment is 5. The application's audit entries for these QA actions remain.
+- **Not covered:** This run did not exercise every form, button, submenu, and page for every role. Post-2FA admin dashboards and OS-level print dialogs were not tested. No database migrations, seeders, resets, or destructive SQL were run.
+- **Status:** **PASS** for the checks completed; **FAIL** 0; **NOT TESTED** the concurrency test and exhaustive UI coverage; **BLOCKED** Exam Coordinator access (no linked account) and post-2FA admin pages (preserved existing accounts).
+
+## Global dropdown regression — 2026-11-21
+
+- **Shared component result:** PASS, 10 Playwright cases across five viewport projects in light and dark themes. See the [dropdown result register](../QA/Results/DROPDOWN_UI_RESULTS.csv) and [evidence index](../QA/Evidence/EVIDENCE_INDEX.csv).
+- **Checked:** Enhanced class and Active Campus selects, issuing-country, nationality, phone-country, and Bootstrap dropup menus; downward placement, field width, internal scrolling, readable contrast, Escape closing, and Active Campus value/change behavior.
+- **Role-specific pages:** NOT TESTED in this run. The shared component result must not be recorded as a pass for all authenticated pages or all eight role accounts. Use the [global dropdown guide](./guides/global-dropdown-ui.md) for coverage and safe-test limits.
 
 ## 1. FINANCE (Phase 4)
 

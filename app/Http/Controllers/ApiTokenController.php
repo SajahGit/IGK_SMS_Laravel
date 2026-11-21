@@ -12,8 +12,15 @@ class ApiTokenController extends Controller
 {
     public function index(Request $request): View
     {
+        $tokens = $request->user()->tokens()->latest()->get();
+
         return view('Account.ApiTokensIndex', [
-            'tokens' => $request->user()->tokens()->latest()->get(),
+            'tokens' => $tokens->filter(
+                fn ($token) => $token->expires_at === null || $token->expires_at->isFuture()
+            )->values(),
+            'expiredTokens' => $tokens->filter(
+                fn ($token) => $token->expires_at !== null && $token->expires_at->isPast()
+            )->values(),
             'plainTextToken' => $request->session()->pull('api_token_once'),
             'allowedAbilities' => $this->allowedAbilities($request),
         ]);

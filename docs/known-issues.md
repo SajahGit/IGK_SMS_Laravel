@@ -15,9 +15,30 @@ The complete `docs/QA/` register was re-audited against the current implementati
 - **Failed QA test cases:** 0
 - **Dropdown policy:** Every enhanced form/menu dropdown opens downward with a `bottom-start`/`top: 100%` placement and no Popper upward flip.
 - **PDF, CSV, RBAC, transport, inventory, transcript, invoice, and reporting fixes:** Verified against existing feature suites and live browser routes.
-- **Full-suite caveat:** The 600-second full-suite process reached the PHP process timeout before completion; the focused and additional QA suites above pass completely.
+- **Historical full-suite result (2026-11-20):** 302 tests passed, 1 concurrency test was skipped by configuration, and 2602 assertions passed. The long full run used an unlimited temporary PHP execution-time setting.
 
 This closure supplements, and does not replace, the historical resolved issues table below.
+
+### Follow-up UI verification — 2026-11-21
+
+The Subject Performance report's wide results table caused page-level horizontal overflow on narrow screens. The report card now clips that overflow while its table remains horizontally scrollable; print styling restores visible overflow, and the export controls wrap at narrow widths.
+
+### Global dropdown verification — 2026-11-21
+
+The shared dropdown regression passed 10 Chromium cases across five configured viewports and both themes. Six shared menu variants were checked per case for downward opening, field alignment, scrolling, contrast, keyboard closing, and Active Campus select behavior. The test is database-free; it verifies shared UI components, not every authenticated route for all eight roles. Role-page coverage remains incomplete. See the [global dropdown guide](./guides/global-dropdown-ui.md), [results CSV](../QA/Results/DROPDOWN_UI_RESULTS.csv), and [Stage 4 report](../QA/Final-Reports/STAGE4_BROWSER_TESTING_REPORT.md).
+
+### Verification refresh — 2026-11-21
+
+- **Full PHPUnit suite:** 303 tests; 302 passed, 0 failed, 1 skipped; 2603 assertions. `ConcurrentPaymentsTest` is skipped by its existing guard unless a real database and `RUN_CONCURRENCY_TEST=1` are supplied. It uses `DatabaseMigrations` and documents `migrate:fresh` on a disposable database, so it was not enabled against `school_management_system_db`.
+- **PDF regression:** The report PDF controller restores the previous PHP execution-time limit after a download. The focused `ReportsParityTest` run passed 16 tests and 117 assertions. The PDF exporter retains its 512MB memory allowance; attempting to lower it before a large rendered report releases memory can fail.
+- **Browser and responsive checks:** 75 sidebar destinations across Registrar, Teacher, Accountant, Student, Guardian, and Librarian returned HTTP 200. Four representative pages passed 48 checks across 320, 390, 768, 1024, 1366, and 1920px in light and dark themes. These checks cover viewport overflow and visible main controls, not every form or button in every module. Print CSS was checked using browser print emulation, not an operating-system print dialog.
+- **Exports:** Subject Performance PDF returned HTTP 200 with `application/pdf` and a `%PDF-` signature; CSV returned HTTP 200 with `text/csv`.
+- **Historical CRUD record:** One uniquely tagged QA student was created, retrieved, edited, and deleted through the Registrar UI in `school_management_system_db`. Follow-up queries found no tagged QA student/account; the student count returned to 243 and class 4 enrollment to 5. No migrations, seeders, resets, or destructive SQL ran. The application audit history for the QA actions remains. This historical run does not authorize future writes; all new QA writes must use `school_management_system_testing_new_db`.
+- **Authentication and coverage limits:** The default password (`password`) reached the mandatory two-factor challenge for Super Admin and Institution Admin; six non-admin demo roles also logged in with `password`. Admin dashboards after 2FA were not entered to avoid changing existing admin accounts. Exam Coordinator has no linked account. Exhaustive testing of every page, submenu, form, button, theme-dependent component, and role is not complete.
+- **PASS:** All automated tests that ran, the selected browser routes, responsive matrix, safe CRUD workflow, PDF, and CSV checks passed.
+- **FAIL:** 0 automated test failures; no failures in the completed browser/export checks.
+- **NOT TESTED:** `ConcurrentPaymentsTest` (the single skip), all forms/buttons across all modules, post-2FA admin pages, and OS-level printing.
+- **BLOCKED:** Exam Coordinator has no linked user account; post-2FA admin pages were left unvisited to preserve existing admin accounts.
 
 ## Resolved Issues
 

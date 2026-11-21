@@ -42,6 +42,16 @@
                 @endforelse
             </tbody></table></div>
         </div>
+        @if ($expiredTokens->isNotEmpty())
+            <div class="card shadow-sm border-0 mt-3">
+                <div class="card-header bg-transparent"><strong>Expired tokens</strong></div>
+                <div class="table-responsive"><table class="table align-middle mb-0"><thead><tr><th>Name</th><th>Permissions</th><th>Expired</th><th></th></tr></thead><tbody>
+                    @foreach ($expiredTokens as $token)
+                        <tr><td class="text-break" style="overflow-wrap:anywhere">{{ $token->name }}</td><td>{{ implode(', ', $token->abilities ?? []) }}</td><td>{{ $token->expires_at->toDateString() }}</td><td class="text-end"><form method="POST" action="{{ route('account.api-tokens.destroy', $token->id) }}">@csrf @method('DELETE')<button class="btn btn-sm btn-outline-secondary">Remove</button></form></td></tr>
+                    @endforeach
+                </tbody></table></div>
+            </div>
+        @endif
     </div>
 </div>
 @endsection

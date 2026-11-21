@@ -25,4 +25,6 @@ Thumbs.db
 /scratch/
 *.zip
 **/packages/*.zip
+/playwright-report/
+/test-results/
 

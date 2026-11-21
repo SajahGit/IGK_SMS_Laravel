@@ -17,6 +17,8 @@ The top navigation bar provides an **Active Campus** dropdown switcher for Accou
 - **Specific Campus (e.g. IGK Main Campus, IGK Kandy Campus)**: Narrows the active context so only financial transactions, classes, and students of the selected campus are displayed.
 - **Branch Financial Summary (`/admin/accounting/branch-summary`)**: Live overview comparing invoiced, collected, and outstanding totals, inventory footprint, purchase orders, and hostel footprint broken down by branch.
 
+The Active Campus control uses the shared searchable dropdown so its menu opens below and matches the control width on supported desktop, tablet, and mobile layouts. The shared component has passed its 5-viewport light/dark regression; this does not replace authenticated Accountant page testing. See the [global dropdown UI guide](./global-dropdown-ui.md).
+
 ## Accounting & Ledgers Access
 
 Accountants have dedicated access to the core general accounting modules in the sidebar navigation:

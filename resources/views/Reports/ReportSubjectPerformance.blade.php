@@ -7,7 +7,7 @@
         <h3 class="mb-0">Subject Academic Performance Report</h3>
         <small class="text-muted">R8 · Weighted subject results, pass rate and grade distribution.</small>
     </div>
-    <div class="d-flex gap-2 no-print">
+    <div class="d-flex flex-wrap gap-2 no-print">
         <button type="button" class="btn btn-outline-secondary" onclick="window.print()">
             <i class="bi bi-printer me-1"></i> Print
         </button>
@@ -83,7 +83,7 @@
     </div>
 </form>
 
-<div class="card shadow-sm border-0">
+<div class="card shadow-sm border-0 subject-performance-report-card">
     <div class="table-responsive">
         <table class="table table-hover mb-0 align-middle">
             <thead class="table-light">

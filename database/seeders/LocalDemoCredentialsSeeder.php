@@ -155,7 +155,10 @@ class LocalDemoCredentialsSeeder extends Seeder
             'registrar@school.test' => ['DEMO-REG-001', 'Registrar'],
             'accountant@school.test' => ['DEMO-ACC-001', 'Accountant'],
         ] as $email => [$employeeNo, $jobTitle]) {
-            $user = User::query()->where('email', $email)->firstOrFail();
+            $user = User::query()->where('email', $email)->first();
+            if (! $user) {
+                continue;
+            }
             $employee = Employee::withoutGlobalScopes()->where('user_id', $user->id)->first()
                 ?? Employee::withoutGlobalScopes()->firstOrNew(['employee_no' => $employeeNo]);
             $employee->forceFill([

@@ -104,6 +104,10 @@ tests/
    - Scoped `@page { size: A4 portrait; margin: 10mm 12mm; }` media queries.
    - Automatically hides navigation headers, action buttons, sidebars, and flash toasts during printing.
    - Output renders clean, high-contrast, official printed slips.
+3. **Shared Dropdown Positioning**:
+   - `public/js/app.js` configures Bootstrap menus for `bottom-start` absolute placement and disables Popper flipping. Searchable selects use static placement anchored to their wrapper.
+   - `public/css/glass.css` constrains searchable, issuing-country, nationality, and phone-country menus to their component widths and gives long option lists internal scrolling.
+   - The shared regression is documented in [Global Dropdown UI](./guides/global-dropdown-ui.md). The component matrix passed; authenticated page-by-page role coverage remains incomplete.
 
 ---
 

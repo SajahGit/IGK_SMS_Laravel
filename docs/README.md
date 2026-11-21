@@ -163,6 +163,8 @@ The system is architected into 5 specialized engineering domains, complete with 
 
 As of 2026-11-20, the complete [QA/](./QA/) bug register is closed: 31 logged bug entries are fixed, 163 test execution cases pass, and 0 critical/high or open bugs remain. Form and menu dropdowns are project-wide downward-opening controls (Bootstrap and searchable custom selects) and are not allowed to flip upward.
 
+**Global dropdown verification (2026-11-21):** The shared fix passed 10 Playwright cases across five configured viewports and both themes, covering six shared dropdown variants, field alignment, scrolling, contrast, and keyboard closing. These are component-level results, not proof that every authenticated page in all eight roles has been tested. See the [dropdown UI guide](./guides/global-dropdown-ui.md), [results](../QA/Results/DROPDOWN_UI_RESULTS.csv), and [Stage 4 report](../QA/Final-Reports/STAGE4_BROWSER_TESTING_REPORT.md).
+
 The live application state, role scopes, browser UI, CSV/PDF exports, and automated regression suites are summarized in [Known Issues](./known-issues.md), [Complete System Guide](./IGK_SCHOOL_ERP_COMPLETE_SYSTEM_AND_PRESENTATION_GUIDE.md), and [Manual Functional Test Checklist](./IGK_SCHOOL_ERP_MANUAL_FUNCTIONAL_TEST_CHECKLIST.md).
 
 All operational and architectural documentation files are maintained inside the [`docs/`](./) directory:

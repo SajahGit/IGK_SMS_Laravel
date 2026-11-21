@@ -59,20 +59,23 @@ class ReportPdfController extends Controller
     {
         abort_unless(isset(self::REPORTS[$report]), 404);
 
+        $previousExecutionLimit = (int) ini_get('max_execution_time');
         ini_set('memory_limit', '512M');
         set_time_limit(120);
-        $request->attributes->set('pdf_export_limit', self::ROW_LIMIT);
 
-        $reportController = app(self::REPORTS[$report]);
-        $reportView = $report === 'students'
-            ? $reportController->pdf($request)
-            : $reportController->index($request);
-        abort_unless($reportView instanceof View, 500, 'The report did not return a view.');
+        try {
+            $request->attributes->set('pdf_export_limit', self::ROW_LIMIT);
 
-        $this->limitViewRows($reportView, $report);
-        $reportView->with('pdfExport', true);
-        $html = $reportView->render();
-        $pdfStyles = <<<'CSS'
+            $reportController = app(self::REPORTS[$report]);
+            $reportView = $report === 'students'
+                ? $reportController->pdf($request)
+                : $reportController->index($request);
+            abort_unless($reportView instanceof View, 500, 'The report did not return a view.');
+
+            $this->limitViewRows($reportView, $report);
+            $reportView->with('pdfExport', true);
+            $html = $reportView->render();
+            $pdfStyles = <<<'CSS'
 <style>
     * { box-sizing: border-box !important; }
     @page { size: A4 landscape; margin: 8mm 10mm; }
@@ -98,12 +101,15 @@ class ReportPdfController extends Controller
     a { color: #0f172a !important; text-decoration: none !important; }
 </style>
 CSS;
-        $html = str_replace('</head>', $pdfStyles.'</head>', $html);
+            $html = str_replace('</head>', $pdfStyles.'</head>', $html);
 
-        return Pdf::setOptions(['isRemoteEnabled' => false])
-            ->loadHTML($html)
-            ->setPaper('a4', 'landscape')
-            ->download($report.'-report-'.today()->toDateString().'.pdf');
+            return Pdf::setOptions(['isRemoteEnabled' => false])
+                ->loadHTML($html)
+                ->setPaper('a4', 'landscape')
+                ->download($report.'-report-'.today()->toDateString().'.pdf');
+        } finally {
+            set_time_limit($previousExecutionLimit);
+        }
     }
 
     private function limitViewRows(View $view, string $report): void

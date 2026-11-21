@@ -36,8 +36,9 @@ As Team Leader and System Governance owner, Alass owns the administrative backbo
    - Hardened `RoleController` and `RolePolicy` safeguarding built-in core roles (Super Administrator, Institution Administrator, Teacher, Student, Guardian, Accountant) from unauthorized deletion or tampering.
    - Added `TermRequest` validating date bounds and sequential ordering across academic terms.
    - Multi-branch class name uniqueness scoping (`scope_class_name_uniqueness_to_branch`) allowing standard grade/class names across branches.
-8. **Global Downward Dropdowns & QA Closure:**
-   - Action menus and searchable dropdowns enforced to open strictly downwards (`bottom-start`), verified across all administrative grids and forms.
+8. **Global Dropdown UI & Verification:**
+   - Shared `public/js/app.js` / `public/css/glass.css` behavior enforces downward `bottom-start` placement and field-aligned searchable controls across authenticated layouts.
+   - The database-free regression passed 10 Chromium cases across five viewports and both themes. This is component-level evidence only; every administrative grid, form, and authenticated page has not been verified. See [Global Dropdown UI](../guides/global-dropdown-ui.md).
 
 ---
 

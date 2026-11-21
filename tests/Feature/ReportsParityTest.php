@@ -126,9 +126,13 @@ class ReportsParityTest extends TestCase
 
         $this->assertCount(500, $viewData['students']);
 
+        $previousExecutionLimit = ini_get('max_execution_time');
+
         $this->get(route('reports.pdf', ['report' => 'students']))
             ->assertOk()
             ->assertHeader('content-type', 'application/pdf');
+
+        $this->assertSame($previousExecutionLimit, ini_get('max_execution_time'));
     }
 
     public function test_fee_collection_and_defaulters_pdfs_render_with_limited_relations(): void

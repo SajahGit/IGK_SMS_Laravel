@@ -1,13 +1,15 @@
 # Manual QA Sample Dataset
 
-இந்த document local/test environment-ல் role-wise manual QA செய்யும் dataset மற்றும் steps. இது [`sms-49day-laravel-sop.html`](./sms-49day-laravel-sop.html)-ன் permission matrix, validation மற்றும் acceptance criteria-ஐப் பின்பற்றுகிறது. SOP-ல் உள்ள MVP role count பழையது; இந்த project-இன் தற்போதைய 8 roles-ஐ இங்கே பயன்படுத்தவும். புதிய teammate-க்கு `.env`, Git setup மற்றும் ஒரே demo data உருவாக்கும் படிகள் [`README-SETUP.md`](./README-SETUP.md)-ல் உள்ளன.
+இந்த document local/test environment-ல் role-wise manual QA செய்யும் synthetic dataset மற்றும் steps. இது [`sms-49day-laravel-sop.html`](./sms-49day-laravel-sop.html)-ன் permission matrix, validation மற்றும் acceptance criteria-ஐப் பின்பற்றுகிறது. SOP-ல் உள்ள MVP role count பழையது; இந்த project-இன் தற்போதைய 8 roles-ஐ இங்கே பயன்படுத்தவும். புதிய teammate-க்கு `.env`, Git setup மற்றும் demo data வழிகாட்டுதல் [`README-SETUP.md`](./README-SETUP.md)-ல் உள்ளது.
+
+> **Safety update — 2026-11-21:** For new QA writes, use only `school_management_system_testing_new_db`. The current `.env` names `school_management_system_db`; do not use it for QA writes. Do not run migrations, seeders, or resets without separate approval. Synthetic logins and relational option examples below are not evidence that accounts or records currently exist.
 
 ## 1. பாதுகாப்பான test setup
 
-1. ஒவ்வொரு developer-மும் தங்களது local MySQL-ல் `school_management_system_testing_db` பயன்படுத்த வேண்டும்; அதே DB பெயரை ஒரே shared MySQL server-ல் ஒரே நேரத்தில் பகிர வேண்டாம். முழு setup [README-SETUP.md](./README-SETUP.md)-ல் உள்ளது.
-2. `.env` target-ஐ `php artisan config:show database.connections.mysql.database` மூலம் உறுதி செய்த பிறகு புதிய schema-வில் `php artisan migrate --seed` இயக்கவும். `DatabaseSeeder` local/testing சூழலில் `FullSampleDataSeeder`-ஐ அழைக்கிறது.
-3. Clean demo dataset-க்கு மட்டும் `php artisan migrate:fresh --seed` இயக்கவும். இது `.env`-ல் தேர்ந்தெடுத்த DB-இன் எல்லா tables/data-வையும் அழிக்கும்; தனிப்பட்ட disposable local DB என்பதை உறுதி செய்யாமல் இயக்க வேண்டாம்.
-4. Demo logins அனைத்துக்கும் password `password`:
+1. QA browser runs-க்கு Playwright-ன் `school_management_system_testing_new_db` override-ஐப் பயன்படுத்தவும். Database write முன் connection/database-ஐ சரிபார்த்து, original `school_management_system_db`-ஐத் தொடக்கூடாது.
+2. `migrate`, `db:seed`, `migrate:fresh`, அல்லது வேறு database reset/write command-ஐ தனிப்பட்ட approval இல்லாமல் இயக்க வேண்டாம். Approved test database-ல் கடைசியாக read-only சரிபார்த்தபோது users, roles, permissions, மற்றும் role profiles அனைத்தும் 0.
+3. கீழுள்ள demo logins synthetic QA examples. தேவையான test data தனியாக அங்கீகரிக்கப்பட்டு உருவாக்கப்படும் வரை இவை login செய்யும் என்று கருத வேண்டாம்.
+4. Demo login examples-க்கு password `password`:
 
 | Role | Demo email |
 |---|---|
@@ -18,16 +20,18 @@
 | Accountant | `accountant@school.test` |
 | Student | `student@school.test` |
 | Guardian | `guardian@school.test` |
+| Librarian | `librarian@school.test` |
 
 5. 2FA **Super Admin, Institution Admin-க்கு மட்டுமே** கட்டாயம். Local-ல் முதல் setup-க்கு login பின் காட்டப்படும் setup code-ஐ பயன்படுத்தவும்; அடுத்த login-களுக்கு authenticator app-இன் புதிய code தேவை. மற்ற 6 roles password login முடிந்ததும் நேரடியாக தங்கள் dashboard-க்கு செல்ல வேண்டும்.
 6. ஒவ்வொரு role-லும் add/edit/delete செய்ய முடியாது. அந்த role-ன் permission matrix-க்கு ஏற்ப அனுமதிக்கப்பட்ட CRUD மட்டும் செய்யவும்; read-only/immutable செயல்களுக்கு கீழே உள்ள deny/guard checks-ஐ எதிர்பார்க்கவும்.
-7. கீழுள்ள பெயர்கள், emails, identifiers அனைத்தும் synthetic QA values. Seeded dropdowns-ல் class, term, branch, guardian, invoice, subject, exam போன்ற உறவுகளைத் தேர்ந்தெடுக்கவும்; ஊகித்து ID type செய்ய வேண்டாம்.
+7. கீழுள்ள பெயர்கள், emails, identifiers அனைத்தும் synthetic QA values. Approved test data இருந்தால் class, term, branch, guardian, invoice, subject, exam போன்ற dropdown options-லிருந்து தேர்வு செய்யவும்; ஊகித்து ID type செய்ய வேண்டாம்.
+8. Shared dropdown behavior, viewport/theme matrix, and verification limits: [Global Dropdown UI guide](./guides/global-dropdown-ui.md).
 
 ## 2. பொதுவான CRUD சோதனை முறை
 
 ஒவ்வொரு sample record-க்கும்:
 
-1. **Create:** role-க்கு உரிய menu-இல் Add/Create திறந்து கீழுள்ள values மற்றும் seeded relational dropdown values-ஐ நிரப்பி save செய்யவும். புதிய row/list entry சரியாகத் தோன்ற வேண்டும்.
+1. **Create:** QA data creation அங்கீகரிக்கப்பட்ட பிறகு மட்டும், role-க்கு உரிய menu-இல் Add/Create திறந்து values மற்றும் approved relational dropdown options-ஐ நிரப்பி save செய்யவும். புதிய row/list entry சரியாகத் தோன்ற வேண்டும்.
 2. **Read:** search/filter மூலம் அதே row-ஐக் கண்டுபிடித்து detail page-ஐத் திறக்கவும்.
 3. **Update/Edit:** `QA-EDIT` அல்லது `-EDIT` suffix/குறிப்பைச் சேர்த்து save செய்யவும்; list, detail, dashboard/report-ல் மாற்றம் வந்ததைச் சரிபார்க்கவும்.
 4. **Delete:** record-க்கு downstream data இல்லாதபோது மட்டும் delete செய்யவும். Confirmation வந்தால் உறுதிப்படுத்தி list-ல் மறைந்ததைச் சரிபார்க்கவும். Linked/posted/published data-க்கு delete மறுக்கப்படுவது சரியான behavior; அந்த record-ஐ வைத்திருக்கவும்.

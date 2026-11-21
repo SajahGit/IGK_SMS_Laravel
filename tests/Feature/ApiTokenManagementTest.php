@@ -36,4 +36,25 @@ class ApiTokenManagementTest extends TestCase
             ->assertSee('placeholder="e.g. Mobile app integration"', false)
             ->assertSee('text-break', false);
     }
+
+    public function test_expired_tokens_are_not_listed_as_active(): void
+    {
+        $student = User::factory()->create([
+            'role' => 'student',
+            'password' => 'password',
+        ]);
+
+        $student->createToken(
+            'Expired Demo Token',
+            ['profile:read'],
+            now()->subDay()
+        );
+
+        $this->actingAs($student)
+            ->get(route('account.api-tokens.index'))
+            ->assertOk()
+            ->assertSee('Expired tokens')
+            ->assertSee('Expired Demo Token')
+            ->assertSee('No active tokens.');
+    }
 }

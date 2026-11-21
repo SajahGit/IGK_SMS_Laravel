@@ -89,3 +89,7 @@ To prevent git merge conflicts in Fork:
    - Session flash banners (`success`, `status`, `warning`, `error`) are strictly centralized in `LayoutApp.blade.php` with 4-second auto-dismiss. Never place redundant in-page alert blocks in child view templates.
 3. **Unicode Separator Standard:**
    - All text separators inside Blade expressions `{{ ... }}` must use Unicode middle dot (`·`) or plain hyphens (` - `), never raw HTML entities such as `&middot;` which Laravel escapes into raw text `&amp;middot;`.
+4. **Global Dropdown Behavior:**
+   - Shared `public/js/app.js` and `public/css/glass.css` enforce downward `bottom-start` positioning, field-aligned widths, and internal scrolling for long searchable/country menus across authenticated role layouts.
+   - Regular selects, including Active Campus, use the searchable component while preserving the original select value/change event. Special country, nationality, and phone controls keep their dedicated shared components.
+   - The database-free component regression and its role-page coverage limit are documented in [Global Dropdown UI](../guides/global-dropdown-ui.md).

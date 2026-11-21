@@ -161,7 +161,15 @@ The system is architected into 5 specialized engineering domains, complete with 
 
 ## Current QA and Delivery Status
 
+The Stage 3 Playwright and evidence architecture is prepared under [`QA/`](./QA/) and [`tests/e2e/`](./tests/e2e/). The QA scope includes eight actual roles: Super Admin, Institution Admin, Registrar, Teacher, Accountant, Student, Guardian, and Librarian. Librarian remains implemented but is not displayed as a login-page role option.
+
+Stage 4 read-only browser execution is partial, not complete. 323 browser checks passed: 40 8-role/login viewport combinations and 283 sidebar page responses. CRUD mutations, every form/button, complete theme contrast testing, every-page export/upload checks, and full 448-route authorization testing remain not executed. See `QA/Final-Reports/STAGE4_BROWSER_TESTING_REPORT.md`.
+
 As of 2026-11-20, the complete [docs/QA/](./docs/QA/) bug register is closed: 31 logged bug entries are fixed, 163 test execution cases pass, and 0 critical/high or open bugs remain. Form and menu dropdowns are project-wide downward-opening controls (Bootstrap and searchable custom selects) and are not allowed to flip upward.
+
+**Global dropdown verification (2026-11-21):** The shared fix passed 10 Playwright cases across five configured viewports and both themes, covering six shared dropdown variants, field alignment, scrolling, contrast, and keyboard closing. These are component-level results, not proof that every authenticated page in all eight roles has been tested. See the [dropdown UI guide](./docs/guides/global-dropdown-ui.md), [results](./QA/Results/DROPDOWN_UI_RESULTS.csv), and [Stage 4 report](./QA/Final-Reports/STAGE4_BROWSER_TESTING_REPORT.md).
+
+The 2026-11-21 verification refresh completed the full PHPUnit suite (303 tests: 302 passed, 0 failed, 1 opt-in concurrency test skipped; 2603 assertions). Browser checks covered 75 sidebar destinations across six non-admin roles, 48 responsive viewport/theme checks on four representative pages, and a tagged QA-only student CRUD workflow against `school_management_system_db`. This is a historical record, not authorization for future writes; all new QA writes must use `school_management_system_testing_new_db`. This is not exhaustive sign-off: every form/button across every role, post-2FA admin dashboards, and OS-level print dialogs remain unverified. See the [execution details](./docs/known-issues.md#verification-refresh--2026-11-21) and [manual checklist](./docs/IGK_SCHOOL_ERP_MANUAL_FUNCTIONAL_TEST_CHECKLIST.md#execution-report--2026-11-21).
 
 The live application state, role scopes, browser UI, CSV/PDF exports, and automated regression suites are summarized in [Known Issues](./docs/known-issues.md), [Complete System Guide](./docs/IGK_SCHOOL_ERP_COMPLETE_SYSTEM_AND_PRESENTATION_GUIDE.md), and [Manual Functional Test Checklist](./docs/IGK_SCHOOL_ERP_MANUAL_FUNCTIONAL_TEST_CHECKLIST.md).
 
@@ -173,6 +181,7 @@ All operational and architectural documentation files are maintained inside the 
 - [Complete System PDF Handbook (88 Pages)](./docs/IGK_ERP_COMPLETE_SYSTEM_DOCUMENTATION.pdf)
 - [Comprehensive System HTML Handbook](./docs/IGK_ERP_COMPLETE_SYSTEM_DOCUMENTATION.html)
 - [System Architecture & Module Invariants](./docs/architecture.md)
+- [Global Dropdown UI Behavior & Verification](./docs/guides/global-dropdown-ui.md)
 - [Sample Role Logins & QA Test Dataset](./docs/sample%20dataset.md)
 - [Local Developer Setup Guide](./docs/README-SETUP.md)
 - [Manual Functional Test Checklist](./docs/IGK_SCHOOL_ERP_MANUAL_FUNCTIONAL_TEST_CHECKLIST.md)

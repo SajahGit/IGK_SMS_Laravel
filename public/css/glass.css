@@ -359,6 +359,7 @@ code { color: var(--accent-3); }
 .table td.text-end, .table th.text-end, .table .text-nowrap { white-space: nowrap; }
 .table td.small, .table td.wrap { white-space: normal; }
 .table-responsive { scrollbar-gutter: stable; overscroll-behavior-x: contain; }
+.subject-performance-report-card { overflow-x: clip; }
 [data-bs-theme="dark"] .table-light { --bs-table-color: var(--bs-body-color); --bs-table-bg: var(--glass-bg-strong); }
 [data-bs-theme="dark"] .table-light > * > * { color: var(--bs-body-color) !important; background-color: var(--glass-bg-strong) !important; }
 
@@ -383,7 +384,9 @@ code { color: var(--accent-3); }
 }
 .phone-country-toggle::after { margin-left: auto; }
 .phone-country-menu {
-    width: max(100%, 14rem);
+    width: 100%;
+    min-width: 100%;
+    max-width: 100%;
     max-height: min(52vh, 22rem);
     overflow-y: auto;
     overscroll-behavior-y: contain;
@@ -417,7 +420,8 @@ code { color: var(--accent-3); }
 }
 .international-country-menu {
     width: 100%;
-    min-width: 16rem;
+    min-width: 100%;
+    max-width: 100%;
     max-height: min(52vh, 22rem);
     overflow-y: auto;
     overscroll-behavior-y: contain;
@@ -425,6 +429,9 @@ code { color: var(--accent-3); }
 }
 .international-nationality-menu {
     width: 100%;
+    min-width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
     max-height: min(52vh, 22rem);
     overflow-y: auto;
     overscroll-behavior-y: contain;
@@ -466,6 +473,11 @@ code { color: var(--accent-3); }
     background-image: none !important; /* Eliminates duplicate form-select chevron */
     cursor: pointer;
 }
+.searchable-select-toggle.form-select-sm {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
 .searchable-select-toggle::after {
     margin-left: auto;
     flex: 0 0 auto;
@@ -486,7 +498,9 @@ code { color: var(--accent-3); }
     bottom: auto;
     left: 0;
     width: 100%;
-    min-width: max(100%, 16rem);
+    min-width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
     margin-top: 4px;
     z-index: 1075 !important;
     border-radius: 12px;
@@ -723,6 +737,7 @@ hr { border-color: var(--glass-border); opacity: 1; }
     .app-main { display: block !important; width: 100% !important; max-width: 100% !important; min-width: 100% !important; margin: 0 !important; padding: 0 !important; }
     .content { display: block !important; width: 100% !important; max-width: 100% !important; margin: 0 !important; padding: 0 !important; }
     .card { background: #ffffff !important; box-shadow: none !important; border: 1px solid #d1d5db !important; backdrop-filter: none !important; color: #111827 !important; page-break-inside: avoid; }
+    .subject-performance-report-card { overflow: visible !important; }
     h1, h2, h3, h4, h5, .stat-value, .table { color: #111827 !important; }
     .text-muted, .stat-label, .form-text { color: #4b5563 !important; }
     .table {

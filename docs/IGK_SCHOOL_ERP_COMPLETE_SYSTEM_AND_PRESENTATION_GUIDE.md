@@ -8,7 +8,7 @@
 
 The current implementation has completed the QA register in `docs/QA/`. The Bug Report CSV contains 31 logged entries and all are marked Fixed, all 163 Test Execution cases are marked Pass, Open Bugs is 0, Failed is 0, and there are 0 critical/high open bugs.
 
-Global UI behavior now forces Bootstrap and searchable custom dropdown menus downward, using bottom-start placement/top:100% positioning and disabling upward Popper flipping. Native browser `<select>` controls remain governed by the platform but all application-enhanced form selects use the project-wide searchable downward menu.
+Global UI behavior now forces Bootstrap and searchable custom dropdown menus downward, using bottom-start placement and disabling upward Popper flipping. Regular visible application selects, including Active Campus, use the shared searchable downward menu. Native date/time picker popups remain browser/OS controlled.
 
 The exact QA evidence is in:
 
@@ -16,6 +16,10 @@ The exact QA evidence is in:
 - `docs/QA/IGK SMS - QA Testing & Bug Report - Test Execution.csv`
 - `docs/QA/IGK SMS - QA Testing & Bug Report - RBAC Matrix.csv`
 - `docs/QA/IGK SMS - QA Testing & Bug Report - Summary.csv`
+
+### Dropdown verification addendum (2026-11-21)
+
+The shared dropdown code passed 10 Chromium component tests across five viewport projects in light and dark themes. Six shared menu variants were opened per case; placement, field width, internal scrolling, contrast, keyboard closing, and the Active Campus select change event were checked. This does not constitute a login-based inspection of every role page. See the [global dropdown guide](./guides/global-dropdown-ui.md), [results CSV](../QA/Results/DROPDOWN_UI_RESULTS.csv), and [Stage 4 report](../QA/Final-Reports/STAGE4_BROWSER_TESTING_REPORT.md).
 
 ## 1. Project at a glance
 

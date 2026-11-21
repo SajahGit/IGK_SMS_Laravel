@@ -12,22 +12,20 @@
                 container.classList.add('dropdown');
             }
 
-            var menu = toggle.nextElementSibling;
-            if (menu && menu.classList.contains('dropdown-menu')) {
-                menu.style.top = '100%';
-                menu.style.bottom = 'auto';
-                menu.style.marginTop = '4px';
-            }
-
             if (window.bootstrap && window.bootstrap.Dropdown) {
                 window.bootstrap.Dropdown.getOrCreateInstance(toggle, {
                     popperConfig: function (defaultConfig) {
                         var config = typeof defaultConfig === 'function' ? defaultConfig() : defaultConfig;
                         config.placement = 'bottom-start';
-                        config.strategy = 'fixed';
-                        config.modifiers = (config.modifiers || []).concat([
+                        config.strategy = 'absolute';
+                        config.modifiers = (config.modifiers || []).filter(function (modifier) {
+                            return modifier.name !== 'flip' && modifier.name !== 'preventOverflow';
+                        }).concat([
                             { name: 'flip', enabled: false },
-                            { name: 'preventOverflow', options: { boundary: 'viewport', altAxis: true } }
+                            {
+                                name: 'preventOverflow',
+                                options: { boundary: 'viewport', altAxis: true, mainAxis: false }
+                            }
                         ]);
                         return config;
                     }
@@ -41,11 +39,6 @@
         var toggle = event.target;
         var container = toggle.closest('.dropdown');
         if (container) container.classList.remove('dropup', 'dropstart', 'dropright');
-        var menu = toggle.nextElementSibling;
-        if (menu && menu.classList.contains('dropdown-menu')) {
-            menu.style.top = '100%';
-            menu.style.bottom = 'auto';
-        }
     });
     new MutationObserver(forceDropdownsDownward).observe(document.documentElement, {
         childList: true,
@@ -470,7 +463,7 @@
 
     function enhanceSearchableSelect(select) {
         if (select.closest('[data-international-country], [data-international-phone], [data-nationality-picker], [data-guardian-selector]')) return;
-        if (select.id === 'active-branch' || select.closest('#branchContextForm') || select.hasAttribute('data-no-enhance')) return;
+        if (select.hasAttribute('data-no-enhance')) return;
         if (select.dataset.searchableEnhanced) return;
 
         select.dataset.searchableEnhanced = 'true';
@@ -479,7 +472,10 @@
         var button = document.createElement('button');
         button.type = 'button';
         button.className = 'form-select searchable-select-toggle dropdown-toggle';
+        if (select.classList.contains('form-select-sm')) button.classList.add('form-select-sm');
+        if (select.classList.contains('form-select-lg')) button.classList.add('form-select-lg');
         button.setAttribute('data-bs-toggle', 'dropdown');
+        button.setAttribute('data-bs-display', 'static');
         button.setAttribute('data-bs-auto-close', 'outside');
         button.setAttribute('aria-haspopup', 'listbox');
         button.setAttribute('aria-expanded', 'false');

@@ -81,6 +81,8 @@ Admin-created year or term records remain supported; the lifecycle command recon
 4. Users can be deactivated; deactivated users cannot log in.
 5. Permissions are managed via Spatie Laravel Permission.
 
+The shared dropdown component covers regular role, campus, and status selects and keeps field-bound menus below their inputs. Its cross-viewport component results and the remaining authenticated-page coverage are tracked in the [global dropdown UI guide](./global-dropdown-ui.md).
+
 ---
 
 ## 7. Fee Structures

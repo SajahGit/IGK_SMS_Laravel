@@ -41,9 +41,9 @@ Shilfa owns the financial operations of the institution, including student billi
    - Dedicated read-only access for Accountants to inspect staff payroll runs and statutory deductions.
    - Strictly scoped to the accountant's active campus context or all campuses.
    - Payslip transparency view and itemized salary deduction breakdowns.
-9. **Global Downward Dropdown Menus & QA Policy:**
-   - Action menus and searchable form dropdowns open strictly downward (`bottom-start`) with upward flip disabled, preventing menu cutoff across billing tables and payment modals.
-   - 100% QA closure across all financial test execution cases (`docs/QA/`).
+9. **Global Dropdown Menus & QA Scope:**
+   - Shared Bootstrap and searchable menus use downward `bottom-start` placement with upward flip disabled; field-bound menus stay aligned with their controls.
+   - The database-free regression passed 10 Chromium cases across five viewports and both themes. Billing-table, payment-modal, and every authenticated Accountant-page dropdown have not been independently verified. See [Global Dropdown UI](../guides/global-dropdown-ui.md) and [Stage 4 results](../../QA/Final-Reports/STAGE4_BROWSER_TESTING_REPORT.md).
 
 ---
 
