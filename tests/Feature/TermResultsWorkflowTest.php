@@ -71,6 +71,11 @@ class TermResultsWorkflowTest extends TestCase
             'notifiable_id' => $student->user_id,
             'type' => TermResultsPublished::class,
         ]);
+        $this->actingAs($student->user)
+            ->get(route('student.transcript'))
+            ->assertOk()
+            ->assertSee('Final')
+            ->assertSee('85.00 / 100');
 
         $exam->update(['is_published' => false]);
         try {
@@ -88,6 +93,43 @@ class TermResultsWorkflowTest extends TestCase
             ->assertSee('Maths')
             ->assertSee('Weighted term result')
             ->assertSee('4.00');
+    }
+
+    public function test_transcript_includes_published_teacher_exam_results_without_generated_term_results(): void
+    {
+        $this->seed(GradeScaleSeeder::class);
+        $context = $this->createContext();
+        $student = $this->enrollStudent($context['offering'], 'Transcript Student', 'transcript@school.test');
+        $otherStudent = $this->enrollStudent($context['offering'], 'Other Transcript Student', 'other-transcript@school.test');
+        $publishedExam = $this->createExam($context, 'Published Final', 100, true);
+        $draftExam = $this->createExam($context, 'Draft Exam', 100, false);
+        Result::create(['exam_id' => $publishedExam->id, 'student_id' => $student->id, 'marks' => 82]);
+        Result::create(['exam_id' => $publishedExam->id, 'student_id' => $otherStudent->id, 'marks' => 67]);
+        Result::create(['exam_id' => $draftExam->id, 'student_id' => $student->id, 'marks' => 99]);
+
+        $this->actingAs($student->user)
+            ->get(route('student.transcript'))
+            ->assertOk()
+            ->assertSee('Term 1')
+            ->assertSee('Maths')
+            ->assertSee('Published Final')
+            ->assertSee('82.00 / 100')
+            ->assertSee('82.00%')
+            ->assertDontSee('Draft Exam')
+            ->assertDontSee('No published academic-year results are available yet.');
+
+        $this->actingAs($otherStudent->user)
+            ->get(route('student.transcript'))
+            ->assertOk()
+            ->assertSee('Published Final')
+            ->assertSee('67.00 / 100')
+            ->assertSee('67.00%')
+            ->assertDontSee('82.00 / 100');
+
+        $this->actingAs($student->user)
+            ->get(route('student.transcript.pdf'))
+            ->assertOk()
+            ->assertDownload('transcript-'.$student->admission_no.'.pdf');
     }
 
     public function test_generation_reports_every_missing_pair_and_blocks_submission_until_complete(): void

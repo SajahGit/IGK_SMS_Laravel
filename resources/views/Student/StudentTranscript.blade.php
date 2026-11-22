@@ -26,6 +26,23 @@
                         <tr><td>{{ $subject->subject->name }}</td><td>{{ $subject->credit_hours }}</td><td>{{ $subject->percentage }}%</td><td>{{ $subject->grade }}</td><td>{{ number_format((float) $subject->grade_point, 2) }}</td></tr>
                     @empty<tr><td colspan="5" class="text-muted">No graded subjects were recorded.</td></tr>@endforelse</tbody>
                 </table></div>
+                @if($term['exam_results']->isNotEmpty())
+                    <h6 class="mt-3">Published exam results</h6>
+                    <div class="table-responsive"><table class="table table-sm table-hover">
+                        <thead><tr><th>Exam</th><th>Subject</th><th>Marks</th><th>Percent</th><th>Grade</th></tr></thead>
+                        <tbody>
+                            @foreach($term['exam_results'] as $examResult)
+                                <tr>
+                                    <td>{{ $examResult['exam']->name }}</td>
+                                    <td>{{ $examResult['subject']->name }}</td>
+                                    <td>{{ $examResult['status'] ?? number_format($examResult['marks'], 2).' / '.$examResult['max_marks'] }}</td>
+                                    <td>{{ $examResult['percentage'] === null ? '—' : number_format($examResult['percentage'], 2).'%' }}</td>
+                                    <td>{{ $examResult['grade'] ?? $examResult['status'] ?? '—' }}</td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table></div>
+                @endif
             @endforeach
         </div>
     </div>

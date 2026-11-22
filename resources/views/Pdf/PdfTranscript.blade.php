@@ -57,6 +57,31 @@
                     @endforelse
                 </tbody>
             </table>
+            @if($term['exam_results']->isNotEmpty())
+                <h3 class="term-title">Published exam results</h3>
+                <table class="marks">
+                    <thead>
+                        <tr>
+                            <th style="width: 34%;">Exam</th>
+                            <th style="width: 28%;">Subject</th>
+                            <th style="width: 16%;" class="center">Marks</th>
+                            <th style="width: 12%;" class="center">Percent</th>
+                            <th style="width: 10%;" class="center">Grade</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($term['exam_results'] as $examResult)
+                            <tr>
+                                <td>{{ $examResult['exam']->name }}</td>
+                                <td>{{ $examResult['subject']->name }}</td>
+                                <td class="center">{{ $examResult['status'] ?? number_format($examResult['marks'], 2).' / '.$examResult['max_marks'] }}</td>
+                                <td class="center">{{ $examResult['percentage'] === null ? '—' : number_format($examResult['percentage'], 2).'%' }}</td>
+                                <td class="center">{{ $examResult['grade'] ?? $examResult['status'] ?? '—' }}</td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            @endif
         @endforeach
     @endforeach
 </body>
