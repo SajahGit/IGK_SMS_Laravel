@@ -32,10 +32,14 @@
                     <label class="form-label">Roles <span class="text-danger">*</span></label>
                     <select name="roles[]" class="form-select" required multiple>
                         @foreach ($roles as $role)
-                            <option value="{{ $role->name }}" @selected(in_array($role->name, old('roles', []), true))>{{ $role->name }}</option>
+                            @if ($role->name !== 'Student')
+                                <option value="{{ $role->name }}" @selected(in_array($role->name, old('roles', []), true))>{{ $role->name }}</option>
+                            @endif
                         @endforeach
                     </select>
-                    <div class="form-text">Select every role required for this user. Create student accounts from Students &gt; Add Student so each login has a linked profile.</div>
+                    <div class="form-text">Select every role required for this user. To enroll student accounts with academic profiles, please use <a href="{{ route('admin.students.create') }}">Students &gt; Add Student</a>.</div>
+                    @error('roles')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
+                    @error('roles.0')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
                 </div>
                 <div class="col-md-6">
                     <label class="form-label">Campus</label>

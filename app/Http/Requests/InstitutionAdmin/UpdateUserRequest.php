@@ -52,6 +52,24 @@ class UpdateUserRequest extends FormRequest
         ];
     }
 
+    public function attributes(): array
+    {
+        return [
+            'roles' => 'role',
+            'roles.0' => 'role',
+            'roles.*' => 'role',
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'roles.required' => 'Please select at least one role.',
+            'roles.*.exists' => 'The selected role is invalid.',
+            'roles.*.not_in' => 'You do not have permission to assign the selected role.',
+        ];
+    }
+
     private function requiresBranchAssignment(): bool
     {
         $roles = $this->input('roles', []);

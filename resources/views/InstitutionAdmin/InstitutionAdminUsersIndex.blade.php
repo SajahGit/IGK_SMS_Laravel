@@ -232,11 +232,17 @@
                             <label class="form-label">Role <span class="text-danger">*</span></label>
                             <select name="role" class="form-select" required>
                                 @foreach ($roles as $role)
-                                    <option value="{{ $role->name }}">{{ $role->name }}</option>
+                                    @if ($role->name !== 'Student')
+                                        <option value="{{ $role->name }}" @selected(old('role') === $role->name)>{{ $role->name }}</option>
+                                    @endif
                                 @endforeach
                             </select>
+                            <div class="form-text small text-muted mt-1">
+                                <i class="bi bi-info-circle me-1"></i>To create a Student account, please enroll them via <a href="{{ route('admin.students.create') }}">Students &gt; Add Student</a>.
+                            </div>
                             @error('roles')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
                             @error('roles.0')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
+                            @error('role')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Campus</label>
@@ -270,4 +276,16 @@
         </div>
     </div>
 </div>
+
+@if ($errors->has('name') || $errors->has('email') || $errors->has('password') || $errors->has('roles') || $errors->has('roles.0') || $errors->has('role') || $errors->has('branch_id'))
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var modalEl = document.getElementById('createUserModal');
+        if (modalEl && typeof bootstrap !== 'undefined') {
+            var modal = new bootstrap.Modal(modalEl);
+            modal.show();
+        }
+    });
+</script>
+@endif
 @endsection

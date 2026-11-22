@@ -52,6 +52,24 @@ class StoreUserRequest extends FormRequest
         ];
     }
 
+    public function attributes(): array
+    {
+        return [
+            'roles' => 'role',
+            'roles.0' => 'role',
+            'roles.*' => 'role',
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'roles.required' => 'Please select a role for the user.',
+            'roles.*.exists' => 'The selected role is invalid.',
+            'roles.*.not_in' => 'Student accounts cannot be created from User Management. Please enroll students via Students > Add Student so that their academic profile and class enrollment are properly configured.',
+        ];
+    }
+
     private function requiresBranchAssignment(): bool
     {
         $roles = $this->input('roles', []);
