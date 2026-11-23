@@ -1687,7 +1687,7 @@
 <!-- ============================================================================== -->
 <h1>4. Core Mathematical Engines & Business Logic Invariants</h1>
 
-<p>The IGK ERP maintains mathematical precision and database consistency through rigorous business invariants enforced at the database and service layers:</p>
+<p>The IGK ERP maintains mathematical precision, concurrency control, and database consistency through <strong>71 distinct business logic engines and invariants</strong> across all <strong>25 core functional modules (35 specialized sub-systems)</strong>. For the dedicated, exhaustive, zero-loss specification of all 71 logics and 25 modules, refer to <a href="IGK_ERP_MODULES_AND_LOGICS_MASTER_REFERENCE.pdf"><strong>IGK_ERP_MODULES_AND_LOGICS_MASTER_REFERENCE.pdf</strong></a>. Key foundational mathematical engines include:</p>
 
 <h3>4.1 Gapless Sequential Numbering Engine</h3>
 <p>Every commercial invoice and official cash receipt requires an uninterrupted, sequential serial number compliant with national auditing standards. The <code>NumberSequenceService</code> implements row-level locking via pessimistic locks (<code>SELECT FOR UPDATE</code>) within an atomic database transaction:</p>

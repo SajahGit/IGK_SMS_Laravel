@@ -172,6 +172,8 @@ All operational and architectural documentation files are maintained inside the 
 - [Team Responsibility Matrix & Deliverables](./docs/TEAM/TEAM_OVERVIEW_AND_RESPONSIBILITY_MATRIX.md)
 - [Git & Fork Collaboration Guide](./docs/TEAM/GIT_FORK_COLLABORATION_AND_SETUP_GUIDE.md)
 - [Complete System & Code Map Presentation Guide](./docs/IGK_SCHOOL_ERP_COMPLETE_SYSTEM_AND_PRESENTATION_GUIDE.md)
+- [Master Modules & 71 Business Logics PDF Specification (Master Zero-Loss Reference)](./docs/IGK_ERP_MODULES_AND_LOGICS_MASTER_REFERENCE.pdf)
+- [Master Modules & 71 Business Logics HTML Reference](./docs/IGK_ERP_MODULES_AND_LOGICS_MASTER_REFERENCE.html)
 - [Complete System PDF Handbook (88 Pages)](./docs/IGK_ERP_COMPLETE_SYSTEM_DOCUMENTATION.pdf)
 - [Comprehensive System HTML Handbook](./docs/IGK_ERP_COMPLETE_SYSTEM_DOCUMENTATION.html)
 - [System Architecture & Module Invariants](./docs/architecture.md)
