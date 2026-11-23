@@ -230,11 +230,11 @@ Shared migrations, route files, roles/permissions, common models/services, and l
 
 | Member | Architectural Engineering Domain | Standalone Deployment Package |
 |---|---|---|
-| **Alass** (Team Lead) | **Super Admin, Multi-Campus & Governance**: Multi-branch switching, RBAC security, HR & statutory payroll processing (EPF/ETF), Super Admin salary deductions console, system settings, forensic audit trail, and private messaging. | `ALASS_ADMIN_PACKAGE.zip` (71 items) |
+| **Alass** (Team Lead) | **Super Admin, Multi-Campus & Governance**: Multi-branch switching, RBAC security, HR & statutory payroll processing (EPF/ETF), Super Admin salary deductions console, system settings, forensic audit trail, and private messaging. | `ALASS_ADMIN_PACKAGE.zip` (74 items) |
 | **Sumaiya** | **Teacher Portal & Examinations**: Teacher desk portal, faculty self-service, class-subject allocation, automated timetable clash detector, attendance roll call, biometric endpoints, marks boundary checks, and batch GPA publishing. | `SUMAIYA_TEACHER_PACKAGE.zip` (57 items) |
-| **Rajiya** | **Student Lifecycle & Guardian Portal**: Admissions registration & onboarding, Student master directory (SIS), multi-child Guardian portal & family context switcher, academic catalog, transcripts, hostels, transport, and cafeteria. | `RAJIYA_STUDENT_PACKAGE.zip` (103 items) |
+| **Rajiya** | **Student Lifecycle & Guardian Portal**: Admissions registration & onboarding, Student master directory (SIS), multi-child Guardian portal & family context switcher, academic catalog, transcripts, hostels, transport, and cafeteria. | `RAJIYA_STUDENT_PACKAGE.zip` (104 items) |
 | **Hasfa** | **The 11 Master Reports Suite & LMS**: The 11 Master Reports Suite (Enrollment, Attendance, Results, Performance, Financial, Defaulters), real-time CSV streaming engine, pixel-perfect DomPDF generation, Library circulation desk, and LMS. | `HASFA_REPORTS_PACKAGE.zip` (37 items) |
-| **Shilfa** | **Financial Accounting, Ledgers & Procurement**: Fee structures catalog, cohort student invoicing engine, counter cashier payments & receipts, PayHere online gateway, double-entry general ledger, and Procurement supply chain. | `SHILFA_FINANCE_PACKAGE.zip` (68 items) |
+| **Shilfa** | **Financial Accounting, Ledgers & Procurement**: Fee structures catalog, cohort student invoicing engine, counter cashier payments & receipts, PayHere online gateway, double-entry general ledger, and Procurement supply chain. | `SHILFA_FINANCE_PACKAGE.zip` (70 items) |
 | **All Team** | **Core Shared Architecture**: Base Laravel 12 kernel, `LayoutApp` views, `glass.css`, `app.js`, `User` model, `BranchOwned` global scope, base migrations, and `RolePermissionSeeder`. | `CORE_SHARED_SYSTEM_PACKAGE.zip` (20 items) |
 
 Detailed individual guides and Git Fork collaboration instructions are provided in `docs/TEAM/` (and mirrored in `documents/TEAM/`):

@@ -146,7 +146,8 @@ php artisan migrate:fresh --seed
 php artisan serve
 ```
 
-Browser-ல் `http://127.0.0.1:8000` திறக்கவும். Role login email-கள், local demo password, QA வழிமுறைகள் [sample dataset.md](./sample%20dataset.md)-ல் உள்ளன. Demo credentials local/testing-க்கு மட்டுமே; production-க்கு வேண்டாம். Super Admin, Institution Admin-க்கு local 2FA setup இருக்கலாம்.
+Browser-ல் `http://127.0.0.1:8000` திறக்கவும். Role login email-கள், local demo password, QA வழிமுறைகள் [sample dataset.md](./sample%20dataset.md)-ல் உள்ளன. Demo credentials local/testing-க்கு மட்டுமே; production-க்கு வேண்டாம்.
+Super Admin மற்றும் Institution Admin-க்கு 2FA உள்ளது; முதல் முறை Setup Key-ஐ Google Authenticator-ல் இணைக்க வேண்டும் அல்லது local demo code `434649` பயன்படுத்தலாம். 2FA தேவையில்லை எனில் `.env`-இல் `TWO_FACTOR_ENABLED=false` என மாற்றலாம்; 2FA-ஐ reset செய்ய `php scratch/execute_reset_2fa.php` இயக்கலாம்.
 
 ## 6. Automated verification
 

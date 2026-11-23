@@ -22,7 +22,10 @@
 | Guardian | `guardian@school.test` |
 | Librarian | `librarian@school.test` |
 
-5. 2FA **Super Admin, Institution Admin-க்கு மட்டுமே** கட்டாயம். Local-ல் முதல் setup-க்கு login பின் காட்டப்படும் setup code-ஐ பயன்படுத்தவும்; அடுத்த login-களுக்கு authenticator app-இன் புதிய code தேவை. மற்ற 6 roles password login முடிந்ததும் நேரடியாக தங்கள் dashboard-க்கு செல்ல வேண்டும்.
+5. 2FA **Super Admin, Institution Admin-க்கு மட்டுமே** பொருந்தும் (`requiresTwoFactor()`). இதனை `.env`-இல் உள்ள `TWO_FACTOR_ENABLED` மூலம் கட்டுப்படுத்தலாம்:
+   - **2FA Active (`TWO_FACTOR_ENABLED=true`):** முதல் முறை லாகின் செய்யும் போது திரையில் காட்டப்படும் 16-எழுத்து **Authenticator Setup Key**-ஐ Google Authenticator / Microsoft Authenticator மொபைல் ஆப்பில் (`+` ➔ `Enter a setup key`) சேர்த்துவிட்டு, மொபைலில் தோன்றும் 6-இலக்க எண்ணைக் கொடுத்து verify செய்யலாம். Local Demo-ல் திரையில் தோன்றும் `434649` என்ற demo code-ஐயும் பயன்படுத்தலாம். 2FA-ஐ reset செய்ய `php scratch/execute_reset_2fa.php` இயக்கவும்.
+   - **2FA Bypass (`TWO_FACTOR_ENABLED=false`):** Client-க்கு 2FA வேண்டாமென்றால் `.env`-இல் `TWO_FACTOR_ENABLED=false` என மாற்றினால் Super Admin உட்பட அனைவரும் பாஸ்வேர்ட் மட்டுமே கொடுத்து நேரடியாக நுழையலாம்.
+   - மற்ற 6 roles (Teacher, Student, Guardian, Accountant, Librarian, Registrar) 2FA இன்றி password login முடிந்ததும் நேரடியாக தங்கள் dashboard-க்கு செல்லலாம்.
 6. ஒவ்வொரு role-லும் add/edit/delete செய்ய முடியாது. அந்த role-ன் permission matrix-க்கு ஏற்ப அனுமதிக்கப்பட்ட CRUD மட்டும் செய்யவும்; read-only/immutable செயல்களுக்கு கீழே உள்ள deny/guard checks-ஐ எதிர்பார்க்கவும்.
 7. கீழுள்ள பெயர்கள், emails, identifiers அனைத்தும் synthetic QA values. Approved test data இருந்தால் class, term, branch, guardian, invoice, subject, exam போன்ற dropdown options-லிருந்து தேர்வு செய்யவும்; ஊகித்து ID type செய்ய வேண்டாம்.
 8. Shared dropdown behavior, viewport/theme matrix, and verification limits: [Global Dropdown UI guide](./guides/global-dropdown-ui.md).

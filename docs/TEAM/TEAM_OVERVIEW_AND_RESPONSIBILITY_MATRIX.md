@@ -58,11 +58,11 @@ This architecture keeps the repository cleanly segregated: only system source co
 
 | Package File Name | Items Count | Uncompressed Scope |
 | :--- | :---: | :--- |
-| `ALASS_ADMIN_PACKAGE.zip` | **71 items** | Super Admin & Admin Controllers, HR Payroll Services, Audit Observers, Messaging, Admin Blade views, Feature test suites. |
+| `ALASS_ADMIN_PACKAGE.zip` | **74 items** | Super Admin & Admin Controllers, HR Payroll Services, Audit Observers, Messaging, Admin Blade views, Feature test suites. |
 | `SUMAIYA_TEACHER_PACKAGE.zip` | **57 items** | Teacher Controllers, Marks & Grading Services, Timetable clash detector, Attendance engine, Teacher views, Feature tests. |
-| `RAJIYA_STUDENT_PACKAGE.zip` | **103 items** | Student & Guardian Controllers, Admissions & Enrollment Services, Transcripts, SIS Blade views, Guardian views, Feature tests. |
+| `RAJIYA_STUDENT_PACKAGE.zip` | **104 items** | Student & Guardian Controllers, Admissions & Enrollment Services, Transcripts, SIS Blade views, Guardian views, Feature tests. |
 | `HASFA_REPORTS_PACKAGE.zip` | **37 items** | 11 Report Controllers, CsvStreamer, Report views, Library circulation system, LMS modules, PDF report card templates, Feature tests. |
-| `SHILFA_FINANCE_PACKAGE.zip` | **68 items** | Invoicing & Payment Services, Accountant Controllers, General Ledger, Chart of Accounts, Procurement, Finance views, Feature tests. |
+| `SHILFA_FINANCE_PACKAGE.zip` | **70 items** | Invoicing & Payment Services, Accountant Controllers, General Ledger, Chart of Accounts, Procurement, Finance views, Feature tests. |
 | `CORE_SHARED_SYSTEM_PACKAGE.zip` | **20 items** | Framework configuration, database migrations, master seeders, global glassmorphic layouts, shared User model and scripts. |
 
 ---

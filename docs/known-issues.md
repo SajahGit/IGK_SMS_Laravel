@@ -73,6 +73,7 @@ The shared dropdown regression passed 10 Chromium cases across five configured v
 | **BUG-027** | Student Portal & SIS / Published Exam Results on Transcripts | Enhanced `TranscriptService::forStudent()` to query and categorize published teacher exam papers by term even prior to formal batch term result finalization. Applied student program grade scale resolution with weighted GPA calculations, and rendered exam details seamlessly across web (`StudentTranscript.blade.php`) and PDF (`PdfTranscript.blade.php`). Verified by `TermResultsWorkflowTest`. | **RESOLVED** |
 | **BUG-028** | System API & UI / API Token Lifecycle & Multi-Viewport Parity | Fixed API token creation abilities validation in `ApiTokenController`, corrected report PDF behavior and subject performance parity in `ReportPdfController`, and enforced downward dropdown menus across desktop, tablet, and mobile viewports with Playwright test coverage. Verified by `ApiTokenManagementTest` and `ReportsParityTest`. | **RESOLVED** |
 | **BUG-029** | UI / Table Actions Truncation & Navigation Tab Containment Under Horizontal Scroll | Resolved Actions column clipping in teacher table and other modules by removing rigid fixed layout, setting fluid column min-widths, and replacing form-nested button groups with flexible `.teacher-actions` and `.table-actions` flex rows. Prevented page-level horizontal overflow via `glass.css` body and app-shell clipping (`max-width: 100vw; overflow-x: clip;`), ensuring sticky topbar navigation spans full container width without cutting off. Added dedicated full-width Modern Tab Navigation System for `.nav-pills` and `.nav-tabs` across Teacher Profile, Student Profile, Curriculum, and Cafeteria. Verified by `NavigationAndTableActionsUiTest`. | **RESOLVED** |
+| **BUG-030** | Auth / Two-Factor Authentication (2FA) Client Onboarding & Handover Control | Resolved issue where clients onboarding into production or demo environments were blocked on the 2FA Challenge screen (`/two-factor/challenge`) without possessing the mobile setup key. Added `TWO_FACTOR_ENABLED` toggle in `config/school.php` and `app/Models/User.php` (`requiresTwoFactor()`), allowing environments to bypass 2FA when set to `false`. Automated database reset via `scratch/execute_reset_2fa.php` to clear legacy 2FA records and immediately present fresh Setup Keys (`/two-factor/setup`) for Google Authenticator pairing on first login. Verified by `Phase1AuthAndAcademicTest`. | **RESOLVED** |
 
 ---
 
@@ -88,7 +89,7 @@ All core regression and feature suites pass with 100% assertions:
 * `Tests\Feature\AccountantAllBranchFinanceTest` &mdash; 5 passed (32 assertions)
 * `Tests\Feature\AccountantFinanceAccessTest` &mdash; 9 passed (46 assertions)
 * `Tests\Feature\StudentAccountLinkingTest` &mdash; 11 passed (74 assertions)
-* `Tests\Feature\Phase1AuthAndAcademicTest` &mdash; 10 passed (34 assertions)
+* `Tests\Feature\Phase1AuthAndAcademicTest` &mdash; 10 passed (85 assertions)
 * `Tests\Feature\Phase1RbacAndModuleTest` &mdash; 20 passed (108 assertions)
 * `Tests\Feature\Phase2DocumentsCapacityTimetableAttendanceTest` &mdash; 5 passed
 * `Tests\Feature\InternationalMultiBranchAndPayrollTest` &mdash; 10 passed
@@ -111,5 +112,4 @@ The full codebase is structured into 5 isolated domains and 1 shared foundation 
 * `RAJIYA_STUDENT_PACKAGE.zip` (Student & Guardian - 104 items)
 * `HASFA_REPORTS_PACKAGE.zip` (11 Master Reports & LMS - 37 items)
 * `SHILFA_FINANCE_PACKAGE.zip` (Finance & Accounting - 70 items)
-* `CORE_SHARED_SYSTEM_PACKAGE.zip` (Shared Laravel Base - 20 items)
 * `CORE_SHARED_SYSTEM_PACKAGE.zip` (Shared Laravel Base - 20 items)

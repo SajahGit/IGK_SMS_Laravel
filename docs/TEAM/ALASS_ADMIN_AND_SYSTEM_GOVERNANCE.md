@@ -42,6 +42,12 @@ As Team Leader and System Governance owner, Alass owns the administrative backbo
 9. **User Management Validation & Student Profile Integrity (`BUG-026`):**
    - Hardened `StoreUserRequest` and `UpdateUserRequest` with human-friendly attribute mappings (`roles.0` -> `role`) and descriptive guidance messages.
    - Cleanly insulated generic user creation from student account enrollment, ensuring student profiles are always linked through Admissions while preserving role filtering on the users index.
+10. **Two-Factor Authentication (2FA) Governance & Client Onboarding (`BUG-030`):**
+   - Introduced `TWO_FACTOR_ENABLED` toggle in `config/school.php` and `app/Models/User.php` (`requiresTwoFactor()`), allowing environments to enforce strict RFC 6238 TOTP Google Authenticator 2FA or toggle it off via `.env` (`TWO_FACTOR_ENABLED=false`) for direct credentials login.
+   - Provided automated database reset script (`scratch/execute_reset_2fa.php`) clearing existing 2FA secrets for instant, clean client onboarding with fresh setup keys.
+11. **Table Actions & Fluid Navigation Layout (`BUG-029`):**
+   - Overhauled table actions across all administration grids with `.table-actions` and `.teacher-actions` flexbox containers (`min-width: 220px`), eliminating clipping and truncation under horizontal scrolling.
+   - Implemented page-level overflow clipping (`overflow-x: clip; max-width: 100vw;`) in `glass.css`, ensuring the sticky `.topbar` remains fully anchored and unclipped. Verified by `NavigationAndTableActionsUiTest`.
 
 ---
 

@@ -53,6 +53,12 @@ An enterprise-grade, international-standard School Management and Enterprise Res
 - **Leave History**: Total allowed, utilized, pending, and approved leaves.
 - **Financial Transparency**: Live access to generated monthly payslips with detailed earnings and dual-mode deductions breakdown.
 
+### 6. Two-Factor Authentication (2FA) Governance & Client Handover
+- **Configurable Environment Toggle**: Controlled via `.env` (`TWO_FACTOR_ENABLED=true` / `false`) and `config/school.php` across `User::requiresTwoFactor()`.
+- **RFC 6238 TOTP Mobile App Pairing**: Google Authenticator and Microsoft Authenticator support via 16-character base32 setup keys.
+- **Client Onboarding Reset Tool**: Single-command 2FA reset script (`php scratch/execute_reset_2fa.php`) clears legacy testing secrets and presents fresh setup keys for client onboarding.
+- **Local Demo Support**: Local demo bypass code `434649` with one-click auto-fill for rapid testing in development environments.
+
 ---
 
 ## 🏗️ Technical Stack & Architecture
@@ -139,6 +145,12 @@ php vendor/bin/phpunit tests/Feature/RegistrarAccessTest.php
 
 # Academic Reports & R8 Performance Parity Tests
 php vendor/bin/phpunit tests/Feature/ReportsParityTest.php
+
+# Table Actions Zero-Clipping & Modern Navigation Tabs UI Tests
+php vendor/bin/phpunit tests/Feature/NavigationAndTableActionsUiTest.php
+
+# Authentication & Two-Factor (2FA) Lifecycle Tests
+php vendor/bin/phpunit tests/Feature/Phase1AuthAndAcademicTest.php
 ```
 
 ---

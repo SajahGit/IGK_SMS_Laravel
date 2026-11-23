@@ -1,14 +1,15 @@
 # Architecture Documentation (architecture.md)
 
-**Project:** IGK School ERP — Laravel 12.70.0  
+**Project:** IGK School ERP — Laravel 12.71.0  
 **SOP Reference:** §10 Architecture, §29 Handover Artefact #8  
-**Owner:** D1  
+**Scope:** 25 Core Functional Modules (35 Sub-systems) • 71 Business Logic Engines • 8 Role Portals • Multi-Campus Branch Isolation  
+**Owner:** Core Architecture & Engineering Team  
 
 ---
 
 ## Approved Architecture
 
-Plain Laravel — no Repositories, DTOs, Actions, Domain, or Modules directories. The project follows Laravel conventions with thin controllers, Form Requests for validation, and Policies for authorization.
+Plain Laravel — thin controllers, Form Requests for validation, dedicated Domain Services for multi-step transactional mutations, and Policies for authorization. Features strict multi-campus data isolation via `BranchOwned` global query scoping.
 
 ---
 
@@ -16,52 +17,76 @@ Plain Laravel — no Repositories, DTOs, Actions, Domain, or Modules directories
 
 ```
 app/
-  Exceptions/           Custom exceptions (MarksLockedException, EnrollmentException)
+  Enums/                Domain enums (AttendanceStatus, InvoiceStatus, ExamStatus, etc.)
+  Events/               Domain events (AnnouncementPublished, InvoiceIssued, PaymentRecorded, ResultPublished)
+  Exceptions/           Domain exceptions (MarksLockedException, EnrollmentException, PaymentExceedsBalanceException)
   Http/
     Controllers/
-      Admin/            24 controllers (role: admin)
-      Auth/             4 controllers (login, password change, forgot, reset)
-      Teacher/          5 controllers
-      Student/          5 controllers
-      Guardian/         3 controllers
-      Report/           7 controllers
-    Middleware/         EnsureRole, ForcePasswordChange
-    Requests/           23 Form Requests
-  Models/               23 Eloquent models
-  Policies/             10 authorization policies
-  Services/             7 services (see below)
-  Support/              5 support classes (Money, AuditLogger, etc.)
+      InstitutionAdmin/ 27 controllers (users, branches, academics, finance, HR, transport, hostel, cafeteria, inventory)
+      SuperAdmin/       2 controllers (roles, salary deduction policies)
+      Auth/             5 controllers (login, password change, forgot, reset, two-factor TOTP)
+      Teacher/          7 controllers (classes, attendance, exams, marks, timetable, LMS, profile)
+      Accountant/       4 controllers (fee structures, invoices, payments, dashboard)
+      Registrar/        1 controller (registrar dashboard & student enrollment)
+      Student/          9 controllers (dashboard, timetable, electives, attendance, results, invoices, ledger, cafeteria, hostel, LMS)
+      Guardian/         5 controllers (dashboard, child attendance, results, report card, invoices)
+      Library/          2 controllers (circulation desk, catalog master)
+      Procurement/      2 controllers (suppliers, purchase orders)
+      Report/           11 controllers (11 master reports suite + DomPDF streamer)
+    Middleware/         EnsureRole, EnsurePasswordIsChanged, SetActiveBranchContext
+    Requests/           Form request validation classes
+  Jobs/                 7 asynchronous queue jobs (GenerateMonthlyPayroll, GenerateTermInvoices, GenerateTermResults, etc.)
+  Listeners/            Domain event listeners (SendInvoiceIssuedNotification, SendPaymentReceivedNotification)
+  Mail/                 Mailable classes (DailyAbsenteeDigest)
+  Models/               Eloquent models with relational constraints & BranchOwned scopes
+  Notifications/        Multi-channel notifications (Database, Mail)
+  Observers/            AuditObserver (Actor-backed mutation auditing with password/token masking)
+  Policies/             13 authorization policies (UserPolicy, RolePolicy, MarkPolicy, etc.)
+  Rules/                Domain validation rules (UniqueStudentDocumentNumber, ValidInternationalPhone, etc.)
+  Services/             26 business logic services (Enrollment, Transfer, Payroll, Invoicing, Grading, etc.)
+  Support/              15 domain & calculation engines (Money, NumberSequence, TimetableClashDetector, etc.)
 database/
-  migrations/           database schema migration set
-  seeders/              6 seeders (incl. ProductionSeeder)
+  migrations/           66 database schema migrations (55+ relational tables)
+  seeders/              Dedicated demo & production seeders
 routes/
-  web.php               Auth + role-scoped route groups
-  modules/admin.php     Admin route resource definitions
-  teacher.php, student.php, guardian.php, reports.php
+  web.php               Auth, account, notifications, 1-on-1 private messages, branch-context
+  modules/admin.php     Institution administration endpoints
+  accounting.php        Chart of accounts, journals, trial balance, ledger
+  teacher.php, student.php, guardian.php, library.php, procurement.php, reports.php
 resources/
-  views/                Blade views (components, layouts, pdf)
+  views/                Blade views with glassmorphic dark theme, print-optimized sheets, and zero-clipping table actions
 tests/
-  Feature/              21 feature test files
-  Unit/                 Unit tests (GradingServiceTest, etc.)
+  Feature/              49 feature test files (100% passed)
+  Unit/                 Unit calculation tests
 ```
 
 ---
 
-## Core Business Services and Their Invariants
+## Core Business Services & Domain Logics (71 Engines Across 7 Domains)
 
-| Service | Responsibility | Key Invariants |
+The system enforces 71 dedicated business logics across 7 enterprise domains (see `docs/IGK_ERP_MODULES_AND_LOGICS_MASTER_REFERENCE.pdf` for the complete zero-loss specification):
+
+| Domain | Services & Support Classes | Key Invariants & Rules |
 |---|---|---|
-| `EnrollmentService` | Creates student + user, enforces class capacity, rejects duplicate admission numbers, drops/restores students | Capacity enforced; unique admission no. with campus prefix; drop removes enrollment record |
-| `BranchTransferService` | Orchestrates student & teacher branch transfers, campus reassignments, and audit trails | Logs `from_branch_id`, `to_branch_id`, `transferred_by`, effective date, and status (`transferred`); maintains unorphaned teacher class assignments |
-| `HrPayrollService` | Generates branch payroll runs, calculates Sri Lankan statutory items (EPF, ETF, APIT), executes dual-mode deductions | EPF 8%/12%, ETF 3%, progressive APIT; calculates automatic attendance deductions (unpaid leave + absent days) via pro-rata or fixed daily penalty; applies pending Super Admin manual deductions |
-| `AttendanceSessionService` | Creates attendance sessions and records, enforces 48h edit window | Records editable only within 48h; clash detection for timetable |
-| `MarksEntryService` | Saves/upserts marks, rejects when published, marks absent | Marks locked after publish; absent flag supported |
-| `GradingService` | Calculates grades per paper, term GPA | Grade scale boundaries; absent = 0; null marks excluded from GPA; no results = null GPA |
-| `ResultPublicationService` | Publishes/unpublishes results, locks marks | Only authorized can publish; locking enforced |
-| `InvoiceService` | Generates invoices (idempotent, sequential numbering) | Unique sequential invoice numbers; idempotent generation |
-| `PaymentService` | Records payments, receipts, reversals | Overpayment rejected (422); balance restored on reversal; no double reversal; receipt numbers gapless and unique |
+| **1. Academic Lifecycle** | `EnrollmentService`, `AcademicLifecycleService`, `BranchTransferService`, `ElectiveRegistrationService`, `AdmissionNumberGenerator`, `TimetableClashDetector` | Collision-free admission numbering; classroom quota gating; auto-enrollment in core subjects; multi-level student promotion; 3D timetable clash prevention (day/period/teacher/room/class). |
+| **2. Attendance & Exams** | `AttendanceSessionService`, `MarksEntryService`, `GradeScaleService`, `GradingService`, `ResultPublicationService`, `TermResultService`, `TranscriptService` | 48-hour tamper-proof attendance edit lock; duplicate daily session prevention; contiguous 0–100% grade scale; immutable exam lock on publication; credit-weighted GPA/CGPA; 4-stage term results state machine. |
+| **3. Finance & Accounting** | `InvoiceService`, `PaymentService`, `JournalService`, `PayHereService`, `Money`, `NumberSequence`, `NumberToWords` | Pessimistic row-locking gapless sequential numbering (`INV`, `REC`); BCMath arbitrary-precision zero-rounding currency; overpayment rejection; Super Admin payment reversals; double-entry balancing ($\sum \text{Debits} == \sum \text{Credits}$); PayHere HMAC-SHA256 signature verification. |
+| **4. HR & Statutory Payroll** | `HrPayrollService`, `SriLankaPayrollCalculator`, `SuperAdmin\SalaryDeductionController`, `BranchTransferService` | Sri Lanka statutory compliance: EPF (8% employee, 12% employer), ETF (3% employer), progressive APIT withholding tax; dual-mode attendance deductions (dynamic pro-rata vs fixed daily); Super Admin custom deduction governance; 4-eye segregation of duties approval; automatic bank GL posting. |
+| **5. Campus Operations** | `HostelAssignmentService`, `CafeteriaOrderService`, `InventoryService`, `ProcurementService`, `TransportService` | Hostel single-bed allocation invariant; cafeteria pessimistic item stock locking (`lockForUpdate()`); order cancellation stock restoration; warehouse non-negative stock balance; purchase order 5-stage state machine (Draft ➔ Submitted ➔ Approved ➔ Received ➔ Cancelled); vehicle licensed seat quota enforcement. |
+| **6. Multi-Branch Security** | `BranchOwned`, `BranchContext`, `AuditObserver`, `TwoFactorController`, `EnsurePasswordIsChanged`, `InternationalPhoneNumber` | `BranchOwned` global query scoping; active branch session resolution; actor-backed mutation audit logs with sensitive credential masking; Spatie two-tier RBAC; RFC 6238 TOTP 2FA with configurable `.env` toggle (`TWO_FACTOR_ENABLED`); forced password change on first login; E.164 phone normalizer. |
+| **7. Background Automation** | `GenerateMonthlyPayroll`, `GenerateTermInvoices`, `GenerateTermResults`, `SendOverdueInvoiceReminders`, `NotifyOverdueLibraryLoans`, `NotifyLowStockItems`, `BulkCsvImportService`, `DailyAbsenteeDigest` | Scheduled end-of-month payroll generation; chunked memory-capped bulk invoicing; async term results compiler; overdue invoice escalation mailer; automated low-stock alerts; line-by-line CSV streaming up to 5,000 rows; daily registrar absentee digest; after-commit notification dispatchers. |
 
 ---
+
+## Two-Factor Authentication (2FA) Architecture & Handover Control
+
+The platform enforces two-tier security:
+1. **Configurable Toggle (`TWO_FACTOR_ENABLED`)**: Located in `config/school.php` and controlled via `.env`:
+   - `TWO_FACTOR_ENABLED=true` (Default): Super Admin and Institution Admin must verify with RFC 6238 TOTP Google Authenticator or Microsoft Authenticator.
+   - `TWO_FACTOR_ENABLED=false`: 2FA is bypassed across all roles, allowing direct email/password login for rapid testing or client environments that do not require multi-factor verification.
+2. **Setup Key & QR Pairing**: During first-time onboarding, administrators are shown a 16-character `Authenticator Setup Key` to add to their authenticator app.
+3. **Frictionless Reset Script**: `php scratch/execute_reset_2fa.php` resets stored 2FA credentials for all administrators in seconds, enabling clean onboarding for new clients.
+4. **Local Demo Bypass**: In local/testing environments, demo administrators can use the fixed bypass code `434649`.
 
 ## Multi-Branch Campus Architecture
 

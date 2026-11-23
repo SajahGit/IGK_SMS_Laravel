@@ -1777,15 +1777,15 @@
 
 <div class="logic-card">
     <div class="logic-header">
-        <span class="logic-title">LOGIC-58: Time-Based One-Time Password (TOTP) 2FA Handshake</span>
+        <span class="logic-title">LOGIC-58: Time-Based One-Time Password (TOTP) 2FA Handshake & Handover Toggle</span>
         <span class="logic-badge">MFA Security</span>
     </div>
     <div class="logic-body">
-        <p>Implements RFC 6238 TOTP two-factor authentication. Generates cryptographically secure base32 shared secrets, validates 6-digit rolling codes within a +/- 1 time drift window, and provides encrypted recovery codes.</p>
+        <p>Implements RFC 6238 TOTP two-factor authentication for Super Admin and Institution Admin accounts. Features a centralized <code>TWO_FACTOR_ENABLED</code> toggle in <code>config/school.php</code> and <code>app/Models/User.php</code> (allowing direct credentials login when disabled via <code>.env</code>). Generates cryptographically secure base32 shared secrets (Authenticator Setup Key), validates 6-digit rolling codes, and provides 12 hashed one-time recovery codes with a single-command reset script (<code>scratch/execute_reset_2fa.php</code>) for clean client handover.</p>
         <div class="logic-grid">
-            <div class="logic-grid-item"><strong>Implementation</strong><code>app/Http/Controllers/Auth/TwoFactorController.php</code></div>
-            <div class="logic-grid-item"><strong>Concurrency Guard</strong>Pragmastat TOTP engine</div>
-            <div class="logic-grid-item"><strong>Formula / Rule</strong>$$	ext{TOTP} = 	ext{Truncate}(	ext{HMAC-SHA-1}(K, lfloor T / 30 floor))$$</div>
+            <div class="logic-grid-item"><strong>Implementation</strong><code>app/Http/Controllers/Auth/TwoFactorController.php</code>, <code>config/school.php</code></div>
+            <div class="logic-grid-item"><strong>Concurrency Guard</strong>Pragmastat TOTP engine & <code>TWO_FACTOR_ENABLED</code> toggle</div>
+            <div class="logic-grid-item"><strong>Formula / Rule</strong>$$	ext{TOTP} = 	ext{Truncate}(	ext{HMAC-SHA-1}(K, lfloor T / 30 floor)) quad 	ext{when } 	ext{config('school.two_factor_enabled')}$$</div>
             <div class="logic-grid-item"><strong>Failure Mode</strong>Locks user session until valid 6-digit token or recovery code is supplied</div>
         </div>
     </div>
