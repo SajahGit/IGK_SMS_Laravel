@@ -91,7 +91,7 @@
 </div>
 
 <!-- Tabs Navigation -->
-<ul class="nav nav-pills mb-3" id="studentProfileTabs" role="tablist">
+<ul class="nav nav-pills mb-4 w-100" id="studentProfileTabs" role="tablist">
     <li class="nav-item" role="presentation">
         <button class="nav-link active" id="overview-tab" data-bs-toggle="tab" data-bs-target="#overview" type="button" role="tab">
             <i class="bi bi-person-lines-fill me-1"></i> Personal & Guardian
@@ -413,7 +413,7 @@
                             <th>Original Filename</th>
                             <th>Size</th>
                             <th>Uploaded Date</th>
-                            <th class="text-end">Actions</th>
+                            <th class="text-end" style="min-width: 170px;">Actions</th>
                         </tr>
                     </thead>
                     <tbody>

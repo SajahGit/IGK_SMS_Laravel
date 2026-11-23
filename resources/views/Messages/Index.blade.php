@@ -14,7 +14,7 @@
 <!-- Filter Tabs -->
 <div class="card shadow-sm mb-3">
     <div class="card-body py-2 px-3">
-        <ul class="nav nav-pills gap-2">
+        <ul class="nav nav-pills w-100 gap-2 mb-0">
             <li class="nav-item">
                 <a class="nav-link py-1 px-3 {{ ($tab ?? 'all') === 'all' ? 'active' : '' }}" href="{{ route('messages.index') }}">
                     <i class="bi bi-chat-dots me-1"></i>All Conversations

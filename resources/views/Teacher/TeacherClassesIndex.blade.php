@@ -4,17 +4,19 @@
 <h3 class="mb-3">My classes</h3>
 <div class="card shadow-sm"><div class="table-responsive">
     <table class="table table-hover mb-0 align-middle">
-        <thead><tr><th>Class</th><th>Subject</th><th class="text-end">Actions</th></tr></thead>
+        <thead><tr><th>Class</th><th>Subject</th><th class="text-end" style="min-width: 220px;">Actions</th></tr></thead>
         <tbody>
         @forelse ($assignments as $a)
             <tr>
                 <td>{{ $a->schoolClass?->full_name ?? 'Unassigned' }}</td>
                 <td>{{ $a->subject?->name ?? 'Unassigned' }}</td>
                 <td class="text-end">
-                    @if ($a->schoolClass)
-                        <a href="{{ route('teacher.classes.students', $a->schoolClass) }}" class="btn btn-sm btn-outline-primary">Students</a>
-                    @endif
-                    <a href="{{ route('teacher.attendance.create', ['class_id' => $a->class_id]) }}" class="btn btn-sm btn-outline-success">Mark attendance</a>
+                    <div class="table-actions">
+                        @if ($a->schoolClass)
+                            <a href="{{ route('teacher.classes.students', $a->schoolClass) }}" class="btn btn-sm btn-outline-primary">Students</a>
+                        @endif
+                        <a href="{{ route('teacher.attendance.create', ['class_id' => $a->class_id]) }}" class="btn btn-sm btn-outline-success">Mark attendance</a>
+                    </div>
                 </td>
             </tr>
         @empty

@@ -107,7 +107,7 @@
                     <th>Campus / Branch</th>
                     <th>Role</th>
                     <th>Status</th>
-                    <th class="text-end">Actions</th>
+                    <th class="text-end" style="min-width: 170px;">Actions</th>
                 </tr>
             </thead>
             <tbody>
@@ -164,15 +164,15 @@
                         @endif
                     </td>
                     <td class="text-end">
-                        <div class="btn-group btn-group-sm">
+                        <div class="table-actions">
                             @can('view', $user)
-                            <a href="{{ route('admin.users.edit', $user) }}" class="btn btn-outline-primary" title="Edit User"><i class="bi bi-pencil-square me-1"></i>Edit</a>
+                            <a href="{{ route('admin.users.edit', $user) }}" class="btn btn-sm btn-outline-primary" title="Edit User"><i class="bi bi-pencil-square me-1"></i>Edit</a>
                             @endcan
                             @can('delete', $user)
                             @if ($user->id !== auth()->id())
-                            <form method="POST" action="{{ route('admin.users.destroy', $user) }}" class="d-inline" onsubmit="return confirm('Deactivate user {{ $user->name }}?')">
+                            <form method="POST" action="{{ route('admin.users.destroy', $user) }}" class="d-inline m-0" onsubmit="return confirm('Deactivate user {{ $user->name }}?')">
                                 @csrf @method('DELETE')
-                                <button class="btn btn-outline-danger" title="Deactivate"><i class="bi bi-person-x me-1"></i>Deactivate</button>
+                                <button class="btn btn-sm btn-outline-danger" title="Deactivate"><i class="bi bi-person-x me-1"></i>Deactivate</button>
                             </form>
                             @endif
                             @endcan

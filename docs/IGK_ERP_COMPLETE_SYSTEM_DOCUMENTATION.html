@@ -6703,6 +6703,43 @@ dump(App\Services\TranscriptService::forStudent($student));
     <p><strong>Preventive Invariant Enforced:</strong> <em>Academic transcripts must reflect all teacher-published assessments in real time with program-specific grading scales, providing continuous academic transparency.</em></p>
 </div>
 
+<div class="screen-card">
+    <div class="screen-header">
+        <span class="screen-title">Fault 23: Table Actions Truncation &amp; Topbar Navigation Half-Stopped Under Horizontal Scroll</span>
+        <span class="badge badge-red">CRITICAL UI FIX</span>
+    </div>
+    <div class="callout callout-warning">
+        <div class="callout-title">Symptom &amp; Visual Failure:</div>
+        In the Teachers table (<code>/admin/teachers</code>) and other data tables, the rightmost "Actions" column buttons appeared cramped, truncated, or half cut off. When users scrolled horizontally to reach the Actions column, the top navigation tab bar (topbar) stopped halfway across the screen rather than spanning the full container width.
+    </div>
+    <p><strong>Root Cause Analysis:</strong> Three interacting layout issues caused this fault:
+        <br>1) <code>.teacher-table</code> had <code>table-layout: fixed; min-width: 62rem;</code> without column width definitions for all 8 columns (Campus was added as an 8th column, forcing each column into 12.5% = 124px width, whereas the 4 action buttons required &gt;230px).
+        <br>2) Inside <code>&lt;td class="text-end"&gt;</code>, a <code>&lt;form&gt;</code> was placed directly inside <code>.btn-group</code>, violating Bootstrap flex child rules and breaking border radiuses.
+        <br>3) <code>body</code>, <code>html</code>, and <code>.app-shell</code> lacked horizontal clipping (<code>overflow-x: clip; max-width: 100vw;</code>), causing wide tables to expand the page body and leaving the fixed/sticky topbar terminating halfway across the scrolled viewport.
+        <br>4) Tab navigation (<code>.nav-pills</code> and <code>.nav-tabs</code>) lacked full-width track styling and theme tokens across Teacher Profile, Student Profile, Curriculum, and Cafeteria.
+    </p>
+    
+    <div class="screen-section-title">Diagnostic Verification Command:</div>
+    <pre>php artisan test tests/Feature/NavigationAndTableActionsUiTest.php</pre>
+
+    <div class="screen-section-title">Exact Resolution &amp; Implementation:</div>
+    <pre>// 1. In public/css/glass.css:
+// Enforce page-level clipping: html, body, .app-shell, .app-main, .content { overflow-x: clip; max-width: 100vw; }
+// Ensure .topbar has width: 100%; max-width: 100%;
+// Modern Tab Navigation System: .nav-pills, .nav-tabs { width: 100%; border-bottom: 1px solid var(--glass-border); ... }
+// Fluid teacher table: .teacher-table { min-width: 72rem; } without rigid table-layout: fixed
+// Table actions flex container: .teacher-actions, .table-actions { display: inline-flex; align-items: center; justify-content: flex-end; gap: 0.35rem; white-space: nowrap; flex-wrap: nowrap; }
+
+// 2. In resources/views/components/teacher-table.blade.php:
+// Added explicit column min-widths: &lt;th style="min-width: 150px;"&gt;Name&lt;/th&gt; ... &lt;th class="text-end" style="min-width: 220px;"&gt;Actions&lt;/th&gt;
+// Replaced form-nested .btn-group with &lt;div class="teacher-actions"&gt; and clean .btn-sm buttons.
+
+// 3. Across Teacher Profile, Student Profile, Curriculum, Cafeteria, and Users views:
+// Applied w-100 and .table-actions to guarantee full-width tab bars and non-clipping action buttons.</pre>
+
+    <p><strong>Preventive Invariant Enforced:</strong> <em>All table action columns must enforce a minimum width of 170px-220px with inline-flex containers, and page-level overflow must be clipped so topbars and navigation tab tracks always span 100% of the viewport.</em></p>
+</div>
+
 <!-- ============================================================================== -->
 <!-- SECTION 9: PRODUCTION RUNBOOK                                                  -->
 <!-- ============================================================================== -->

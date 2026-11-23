@@ -14,7 +14,7 @@
 @include('Layouts.LayoutErrors')
 
 <!-- Tabs Navigation -->
-<ul class="nav nav-pills mb-3 no-print" id="curriculumTabs" role="tablist">
+<ul class="nav nav-pills mb-4 w-100 no-print" id="curriculumTabs" role="tablist">
     <li class="nav-item" role="presentation">
         <button class="nav-link active" id="structure-tab" data-bs-toggle="tab" data-bs-target="#structure" type="button" role="tab">
             <i class="bi bi-diagram-3 me-1"></i> Curriculum Structure
@@ -57,7 +57,7 @@
                             <th>Subject</th>
                             <th>Term No.</th>
                             <th>Type</th>
-                            <th class="text-end">Actions</th>
+                            <th class="text-end" style="min-width: 170px;">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -75,14 +75,14 @@
                                 </span>
                             </td>
                             <td class="text-end">
-                                <div class="btn-group btn-group-sm">
+                                <div class="table-actions">
                                     @can('update', $c)
-                                    <a href="{{ route('admin.curricula.edit', $c) }}" class="btn btn-outline-primary"><i class="bi bi-pencil-square me-1"></i>Edit</a>
+                                    <a href="{{ route('admin.curricula.edit', $c) }}" class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil-square me-1"></i>Edit</a>
                                     @endcan
                                     @can('delete', $c)
-                                    <form method="POST" action="{{ route('admin.curricula.destroy', $c) }}" class="d-inline" onsubmit="return confirm('Remove this subject assignment?')">
+                                    <form method="POST" action="{{ route('admin.curricula.destroy', $c) }}" class="d-inline m-0" onsubmit="return confirm('Remove this subject assignment?')">
                                         @csrf @method('DELETE')
-                                        <button class="btn btn-outline-danger"><i class="bi bi-trash3 me-1"></i>Remove</button>
+                                        <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash3 me-1"></i>Remove</button>
                                     </form>
                                     @endcan
                                 </div>

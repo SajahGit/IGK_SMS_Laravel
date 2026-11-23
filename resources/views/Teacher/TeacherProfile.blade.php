@@ -155,7 +155,7 @@
 </div>
 
 <!-- Tabs Navigation -->
-<ul class="nav nav-pills mb-3 border-bottom pb-2 gap-2" id="teacherProfileTabs" role="tablist">
+<ul class="nav nav-pills mb-4 w-100" id="teacherProfileTabs" role="tablist">
     <li class="nav-item" role="presentation">
         <button class="nav-link active fw-semibold" id="salary-tab" data-bs-toggle="tab" data-bs-target="#salary-pane" type="button" role="tab" aria-selected="true">
             <i class="bi bi-cash-coin me-1 text-success"></i> Salary & Super Admin Deductions
@@ -303,7 +303,7 @@
                                 <th>Deductions</th>
                                 <th>Net Pay</th>
                                 <th>Status</th>
-                                <th class="text-end">Action</th>
+                                <th class="text-end" style="min-width: 140px;">Action</th>
                             </tr>
                         </thead>
                         <tbody>

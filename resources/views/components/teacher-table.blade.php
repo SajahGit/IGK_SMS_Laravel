@@ -3,14 +3,14 @@
         <table class="table table-hover mb-0 align-middle teacher-table">
             <thead class="table-light">
                 <tr>
-                    <th>Name</th>
-                    <th>Campus</th>
-                    <th>Department</th>
-                    <th>Status</th>
-                    <th>Email</th>
-                    <th>Phone</th>
-                    <th>Classes and subjects</th>
-                    <th class="text-end">Actions</th>
+                    <th style="min-width: 150px;">Name</th>
+                    <th style="min-width: 120px;">Campus</th>
+                    <th style="min-width: 130px;">Department</th>
+                    <th style="min-width: 95px;">Status</th>
+                    <th style="min-width: 170px;">Email</th>
+                    <th style="min-width: 120px;">Phone</th>
+                    <th style="min-width: 190px;">Classes and subjects</th>
+                    <th class="text-end" style="min-width: 220px;">Actions</th>
                 </tr>
             </thead>
             <tbody>
@@ -74,20 +74,20 @@
                             </div>
                         </td>
                         <td class="text-end">
-                            <div class="btn-group btn-group-sm">
-                                <a href="{{ route('admin.teachers.show', $teacher) }}" class="btn btn-outline-info" title="View Profile & Salary Details">
+                            <div class="teacher-actions">
+                                <a href="{{ route('admin.teachers.show', $teacher) }}" class="btn btn-sm btn-outline-info" title="View Profile & Salary Details">
                                     <i class="bi bi-person-badge"></i>
                                 </a>
-                                <a href="{{ route('admin.teachers.edit', $teacher) }}" class="btn btn-outline-primary" title="Edit Teacher">
+                                <a href="{{ route('admin.teachers.edit', $teacher) }}" class="btn btn-sm btn-outline-primary" title="Edit Teacher">
                                     <i class="bi bi-pencil-square me-1"></i>Edit
                                 </a>
-                                <button type="button" class="btn btn-outline-warning" data-bs-toggle="modal" data-bs-target="#transferTeacherModal{{ $teacher->id }}" title="Transfer to another campus">
+                                <button type="button" class="btn btn-sm btn-outline-warning" data-bs-toggle="modal" data-bs-target="#transferTeacherModal{{ $teacher->id }}" title="Transfer to another campus">
                                     <i class="bi bi-arrow-left-right me-1"></i>Transfer
                                 </button>
-                                <form method="POST" action="{{ route('admin.teachers.destroy', $teacher) }}" onsubmit="return confirm('Delete this teacher?')">
+                                <form method="POST" action="{{ route('admin.teachers.destroy', $teacher) }}" class="d-inline m-0" onsubmit="return confirm('Delete this teacher?')">
                                     @csrf
                                     @method('DELETE')
-                                    <button class="btn btn-outline-danger" title="Delete Teacher"><i class="bi bi-trash3"></i></button>
+                                    <button class="btn btn-sm btn-outline-danger" title="Delete Teacher"><i class="bi bi-trash3"></i></button>
                                 </form>
                             </div>
 

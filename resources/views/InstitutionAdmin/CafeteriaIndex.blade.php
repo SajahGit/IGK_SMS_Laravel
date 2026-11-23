@@ -15,7 +15,7 @@
 
 <div class="card shadow-sm border-0 mb-4">
     <div class="card-header bg-transparent pb-0">
-        <ul class="nav nav-tabs card-header-tabs" id="cafeteriaStockTabs" role="tablist">
+        <ul class="nav nav-tabs card-header-tabs w-100" id="cafeteriaStockTabs" role="tablist">
             <li class="nav-item" role="presentation">
                 <button class="nav-link active" id="tab-existing-btn" data-bs-toggle="tab" data-bs-target="#tab-existing" type="button" role="tab" aria-selected="true">
                     <i class="bi bi-link-45deg me-1"></i>Link Existing Stock Item

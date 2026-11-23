@@ -71,7 +71,7 @@
 
 <div class="card shadow-sm border-0"><div class="table-responsive">
     <table class="table table-hover mb-0 align-middle">
-        <thead class="table-light"><tr><th>Exam</th><th>Class</th><th>Subject</th><th>Date</th><th>Max</th><th>Marks Entered</th><th class="text-end">Actions</th></tr></thead>
+        <thead class="table-light"><tr><th>Exam</th><th>Class</th><th>Subject</th><th>Date</th><th>Max</th><th>Marks Entered</th><th class="text-end" style="min-width: 220px;">Actions</th></tr></thead>
         <tbody>
         @forelse ($exams as $e)
             <tr>
@@ -86,11 +86,11 @@
                     </span>
                 </td>
                 <td class="text-end">
-                    <div class="btn-group btn-group-sm">
-                        <a href="{{ route('teacher.marks.edit', $e) }}" class="btn btn-outline-primary" title="Enter / Modify Marks">
+                    <div class="table-actions">
+                        <a href="{{ route('teacher.marks.edit', $e) }}" class="btn btn-sm btn-outline-primary" title="Enter / Modify Marks">
                             <i class="bi bi-pencil-square me-1"></i>Enter Marks
                         </a>
-                        <a href="{{ route('teacher.marks.show', $e) }}" class="btn btn-outline-secondary" title="View Results Summary">
+                        <a href="{{ route('teacher.marks.show', $e) }}" class="btn btn-sm btn-outline-secondary" title="View Results Summary">
                             <i class="bi bi-eye me-1"></i>Results
                         </a>
                     </div>

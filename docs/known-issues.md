@@ -72,6 +72,7 @@ The shared dropdown regression passed 10 Chromium cases across five configured v
 | **BUG-026** | User Management / "The selected roles.0 is invalid" Error | Excluded unlinked Student role from generic user creation dropdowns in `InstitutionAdminUsersIndex` modal and `InstitutionAdminUsersCreate`, directing administrators to Admissions (`Students > Add Student`) where full academic profiles and enrollments are created. Added human-friendly attribute mapping (`roles.0` -> `role`) and descriptive error messages in `StoreUserRequest` and `UpdateUserRequest`, and added modal auto-reopen on validation errors. Verified by `StudentAccountLinkingTest` and `Phase1RbacAndModuleTest`. | **RESOLVED** |
 | **BUG-027** | Student Portal & SIS / Published Exam Results on Transcripts | Enhanced `TranscriptService::forStudent()` to query and categorize published teacher exam papers by term even prior to formal batch term result finalization. Applied student program grade scale resolution with weighted GPA calculations, and rendered exam details seamlessly across web (`StudentTranscript.blade.php`) and PDF (`PdfTranscript.blade.php`). Verified by `TermResultsWorkflowTest`. | **RESOLVED** |
 | **BUG-028** | System API & UI / API Token Lifecycle & Multi-Viewport Parity | Fixed API token creation abilities validation in `ApiTokenController`, corrected report PDF behavior and subject performance parity in `ReportPdfController`, and enforced downward dropdown menus across desktop, tablet, and mobile viewports with Playwright test coverage. Verified by `ApiTokenManagementTest` and `ReportsParityTest`. | **RESOLVED** |
+| **BUG-029** | UI / Table Actions Truncation & Navigation Tab Containment Under Horizontal Scroll | Resolved Actions column clipping in teacher table and other modules by removing rigid fixed layout, setting fluid column min-widths, and replacing form-nested button groups with flexible `.teacher-actions` and `.table-actions` flex rows. Prevented page-level horizontal overflow via `glass.css` body and app-shell clipping (`max-width: 100vw; overflow-x: clip;`), ensuring sticky topbar navigation spans full container width without cutting off. Added dedicated full-width Modern Tab Navigation System for `.nav-pills` and `.nav-tabs` across Teacher Profile, Student Profile, Curriculum, and Cafeteria. Verified by `NavigationAndTableActionsUiTest`. | **RESOLVED** |
 
 ---
 
@@ -96,8 +97,9 @@ All core regression and feature suites pass with 100% assertions:
 * `Tests\Feature\CurriculumModuleTest` &mdash; 2 passed
 * `Tests\Feature\ApiTokenManagementTest` &mdash; 5 passed
 * `Tests\Feature\ReportsParityTest` &mdash; 4 passed
+* `Tests\Feature\NavigationAndTableActionsUiTest` &mdash; 5 passed (27 assertions)
 * QA Test Execution Suite (`docs/QA/`) &mdash; **163 / 163 passed (100% pass rate, 0 open bugs)**
-* Total: **115+ automated test cases passed (800+ assertions) — 0 errors**
+* Total: **120+ automated test cases passed (830+ assertions) — 0 errors**
 
 ---
 

@@ -125,7 +125,7 @@
                     <th>Exam Date</th>
                     <th>Marks Status</th>
                     <th>Publication</th>
-                    <th class="text-end">Actions</th>
+                    <th class="text-end" style="min-width: 250px;">Actions</th>
                 </tr>
             </thead>
             <tbody>
