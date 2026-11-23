@@ -114,6 +114,10 @@ class User extends Authenticatable
 
     public function requiresTwoFactor(): bool
     {
+        if (! config('school.two_factor_enabled', true)) {
+            return false;
+        }
+
         return $this->isSuperAdmin() || $this->isInstitutionAdmin();
     }
 

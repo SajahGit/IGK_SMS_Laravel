@@ -40,6 +40,7 @@ return [
     'document_mimes' => ['pdf', 'jpg', 'jpeg', 'png'],
     'document_types' => ['birth_cert', 'prior_transcript', 'photo', 'national_id', 'other'],
     'library_daily_fine' => '50.00',
+    'two_factor_enabled' => env('TWO_FACTOR_ENABLED', true),
     'local_demo_two_factor_setup_code' => env('LOCAL_DEMO_TWO_FACTOR_SETUP_CODE', '434649'),
     'demo_emails' => [
         'superadmin@school.test',
