@@ -39,10 +39,13 @@ As Team Leader and System Governance owner, Alass owns the administrative backbo
 8. **Global Dropdown UI & Verification:**
    - Shared `public/js/app.js` / `public/css/glass.css` behavior enforces downward `bottom-start` placement and field-aligned searchable controls across authenticated layouts.
    - The database-free regression passed 10 Chromium cases across five viewports and both themes. This is component-level evidence only; every administrative grid, form, and authenticated page has not been verified. See [Global Dropdown UI](../guides/global-dropdown-ui.md).
+9. **User Management Validation & Student Profile Integrity (`BUG-026`):**
+   - Hardened `StoreUserRequest` and `UpdateUserRequest` with human-friendly attribute mappings (`roles.0` -> `role`) and descriptive guidance messages.
+   - Cleanly insulated generic user creation from student account enrollment, ensuring student profiles are always linked through Admissions while preserving role filtering on the users index.
 
 ---
 
-### 2. Complete File Inventory (72 Files)
+### 2. Complete File Inventory (74 Files)
 
 #### Routes:
 * `routes/modules/admin.php`

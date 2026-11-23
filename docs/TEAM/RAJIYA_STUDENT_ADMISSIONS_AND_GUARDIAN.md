@@ -29,14 +29,15 @@ Rajiya owns the complete student lifecycle from initial admission to academic pr
    - Cohort Classes & Sections management with reverse-chronological and latest activity ordering.
 6. **Student Operational Logistics & Cafeteria Stock Governance:**
    - Hostel boarding and room allotment (`HostelAssignmentService`).
-   - Transport fleet logistics and student bus route assignments (`TransportService`).
+   - Transport fleet logistics, route stops, and student bus route assignments (`TransportService`, `StoreTransportRouteRequest`).
    - Multi-branch cafeteria inventory and 1-click fresh stock provisioning (`/admin/cafeteria/stock` and `/admin/cafeteria/stock/{id}/restock`).
-6. **Official Academic Transcripts (`/transcripts`):**
-   - Official multi-term academic transcripts with cumulative CGPA computation and PDF download.
+7. **Official Academic Transcripts & Published Exam Inclusion (`/transcripts`, `/student/transcript`):**
+   - Official multi-term academic transcripts with cumulative CGPA computation, program-specific grade scale resolution, and print-ready PDF download.
+   - Comprehensive published exam results breakdown: automatically includes published teacher exam papers categorized by term even before global batch term results are finalized, providing real-time academic progression visibility.
 
 ---
 
-### 2. Complete File Inventory (103 Files)
+### 2. Complete File Inventory (104 Files)
 
 #### Routes:
 * `routes/student.php`

@@ -70,6 +70,8 @@ The shared dropdown regression passed 10 Chromium cases across five configured v
 | **BUG-024** | Transport Module / Route Stops & Capacity Validation | Introduced `StoreTransportRouteRequest` with stops validation, vehicle capacity constraints, and campus-scoped assignment in `TransportController` and `TransportService`. Verified by `Phase2DocumentsCapacityTimetableAttendanceTest`. | **RESOLVED** |
 | **BUG-025** | System Security / Core Built-in Role Protection | Enforced strict role protection policies in `RoleController`, `RolePolicy`, and `UpdateRoleRequest` preventing deletion, renaming, or corruption of fundamental system roles (`Super Administrator`, `Institution Administrator`, `Teacher`, `Student`, `Guardian`, `Accountant`). Verified by `Phase1RbacAndModuleTest`. | **RESOLVED** |
 | **BUG-026** | User Management / "The selected roles.0 is invalid" Error | Excluded unlinked Student role from generic user creation dropdowns in `InstitutionAdminUsersIndex` modal and `InstitutionAdminUsersCreate`, directing administrators to Admissions (`Students > Add Student`) where full academic profiles and enrollments are created. Added human-friendly attribute mapping (`roles.0` -> `role`) and descriptive error messages in `StoreUserRequest` and `UpdateUserRequest`, and added modal auto-reopen on validation errors. Verified by `StudentAccountLinkingTest` and `Phase1RbacAndModuleTest`. | **RESOLVED** |
+| **BUG-027** | Student Portal & SIS / Published Exam Results on Transcripts | Enhanced `TranscriptService::forStudent()` to query and categorize published teacher exam papers by term even prior to formal batch term result finalization. Applied student program grade scale resolution with weighted GPA calculations, and rendered exam details seamlessly across web (`StudentTranscript.blade.php`) and PDF (`PdfTranscript.blade.php`). Verified by `TermResultsWorkflowTest`. | **RESOLVED** |
+| **BUG-028** | System API & UI / API Token Lifecycle & Multi-Viewport Parity | Fixed API token creation abilities validation in `ApiTokenController`, corrected report PDF behavior and subject performance parity in `ReportPdfController`, and enforced downward dropdown menus across desktop, tablet, and mobile viewports with Playwright test coverage. Verified by `ApiTokenManagementTest` and `ReportsParityTest`. | **RESOLVED** |
 
 ---
 
@@ -80,28 +82,32 @@ All core regression and feature suites pass with 100% assertions:
 * `Tests\Feature\SingleNotificationBannerTest` &mdash; 9 passed (55 assertions)
 * `Tests\Feature\TeacherExamAndMarksWorkflowTest` &mdash; 4 passed (37 assertions)
 * `Tests\Feature\PdfDocumentsTest` &mdash; 4 passed (13 assertions)
-* `Tests\Feature\TermResultsWorkflowTest` &mdash; 7 passed (51 assertions)
+* `Tests\Feature\TermResultsWorkflowTest` &mdash; 8 passed (63 assertions)
 * `Tests\Feature\Phase3MarksLockGpaPublicationReportCardTest` &mdash; 4 passed (16 assertions)
 * `Tests\Feature\AccountantAllBranchFinanceTest` &mdash; 5 passed (32 assertions)
 * `Tests\Feature\AccountantFinanceAccessTest` &mdash; 9 passed (46 assertions)
-* `Tests\Feature\Phase1AuthAndAcademicTest` &mdash; 4 passed
-* `Tests\Feature\Phase1RbacAndModuleTest` &mdash; 6 passed
+* `Tests\Feature\StudentAccountLinkingTest` &mdash; 11 passed (74 assertions)
+* `Tests\Feature\Phase1AuthAndAcademicTest` &mdash; 10 passed (34 assertions)
+* `Tests\Feature\Phase1RbacAndModuleTest` &mdash; 20 passed (108 assertions)
 * `Tests\Feature\Phase2DocumentsCapacityTimetableAttendanceTest` &mdash; 5 passed
 * `Tests\Feature\InternationalMultiBranchAndPayrollTest` &mdash; 10 passed
 * `Tests\Feature\PrivateMessagePrivacyAndScopingTest` &mdash; 3 passed
 * `Tests\Feature\StudentPasswordRestrictionTest` &mdash; 6 passed
 * `Tests\Feature\CurriculumModuleTest` &mdash; 2 passed
+* `Tests\Feature\ApiTokenManagementTest` &mdash; 5 passed
+* `Tests\Feature\ReportsParityTest` &mdash; 4 passed
 * QA Test Execution Suite (`docs/QA/`) &mdash; **163 / 163 passed (100% pass rate, 0 open bugs)**
-* Total: **75+ automated test cases passed (600+ assertions) — 0 errors**
+* Total: **115+ automated test cases passed (800+ assertions) — 0 errors**
 
 ---
 
 ## Engineering Deliverables & Team Packages
 
 The full codebase is structured into 5 isolated domains and 1 shared foundation in `docs/TEAM/`:
-* `ALASS_ADMIN_PACKAGE.zip` (Admin & Governance - 71 files)
-* `SUMAIYA_TEACHER_PACKAGE.zip` (Teacher & Exams - 57 files)
-* `RAJIYA_STUDENT_PACKAGE.zip` (Student & Guardian - 103 files)
-* `HASFA_REPORTS_PACKAGE.zip` (11 Master Reports & LMS - 37 files)
-* `SHILFA_FINANCE_PACKAGE.zip` (Finance & Accounting - 68 files)
+* `ALASS_ADMIN_PACKAGE.zip` (Admin & Governance - 74 items)
+* `SUMAIYA_TEACHER_PACKAGE.zip` (Teacher & Exams - 57 items)
+* `RAJIYA_STUDENT_PACKAGE.zip` (Student & Guardian - 104 items)
+* `HASFA_REPORTS_PACKAGE.zip` (11 Master Reports & LMS - 37 items)
+* `SHILFA_FINANCE_PACKAGE.zip` (Finance & Accounting - 70 items)
+* `CORE_SHARED_SYSTEM_PACKAGE.zip` (Shared Laravel Base - 20 items)
 * `CORE_SHARED_SYSTEM_PACKAGE.zip` (Shared Laravel Base - 20 items)

@@ -6647,6 +6647,61 @@ echo &#039;Accountant financial navigation and payroll transparency active.&#039
 
     <p><strong>Preventive Invariant Enforced:</strong> <em>Financial roles require transparent read-only audit visibility into all operational cash outlays including payroll and deductions, strictly scoped to their assigned campus context.</em></p>
 </div>
+<div class="screen-card">
+    <div class="screen-header">
+        <span class="screen-title">Fault 21: Student Account Linking Violation on Generic User Creation (&quot;The selected roles.0 is invalid&quot;)</span>
+        <span class="badge badge-amber">MEDIUM</span>
+    </div>
+    <div class="callout callout-warning">
+        <div class="callout-title">Symptom &amp; Visual Failure:</div>
+        In User Management (<code>/admin/users</code>), an administrator clicks &quot;Add User&quot;, selects &quot;Student&quot; from the Role dropdown, and clicks &quot;Create User&quot;. The submission is rejected with a cryptic red banner: <code>&quot;The selected roles.0 is invalid.&quot;</code> positioned immediately above the <code>Search Users</code> filter section.
+    </div>
+    <p><strong>Root Cause Analysis:</strong> In educational ERP architecture, student logins cannot be created as orphan generic users; they strictly require an enrollment record in the <code>students</code> table (admission number, class assignment, guardian relations, and verified documents). <code>StoreUserRequest</code> correctly enforced <code>Rule::notIn(['Student'])</code>, but the creation modal in <code>InstitutionAdminUsersIndex.blade.php</code> and <code>InstitutionAdminUsersCreate.blade.php</code> inadvertently displayed <code>Student</code> in the dropdown without custom error messages or field aliasing.</p>
+    
+    <div class="screen-section-title">Diagnostic &amp; Front-End Inspection:</div>
+    <pre>// Submitting role=Student to POST /admin/users:
+// StoreUserRequest failed on &#039;roles.*&#039; rule Rule::notIn([&#039;Student&#039;])
+// Default Laravel error string: &#039;The selected roles.0 is invalid.&#039;</pre>
+
+    <div class="screen-section-title">Exact Resolution &amp; Implementation:</div>
+    <pre>// 1. In StoreUserRequest and UpdateUserRequest:
+public function attributes(): array {
+    return [&#039;roles.0&#039; =&gt; &#039;role&#039;, &#039;roles.*&#039; =&gt; &#039;role&#039;];
+}
+public function messages(): array {
+    return [
+        &#039;roles.*.not_in&#039; =&gt; &#039;Student accounts cannot be created from User Management. Please enroll students via Students &gt; Add Student so their academic profile is linked.&#039;,
+    ];
+}
+// 2. In InstitutionAdminUsersIndex.blade.php &amp; InstitutionAdminUsersCreate.blade.php:
+// Exclude &#039;Student&#039; from creation dropdowns, provide direct link to Admissions, and auto-reopen modal on validation failure.</pre>
+
+    <p><strong>Preventive Invariant Enforced:</strong> <em>Generic user administration must not create unlinked student logins; all student accounts must originate from the Admissions &amp; SIS enrollment engine.</em></p>
+</div>
+<div class="screen-card">
+    <div class="screen-header">
+        <span class="screen-title">Fault 22: Student Transcript Missing Published Teacher Exam Results Prior to Batch Term Finalization</span>
+        <span class="badge badge-blue">ENHANCEMENT</span>
+    </div>
+    <div class="callout callout-warning">
+        <div class="callout-title">Symptom &amp; Visual Failure:</div>
+        Students and registrars reviewing multi-term transcripts observed that newly published teacher exam papers did not appear on transcripts until the end-of-term batch GPA calculation job was completed by the Academic Administrator.
+    </div>
+    <p><strong>Root Cause Analysis:</strong> <code>TranscriptService::forStudent()</code> previously fetched records strictly from the <code>term_results</code> and <code>subject_results</code> tables, leaving a visibility gap for active terms where exams were graded and published individually by teachers.</p>
+    
+    <div class="screen-section-title">Diagnostic Artisan / Terminal Script for Sir:</div>
+    <pre>php artisan tinker --execute=&quot;
+$student = App\Models\Student::first();
+dump(App\Services\TranscriptService::forStudent($student));
+&quot;</pre>
+
+    <div class="screen-section-title">Exact Resolution &amp; Implementation:</div>
+    <pre>// In app/Services/TranscriptService.php:
+// Query published teacher results dynamically: Result::with([&#039;exam.subject&#039;, &#039;exam.term.academicYear&#039;])-&gt;whereHas(&#039;exam&#039;, fn($q) =&gt; $q-&gt;where(&#039;is_published&#039;, true))...
+// Group by term, calculate subject percentages with program grade scale, and display individual exam assessments alongside finalized terms in PdfTranscript and StudentTranscript views.</pre>
+
+    <p><strong>Preventive Invariant Enforced:</strong> <em>Academic transcripts must reflect all teacher-published assessments in real time with program-specific grading scales, providing continuous academic transparency.</em></p>
+</div>
 
 <!-- ============================================================================== -->
 <!-- SECTION 9: PRODUCTION RUNBOOK                                                  -->
@@ -6770,7 +6825,7 @@ gunzip < /backups/sms_backup_20261112_000000.sql.gz | mysql -u root -p igk_schoo
         <tr>
             <td><code>ALASS_ADMIN_PACKAGE.zip</code></td>
             <td><strong>Alass</strong><br><span class="badge badge-blue">Team Leader</span></td>
-            <td class="text-center"><strong>72 items</strong></td>
+            <td class="text-center"><strong>74 items</strong></td>
             <td>Super Admin & Institution Admin desks, Multi-Campus Branch Switching, Users directory & RBAC security, HR & statutory payroll processing (EPF/ETF), Super Admin salary deductions console, system settings, forensic audit trail, private multi-role messaging, core role protection, and multi-branch class name scoping.</td>
             <td class="text-center"><span class="badge badge-green">VERIFIED 100%</span></td>
         </tr>
@@ -6784,8 +6839,8 @@ gunzip < /backups/sms_backup_20261112_000000.sql.gz | mysql -u root -p igk_schoo
         <tr>
             <td><code>RAJIYA_STUDENT_PACKAGE.zip</code></td>
             <td><strong>Rajiya</strong><br><span class="badge badge-green">Core Engineer</span></td>
-            <td class="text-center"><strong>103 items</strong></td>
-            <td>Admissions registration & document onboarding, Student master profiles & SIS portal, multi-child Guardian portal & family context switcher, academic catalog (Departments, Programs, Curricula, Classes), student campus transfers, transcripts, hostels, transport route stops & capacity, and cafeteria.</td>
+            <td class="text-center"><strong>104 items</strong></td>
+            <td>Admissions registration & document onboarding, Student master profiles & SIS portal, multi-child Guardian portal & family context switcher, academic catalog (Departments, Programs, Curricula, Classes), student campus transfers, multi-term transcripts with published exam results inclusion, hostels, transport route stops & capacity, and cafeteria.</td>
             <td class="text-center"><span class="badge badge-green">VERIFIED 100%</span></td>
         </tr>
         <tr>
@@ -6798,14 +6853,14 @@ gunzip < /backups/sms_backup_20261112_000000.sql.gz | mysql -u root -p igk_schoo
         <tr>
             <td><code>SHILFA_FINANCE_PACKAGE.zip</code></td>
             <td><strong>Shilfa</strong><br><span class="badge badge-purple">Core Engineer</span></td>
-            <td class="text-center"><strong>73 items</strong></td>
+            <td class="text-center"><strong>70 items</strong></td>
             <td>Fee structures catalog & billing rules, cohort student invoicing engine, counter cashier payments & printable official receipts, PayHere online gateway integration, double-entry general ledger (Chart of Accounts, Journal entries, Trial Balance, Ledger, Income & Expense, Branch Summary), Procurement supply chain, and campus-scoped Payroll & Salary Deductions read access.</td>
             <td class="text-center"><span class="badge badge-green">VERIFIED 100%</span></td>
         </tr>
         <tr>
             <td><code>CORE_SHARED_SYSTEM_PACKAGE.zip</code></td>
             <td><strong>All Team</strong><br><span class="badge badge-blue">Foundation</span></td>
-            <td class="text-center"><strong>21 items</strong></td>
+            <td class="text-center"><strong>20 items</strong></td>
             <td>Base Laravel 12 kernel, application bootstrap, shared <code>LayoutApp</code> views, <code>glass.css</code> (with downward dropdown rules), <code>app.js</code> (with flip-disabled Popper positioning), <code>User</code> model, <code>BranchOwned</code> global tenant scope, all 62 database schema migrations, and master seeders.</td>
             <td class="text-center"><span class="badge badge-green">VERIFIED 100%</span></td>
         </tr>
