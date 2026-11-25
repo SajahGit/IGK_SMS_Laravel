@@ -51,6 +51,8 @@ Route::post('/two-factor/complete', [TwoFactorController::class, 'completeSetup'
     ->name('two-factor.complete');
 Route::post('/two-factor/cancel', [TwoFactorController::class, 'cancel'])
     ->name('two-factor.cancel');
+Route::post('/two-factor/reset-local', [TwoFactorController::class, 'resetLocalSetup'])
+    ->name('two-factor.reset-local');
 
 Route::post('/payments/payhere/notify', [PayHereController::class, 'notify'])
     ->withoutMiddleware(ValidateCsrfToken::class)

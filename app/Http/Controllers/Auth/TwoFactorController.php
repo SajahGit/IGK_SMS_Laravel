@@ -125,6 +125,25 @@ class TwoFactorController extends Controller
         return redirect()->route('login');
     }
 
+    public function resetLocalSetup(Request $request): RedirectResponse
+    {
+        abort_unless(app()->environment('local'), 403);
+
+        $user = $this->pendingUser($request);
+        if (! $user) {
+            return redirect()->route('login');
+        }
+
+        $user->forceFill([
+            'two_factor_secret' => null,
+            'two_factor_recovery_codes' => null,
+            'two_factor_enabled_at' => null,
+            'two_factor_last_used_at' => null,
+        ])->save();
+
+        return redirect()->route('two-factor.setup');
+    }
+
     public function showSetup(Request $request, Google2FA $google2fa): View|RedirectResponse
     {
         $user = $this->setupUser($request);

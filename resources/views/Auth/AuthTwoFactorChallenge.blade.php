@@ -69,7 +69,16 @@
                 </button>
             </form>
 
-            <form method="POST" action="{{ route('two-factor.cancel') }}" class="mt-3">
+            @if (app()->environment('local'))
+                <form method="POST" action="{{ route('two-factor.reset-local') }}" class="mt-3">
+                    @csrf
+                    <button type="submit" class="btn btn-outline-primary btn-sm w-100">
+                        <i class="bi bi-qr-code-scan me-1"></i> Need Setup Key / QR Code? Pair Google Authenticator
+                    </button>
+                </form>
+            @endif
+
+            <form method="POST" action="{{ route('two-factor.cancel') }}" class="mt-2">
                 @csrf
                 <button type="submit" class="btn btn-outline-secondary w-100">
                     <i class="bi bi-arrow-left me-1"></i> Cancel Sign In
