@@ -73,16 +73,38 @@
                     </form>
                 @endif
             @else
-                <p class="text-muted small mb-3">Add this secret key to your authenticator app (such as Google Authenticator, Microsoft Authenticator, or 1Password).</p>
-                @if ($demoSetupCode)
-                    <div class="alert alert-info small mb-3">
-                        <i class="bi bi-info-circle me-1"></i> Local demo first-time code: <strong class="font-monospace">{{ $demoSetupCode }}</strong>.
+                <div class="mb-3 text-center">
+                    <p class="text-muted small mb-3">Set up Google Authenticator or any TOTP app to protect your administrator account.</p>
+
+                    @if (!empty($qrCodeSvg))
+                        <div class="mb-3 text-center">
+                            <div class="bg-white p-3 rounded-3 d-inline-block shadow-sm border" style="line-height: 0; max-width: 220px;">
+                                {!! $qrCodeSvg !!}
+                            </div>
+                            <div class="text-muted small mt-2">
+                                <i class="bi bi-qr-code-scan me-1"></i> Scan this QR code in <strong>Google Authenticator</strong>
+                            </div>
+                        </div>
+                    @endif
+
+                    @if ($demoSetupCode)
+                        <div class="alert alert-info small mb-3 text-start">
+                            <i class="bi bi-info-circle me-1"></i> Local demo first-time code: <strong class="font-monospace">{{ $demoSetupCode }}</strong>.
+                        </div>
+                    @endif
+
+                    <div class="p-3 mb-3 bg-body-tertiary rounded border text-center">
+                        <div class="text-muted small mb-1 fw-semibold">Manual Secret Setup Key</div>
+                        <div class="d-flex align-items-center justify-content-center gap-2 flex-wrap">
+                            <code class="fs-6 user-select-all fw-bold text-primary font-monospace text-break" id="secretKey">{{ $secret }}</code>
+                            <button type="button" class="btn btn-sm btn-outline-secondary py-1 px-2" onclick="navigator.clipboard.writeText('{{ $secret }}'); this.innerText='Copied!'; setTimeout(() => this.innerText='Copy', 2000);">
+                                <i class="bi bi-clipboard me-1"></i> Copy
+                            </button>
+                        </div>
+                        <div class="text-muted small mt-1" style="font-size: 0.75rem;">Type this key in your app if you cannot scan the QR code.</div>
                     </div>
-                @endif
-                <div class="p-3 mb-3 bg-body-tertiary rounded border text-center">
-                    <div class="text-muted small mb-1">Authenticator Setup Key</div>
-                    <code class="fs-6 user-select-all text-break fw-bold text-primary">{{ $secret }}</code>
                 </div>
+
                 <form method="POST" action="{{ route('two-factor.setup') }}">
                     @csrf
                     @if (auth()->check())
@@ -94,14 +116,22 @@
                         </div>
                     @endif
                     <div class="mb-3">
-                        <label class="form-label small" for="code">Code from Authenticator</label>
-                        <input class="form-control text-center font-monospace fs-5 @error('code') is-invalid @enderror" id="code" name="code"
-                               inputmode="numeric" autocomplete="one-time-code" maxlength="40"
-                               placeholder="Enter code" required autofocus style="letter-spacing: 0.15rem;">
+                        <label class="form-label small fw-semibold" for="code">6-Digit Google Authenticator OTP</label>
+                        <input class="form-control text-center font-monospace fs-4 @error('code') is-invalid @enderror" id="code" name="code"
+                               inputmode="numeric" autocomplete="one-time-code" maxlength="6"
+                               placeholder="123456" required autofocus style="letter-spacing: 0.35rem; font-weight: 600;">
                         @error('code') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
+                        <div class="form-text small text-muted">Enter the 6-digit code shown in Google Authenticator.</div>
                     </div>
-                    <button type="submit" class="btn btn-primary w-100 py-2">
-                        <i class="bi bi-shield-lock-fill me-1"></i> Enable Two-Factor Authentication
+                    <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold">
+                        <i class="bi bi-shield-lock-fill me-1"></i> Verify & Enable 2FA
+                    </button>
+                </form>
+
+                <form method="POST" action="{{ route('two-factor.cancel') }}" class="mt-3">
+                    @csrf
+                    <button type="submit" class="btn btn-outline-secondary w-100 btn-sm">
+                        <i class="bi bi-arrow-left me-1"></i> Cancel Setup & Return to Login
                     </button>
                 </form>
             @endif

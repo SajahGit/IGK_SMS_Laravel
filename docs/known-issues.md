@@ -40,6 +40,20 @@ The shared dropdown regression passed 10 Chromium cases across five configured v
 - **NOT TESTED:** `ConcurrentPaymentsTest` (the single skip), all forms/buttons across all modules, post-2FA admin pages, and OS-level printing.
 - **BLOCKED:** Exam Coordinator has no linked user account; post-2FA admin pages were left unvisited to preserve existing admin accounts.
 
+### Security & Attendance Feature Implementation — 2026-11-25
+
+1. **Mandatory Google Authenticator 2FA (Super Admin & Institution Admin)**:
+   - Generated unique TOTP Secret Keys stored securely using Laravel's `'encrypted'` model cast.
+   - Rendered inline SVG QR Codes (`BaconQrCode\Writer` with `SvgImageBackEnd`) alongside 16-character manual setup keys with one-click copy buttons for effortless Google Authenticator scanning.
+   - Enforced 6-digit TOTP validation on setup and on **every single admin login** without exception.
+   - Removed long-term "Remember Device" / "Trust This Device" options for administrative roles to prevent bypassing 2FA across sessions.
+2. **Teacher & Employee Personal Attendance Views**:
+   - Resolved missing `status` and display in `TeacherProfile.blade.php`.
+   - Updated `staff_attendance` with `employee_id` and backfilled all existing records.
+   - Teachers view attendance logs on `/teacher/profile` (Tab: "Leaves & Attendance History").
+   - Non-teacher employees (Accountants, Registrars, Librarians, Admin Staff) view their personal attendance records and monthly KPIs via `/my-attendance` and topbar navigation.
+   - Added automated calculations for check-in, check-out, working hours, status badges, and monthly KPIs (Days Present, Total Hours, Avg Daily, On-Time Rate).
+
 ## Resolved Issues
 
 | ID | Module | Resolution Summary | Status |

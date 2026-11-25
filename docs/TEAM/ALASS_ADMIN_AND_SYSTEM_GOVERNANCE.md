@@ -19,9 +19,10 @@ As Team Leader and System Governance owner, Alass owns the administrative backbo
    - Multi-relational keyword search across Name, Email, and Phone number (resolved across User, Teacher, Student, and Guardian models).
    - Complete System Role inclusion (including restored Student role) and dynamic filtering by System Role, Campus/Branch, and Account Status.
    - Live matching totals counter and pagination preservation (`withQueryString()`).
-   - Two-Factor Authentication (2FA) enforcement and challenge verification.
+   - Two-Factor Authentication (2FA) enforcement via Google Authenticator with visual SVG QR Code pairing, mandatory 6-digit TOTP verification on every admin login, and device trust disabled.
 3. **Human Resources & Statutory EPF/ETF Payroll (`/admin/payroll`):**
    - Employee master records management and leave approvals.
+   - Staff & Employee personal attendance self-service (`/my-attendance`, `/teacher/profile`) with working hours, check-in/out, and monthly KPI metrics.
    - Statutory payroll computation engine (EPF 8% employee, 12% employer; ETF 3%; APIT income tax).
    - Printable night-mode immune official payslips with pixel-perfect A4 printing.
 4. **Super Admin Salary Deductions Governance (`/admin/salary-deductions`):**

@@ -78,15 +78,23 @@ The system enforces 71 dedicated business logics across 7 enterprise domains (se
 
 ---
 
-## Two-Factor Authentication (2FA) Architecture & Handover Control
+## Mandatory Two-Factor Authentication (2FA) Architecture & Google Authenticator
 
-The platform enforces two-tier security:
-1. **Configurable Toggle (`TWO_FACTOR_ENABLED`)**: Located in `config/school.php` and controlled via `.env`:
-   - `TWO_FACTOR_ENABLED=true` (Default): Super Admin and Institution Admin must verify with RFC 6238 TOTP Google Authenticator or Microsoft Authenticator.
-   - `TWO_FACTOR_ENABLED=false`: 2FA is bypassed across all roles, allowing direct email/password login for rapid testing or client environments that do not require multi-factor verification.
-2. **Setup Key & QR Pairing**: During first-time onboarding, administrators are shown a 16-character `Authenticator Setup Key` to add to their authenticator app.
-3. **Frictionless Reset Script**: `php scratch/execute_reset_2fa.php` resets stored 2FA credentials for all administrators in seconds, enabling clean onboarding for new clients.
-4. **Local Demo Bypass**: In local/testing environments, demo administrators can use the fixed bypass code `434649`.
+The platform enforces strict administrative multi-factor security:
+1. **Mandatory Administrative 2FA**: Super Admin and Institution Admin accounts must authenticate with RFC 6238 TOTP via Google Authenticator on every login without exception.
+2. **Visual QR Code & Secret Key Pairing**: During onboarding or after reset, `/two-factor/setup` renders an inline SVG QR Code generated via `BaconQrCode` (`ImageRenderer` with `SvgImageBackEnd`) alongside a 16-character manual setup key with instant clipboard copying.
+3. **No Remember Device Bypass**: Admin sessions disable long-term remember cookies, ensuring fresh TOTP validation upon each login, session expiration, and browser restart.
+4. **Emergency Reset & Recovery**: Administrators receive 12 one-time emergency recovery codes. Administrators can also be reset using `php scratch/execute_reset_2fa.php` for fresh client handover.
+
+## Staff & Teacher Personal Attendance Architecture
+
+1. **Relational Architecture**: The `staff_attendance` table stores both `teacher_id` and `employee_id` (foreign key to `employees`), ensuring complete parity between academic teachers and operational staff (Accountants, Registrars, Librarians, Admin Staff).
+2. **Personal Self-Service View**:
+   - Teachers access their personal daily attendance log, check-in, check-out, working hours, and status badges via `/teacher/profile` (Tab: "Leaves & Attendance History").
+   - Non-teacher employees access their personal attendance history via `/my-attendance` and the topbar attendance shortcut.
+3. **Automated Status & Performance Metrics**:
+   - `StaffAttendance` model accessors compute formatted times (`check_in_formatted`, `check_out_formatted`), duration (`working_hours_formatted`), and status (`present`, `late`, `half_day`, `absent`).
+   - Summary statistics calculate Monthly Days Present, Total Accumulated Hours, Average Shift Duration, and Punctuality / On-Time Rate.
 
 ## Multi-Branch Campus Architecture
 

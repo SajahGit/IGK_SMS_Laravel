@@ -5,6 +5,10 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Support\AuditLogger;
+use BaconQrCode\Renderer\Image\SvgImageBackEnd;
+use BaconQrCode\Renderer\ImageRenderer;
+use BaconQrCode\Renderer\RendererStyle\RendererStyle;
+use BaconQrCode\Writer;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -132,6 +136,8 @@ class TwoFactorController extends Controller
         if ($encryptedCodes = $request->session()->get(self::RECOVERY_CODES_ONCE)) {
             return view('Auth.AuthTwoFactorSetup', [
                 'secret' => null,
+                'qrCodeSvg' => null,
+                'qrCodeUrl' => null,
                 'recoveryCodes' => json_decode(Crypt::decryptString($encryptedCodes), true, 512, JSON_THROW_ON_ERROR),
                 'enabled' => true,
             ]);
@@ -140,6 +146,8 @@ class TwoFactorController extends Controller
         if ($user->two_factor_enabled_at) {
             return view('Auth.AuthTwoFactorSetup', [
                 'secret' => null,
+                'qrCodeSvg' => null,
+                'qrCodeUrl' => null,
                 'recoveryCodes' => null,
                 'enabled' => true,
             ]);
@@ -149,8 +157,20 @@ class TwoFactorController extends Controller
             $user->forceFill(['two_factor_secret' => $google2fa->generateSecretKey()])->save();
         }
 
+        $company = config('app.name', 'IGK School');
+        $qrCodeUrl = $google2fa->getQRCodeUrl($company, $user->email, $user->two_factor_secret);
+
+        $renderer = new ImageRenderer(
+            new RendererStyle(200, 1),
+            new SvgImageBackEnd()
+        );
+        $writer = new Writer($renderer);
+        $qrCodeSvg = $writer->writeString($qrCodeUrl);
+
         return view('Auth.AuthTwoFactorSetup', [
             'secret' => $user->two_factor_secret,
+            'qrCodeSvg' => $qrCodeSvg,
+            'qrCodeUrl' => $qrCodeUrl,
             'recoveryCodes' => null,
             'enabled' => false,
             'demoSetupCode' => $this->localDemoSetupCode($user),
@@ -352,7 +372,6 @@ class TwoFactorController extends Controller
 
     private function finishLogin(Request $request, User $user): RedirectResponse
     {
-        $remember = (bool) $request->session()->get('two_factor.remember', false);
         $recoveryCodeUsed = (bool) $request->session()->get('two_factor.recovery_code_used', false);
         $twoFactorEnabled = (bool) $request->session()->get('two_factor.newly_enabled', false);
         $request->session()->forget([
@@ -362,7 +381,8 @@ class TwoFactorController extends Controller
             'two_factor.newly_enabled',
         ]);
 
-        Auth::login($user, $remember);
+        // Never remember 2FA-secured admin sessions across browser sessions; require fresh login + 2FA every time
+        Auth::login($user, false);
         $user->update(['last_login_at' => now()]);
         $request->session()->regenerate();
 

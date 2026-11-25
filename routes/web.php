@@ -80,6 +80,8 @@ Route::middleware('auth')->group(function () {
         ->name('messages.replies.store');
 
     Route::post('/branch-context', [BranchController::class, 'switchContext'])->name('branch-context');
+    Route::get('/my-attendance', [\App\Http\Controllers\Teacher\ProfileController::class, 'myAttendance'])->name('my-attendance');
+    Route::get('/my-profile', [\App\Http\Controllers\Teacher\ProfileController::class, 'show'])->name('my-profile');
 });
 
 // ---- Each module has its own route file (one owner per file) ----

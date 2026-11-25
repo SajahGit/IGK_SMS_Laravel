@@ -27,9 +27,12 @@
                     <i class="bi bi-shield-lock-fill"></i>
                 </div>
                 <h1 class="h3 mb-2">Two-Factor Verification</h1>
-                <p class="text-muted small mb-4">
-                    Enter the code from your authenticator app or one of your emergency recovery codes.
+                <p class="text-muted small mb-2">
+                    Open <strong>Google Authenticator</strong> on your mobile phone and enter the 6-digit code.
                 </p>
+                <div class="badge bg-secondary-subtle text-secondary small px-3 py-1 mb-3">
+                    <i class="bi bi-lock-fill me-1"></i> Mandatory on every admin login
+                </div>
             </div>
 
             <form method="POST" action="{{ route('two-factor.challenge') }}" class="text-start">
@@ -44,12 +47,12 @@
                     </div>
                 @endif
                 <div class="mb-3">
-                    <label class="form-label text-start d-block" for="code">Authentication Code</label>
+                    <label class="form-label text-start d-block fw-semibold small" for="code">Google Authenticator OTP or Recovery Code</label>
                     <div class="input-icon">
                         <i class="bi bi-key-fill"></i>
-                        <input class="form-control text-center font-monospace fs-5 @error('code') is-invalid @enderror"
+                        <input class="form-control text-center font-monospace fs-4 @error('code') is-invalid @enderror"
                                id="code" name="code" value="{{ old('code') }}" inputmode="numeric" autocomplete="one-time-code"
-                               placeholder="Enter code" maxlength="40" required autofocus style="letter-spacing: 0.15rem;">
+                               placeholder="123456" maxlength="40" required autofocus style="letter-spacing: 0.35rem; font-weight: 600;">
                     </div>
                     @error('code')
                         <div class="text-danger small mt-2 d-flex align-items-center gap-1">
@@ -57,8 +60,11 @@
                             <span>{{ $message }}</span>
                         </div>
                     @enderror
+                    <div class="form-text small text-muted text-center mt-2">
+                        Lost your device? You can enter one of your 16-character recovery codes.
+                    </div>
                 </div>
-                <button type="submit" class="btn btn-primary w-100 py-2">
+                <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold">
                     <i class="bi bi-box-arrow-in-right me-1"></i> Verify & Sign In
                 </button>
             </form>

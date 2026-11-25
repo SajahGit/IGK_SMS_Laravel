@@ -14,7 +14,7 @@ use Illuminate\View\View;
 class ProfileController extends Controller
 {
     /**
-     * Teacher viewing their own profile, campus assignments, salary, deductions, leaves, and attendance.
+     * Teacher or Employee viewing their own profile, campus assignments, salary, deductions, leaves, and personal attendance.
      */
     public function show(Request $request): View
     {
@@ -30,39 +30,68 @@ class ProfileController extends Controller
             'classSubjects.subject',
         ])->where('user_id', $user->id)->first();
 
-        if (! $teacher) {
+        $employee = Employee::withoutGlobalScopes()
+            ->with(['branch', 'department', 'user'])
+            ->where(function ($q) use ($user, $teacher) {
+                $q->where('user_id', $user->id);
+                if ($teacher) {
+                    $q->orWhere('teacher_id', $teacher->id);
+                }
+            })
+            ->first();
+
+        if (! $teacher && ! $employee) {
             if ($user->isSuperAdmin() || $user->hasRole(['admin', 'institution_admin'])) {
                 $teacher = Teacher::first();
+                $employee = Employee::first();
             }
-            abort_unless($teacher, 404, 'No teacher profile linked to your account.');
+            abort_unless($teacher || $employee, 404, 'No teacher or staff profile linked to your account.');
         }
 
-        return $this->renderProfileView($teacher, true);
+        return $this->renderProfileView($teacher, true, $employee);
     }
 
     /**
-     * Shared render method for both teacher self-service and admin viewing teacher.
+     * Dedicated self-service endpoint for employees and teachers to view their personal attendance details.
      */
-    public function renderProfileView(Teacher $teacher, bool $isSelf = false): View
+    public function myAttendance(Request $request): View
     {
-        $teacher->loadMissing([
-            'user',
-            'branch',
-            'department',
-            'branchTransfers.fromBranch',
-            'branchTransfers.toBranch',
-            'branchTransfers.actor',
-            'classSubjects.schoolClass',
-            'classSubjects.subject',
-        ]);
+        return $this->show($request);
+    }
 
-        $employee = Employee::withoutGlobalScopes()
-            ->with(['branch', 'department'])
-            ->where(function ($q) use ($teacher) {
-                $q->where('teacher_id', $teacher->id)
-                    ->orWhere('user_id', $teacher->user_id);
-            })
-            ->first();
+    /**
+     * Shared render method for teacher self-service, employee self-service, and admin viewing staff.
+     */
+    public function renderProfileView(?Teacher $teacher, bool $isSelf = false, ?Employee $employee = null): View
+    {
+        if ($teacher) {
+            $teacher->loadMissing([
+                'user',
+                'branch',
+                'department',
+                'branchTransfers.fromBranch',
+                'branchTransfers.toBranch',
+                'branchTransfers.actor',
+                'classSubjects.schoolClass',
+                'classSubjects.subject',
+            ]);
+        }
+
+        if (! $employee && $teacher) {
+            $employee = Employee::withoutGlobalScopes()
+                ->with(['branch', 'department', 'user'])
+                ->where(function ($q) use ($teacher) {
+                    $q->where('teacher_id', $teacher->id)
+                        ->orWhere('user_id', $teacher->user_id);
+                })
+                ->first();
+        }
+
+        if ($employee) {
+            $employee->loadMissing(['user', 'branch', 'department']);
+        }
+
+        $user = $teacher?->user ?? $employee?->user ?? auth()->user();
 
         $payrollEntries = collect();
         $payrollDeductions = collect();
@@ -86,10 +115,35 @@ class ProfileController extends Controller
                 ->get();
         }
 
-        $attendances = StaffAttendance::where('teacher_id', $teacher->id)
+        $attendances = StaffAttendance::query()
+            ->where(function ($q) use ($teacher, $employee, $user) {
+                if ($teacher) {
+                    $q->where('teacher_id', $teacher->id);
+                }
+                if ($employee) {
+                    $q->orWhere('employee_id', $employee->id);
+                }
+                if ($user) {
+                    $q->orWhere('staff_name', $user->name);
+                }
+            })
             ->latest('attendance_date')
-            ->take(30)
+            ->take(60)
             ->get();
+
+        $currentMonthAttendances = $attendances->filter(function ($att) {
+            return $att->attendance_date && \Carbon\Carbon::parse($att->attendance_date)->isCurrentMonth();
+        });
+
+        $attendanceStats = [
+            'days_present' => $currentMonthAttendances->whereNotNull('check_in')->count(),
+            'total_hours' => round($currentMonthAttendances->sum('working_hours'), 1),
+            'avg_daily_hours' => $currentMonthAttendances->count() > 0
+                ? round($currentMonthAttendances->sum('working_hours') / $currentMonthAttendances->count(), 1)
+                : 0.0,
+            'on_time_count' => $currentMonthAttendances->filter(fn ($att) => $att->status === 'present')->count(),
+            'late_count' => $currentMonthAttendances->filter(fn ($att) => $att->status === 'late')->count(),
+        ];
 
         $unpaidLeaveCount = $leaveRequests->filter(function ($leave) {
             return in_array($leave->leave_type, ['unpaid', 'unpaid_leave', 'loss_of_pay', 'lop']) && $leave->status === 'approved';
@@ -104,6 +158,7 @@ class ProfileController extends Controller
             'payrollDeductions',
             'leaveRequests',
             'attendances',
+            'attendanceStats',
             'unpaidLeaveCount',
             'isSelf'
         ));

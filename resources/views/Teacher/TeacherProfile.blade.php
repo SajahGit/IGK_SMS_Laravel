@@ -1,15 +1,22 @@
 @extends('Layouts.LayoutApp')
-@section('title', ($isSelf ? 'My Profile & Salary' : 'Teacher Profile - ' . $teacher->user->name))
+@section('title', ($isSelf ? 'My Profile & Attendance' : 'Staff Profile - ' . ($teacher?->user?->name ?? $employee?->user?->name ?? 'Staff')))
 @section('content')
 
 @php
-    $campusName = $teacher->branch?->name ?? $teacher->user->branch?->name ?? 'Main Campus';
-    $campusCode = $teacher->branch?->code ?? $teacher->user->branch?->code ?? 'MAIN';
+    $targetUser = $teacher?->user ?? $employee?->user ?? auth()->user();
+    $targetName = $targetUser?->name ?? 'Staff Member';
+    $targetEmail = $targetUser?->email ?? '';
+    $campusName = $teacher?->branch?->name ?? $employee?->branch?->name ?? $targetUser?->branch?->name ?? 'Main Campus';
+    $campusCode = $teacher?->branch?->code ?? $employee?->branch?->code ?? $targetUser?->branch?->code ?? 'MAIN';
+    $departmentName = $teacher?->department?->name ?? $employee?->department?->name ?? 'General Staff';
+    $jobTitle = $employee?->job_title ?? ($teacher ? 'Teacher' : 'Staff Member');
+    $status = $teacher?->status ?? $employee?->employment_status ?? 'active';
+    $employeeNo = $employee?->employee_no ?? ($teacher ? 'EMP-' . str_pad($teacher->id, 4, '0', STR_PAD_LEFT) : 'EMP-STAFF');
     $latestEntry = $payrollEntries->first();
     $totalDeductionsSum = $payrollDeductions->sum('amount');
     $pendingDeductionsSum = $payrollDeductions->where('status', 'pending')->sum('amount');
     $appliedDeductionsSum = $payrollDeductions->where('status', 'applied')->sum('amount');
-    $availableBranches = ($branches ?? collect())->where('id', '!=', $teacher->branch_id ?? $teacher->user->branch_id);
+    $availableBranches = ($branches ?? collect())->where('id', '!=', $teacher?->branch_id ?? $employee?->branch_id ?? $targetUser?->branch_id);
 @endphp
 
 <!-- Header Banner -->
@@ -18,13 +25,13 @@
         <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
             <div class="d-flex align-items-center gap-3">
                 <div class="avatar avatar-lg bg-primary text-white fs-2 rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="width: 64px; height: 64px; font-weight: 700;">
-                    {{ strtoupper(substr($teacher->user->name, 0, 1)) }}
+                    {{ strtoupper(substr($targetName, 0, 1)) }}
                 </div>
                 <div>
                     <h3 class="mb-1 d-flex flex-wrap align-items-center gap-2">
-                        {{ $teacher->user->name }}
-                        <span class="badge {{ $teacher->status === 'active' ? 'bg-success' : ($teacher->status === 'on_leave' ? 'bg-warning text-dark' : 'bg-secondary') }} fs-6">
-                            {{ ucfirst(str_replace('_', ' ', $teacher->status)) }}
+                        {{ $targetName }}
+                        <span class="badge {{ $status === 'active' ? 'bg-success' : ($status === 'on_leave' ? 'bg-warning text-dark' : 'bg-secondary') }} fs-6">
+                            {{ ucfirst(str_replace('_', ' ', $status)) }}
                         </span>
                         @if ($isSelf)
                             <span class="badge bg-primary-subtle text-primary border border-primary-subtle fs-6">
@@ -35,12 +42,12 @@
                     <div class="text-muted small d-flex flex-wrap align-items-center gap-2 mt-1">
                         <span><i class="bi bi-building text-primary me-1"></i>Campus: <strong>{{ $campusName }} ({{ $campusCode }})</strong></span>
                         <span>&bull;</span>
-                        <span><i class="bi bi-diagram-3 text-secondary me-1"></i>Department: <strong>{{ $teacher->department?->name ?? 'General Faculty' }}</strong></span>
+                        <span><i class="bi bi-diagram-3 text-secondary me-1"></i>Department: <strong>{{ $departmentName }}</strong></span>
                         <span>&bull;</span>
-                        <span><i class="bi bi-person-badge text-info me-1"></i>Employee No: <strong>{{ $employee?->employee_no ?? 'EMP-' . str_pad($teacher->id, 4, '0', STR_PAD_LEFT) }}</strong></span>
+                        <span><i class="bi bi-person-badge text-info me-1"></i>Employee No: <strong>{{ $employeeNo }}</strong></span>
                         <span>&bull;</span>
-                        <span><i class="bi bi-envelope me-1"></i>{{ $teacher->user->email }}</span>
-                        @if ($teacher->phone)
+                        <span><i class="bi bi-envelope me-1"></i>{{ $targetEmail }}</span>
+                        @if ($teacher?->phone)
                             <span>&bull;</span>
                             <span><i class="bi bi-telephone me-1"></i>{{ $teacher->phone }}</span>
                         @endif
@@ -51,20 +58,25 @@
             <!-- Action Buttons -->
             <div class="d-flex flex-wrap gap-2">
                 @if ($isSelf)
-                    <a href="{{ route('teacher.timetable.index') }}" class="btn btn-outline-primary btn-sm">
-                        <i class="bi bi-calendar-week me-1"></i> My Timetable
-                    </a>
-                    <a href="{{ route('teacher.classes.index') }}" class="btn btn-outline-secondary btn-sm">
-                        <i class="bi bi-easel2 me-1"></i> My Classes
-                    </a>
-                    <a href="{{ route('teacher.attendance.create') }}" class="btn btn-primary btn-sm">
-                        <i class="bi bi-clipboard2-check me-1"></i> Mark Attendance
-                    </a>
+                    @if ($teacher)
+                        <a href="{{ route('teacher.timetable.index') }}" class="btn btn-outline-primary btn-sm">
+                            <i class="bi bi-calendar-week me-1"></i> My Timetable
+                        </a>
+                        <a href="{{ route('teacher.classes.index') }}" class="btn btn-outline-secondary btn-sm">
+                            <i class="bi bi-easel2 me-1"></i> My Classes
+                        </a>
+                        <a href="{{ route('teacher.attendance.create') }}" class="btn btn-outline-success btn-sm">
+                            <i class="bi bi-clipboard2-check me-1"></i> Mark Class Attendance
+                        </a>
+                    @endif
+                    <button type="button" class="btn btn-primary btn-sm" onclick="bootstrap.Tab.getOrCreateInstance(document.getElementById('leaves-tab')).show(); document.getElementById('leaves-tab').scrollIntoView({behavior: 'smooth'});">
+                        <i class="bi bi-clock-history me-1"></i> View Attendance History
+                    </button>
                 @else
                     <a href="{{ route('admin.teachers.index') }}" class="btn btn-outline-secondary btn-sm">
                         <i class="bi bi-arrow-left me-1"></i> Back to Teachers
                     </a>
-                    @if (auth()->user()?->can('staff.update') || auth()->user()?->isSuperAdmin())
+                    @if ($teacher && (auth()->user()?->can('staff.update') || auth()->user()?->isSuperAdmin()))
                         <button type="button" class="btn btn-outline-warning btn-sm" data-bs-toggle="modal" data-bs-target="#transferTeacherModal">
                             <i class="bi bi-arrow-left-right me-1"></i> Transfer Campus
                         </button>
@@ -140,15 +152,27 @@
     <div class="col-sm-6 col-xl-3">
         <div class="card shadow-sm border-0 h-100">
             <div class="card-body">
-                <div class="text-muted small text-uppercase fw-semibold mb-1">
-                    <i class="bi bi-book text-primary me-1"></i>Teaching Allocations
-                </div>
-                <div class="fs-4 fw-bold text-primary">
-                    {{ $teacher->classSubjects->count() }} <span class="fs-6 fw-normal text-muted">classes / subjects</span>
-                </div>
-                <div class="small text-muted mt-1">
-                    Campus: {{ $campusName }}
-                </div>
+                @if ($teacher)
+                    <div class="text-muted small text-uppercase fw-semibold mb-1">
+                        <i class="bi bi-book text-primary me-1"></i>Teaching Allocations
+                    </div>
+                    <div class="fs-4 fw-bold text-primary">
+                        {{ $teacher->classSubjects->count() }} <span class="fs-6 fw-normal text-muted">classes / subjects</span>
+                    </div>
+                    <div class="small text-muted mt-1">
+                        Campus: {{ $campusName }}
+                    </div>
+                @else
+                    <div class="text-muted small text-uppercase fw-semibold mb-1">
+                        <i class="bi bi-clock-history text-success me-1"></i>Staff Attendance
+                    </div>
+                    <div class="fs-4 fw-bold text-success">
+                        {{ $attendanceStats['days_present'] ?? 0 }} <span class="fs-6 fw-normal text-muted">days logged</span>
+                    </div>
+                    <div class="small text-muted mt-1">
+                        Campus: {{ $campusName }} &bull; {{ $jobTitle }}
+                    </div>
+                @endif
             </div>
         </div>
     </div>
@@ -161,14 +185,16 @@
             <i class="bi bi-cash-coin me-1 text-success"></i> Salary & Super Admin Deductions
         </button>
     </li>
-    <li class="nav-item" role="presentation">
-        <button class="nav-link fw-semibold" id="academic-tab" data-bs-toggle="tab" data-bs-target="#academic-pane" type="button" role="tab" aria-selected="false">
-            <i class="bi bi-mortarboard me-1 text-primary"></i> Teaching Allocations & Campus
-        </button>
-    </li>
+    @if ($teacher)
+        <li class="nav-item" role="presentation">
+            <button class="nav-link fw-semibold" id="academic-tab" data-bs-toggle="tab" data-bs-target="#academic-pane" type="button" role="tab" aria-selected="false">
+                <i class="bi bi-mortarboard me-1 text-primary"></i> Teaching Allocations & Campus
+            </button>
+        </li>
+    @endif
     <li class="nav-item" role="presentation">
         <button class="nav-link fw-semibold" id="leaves-tab" data-bs-toggle="tab" data-bs-target="#leaves-pane" type="button" role="tab" aria-selected="false">
-            <i class="bi bi-calendar-week me-1 text-info"></i> Leaves & Attendance
+            <i class="bi bi-clock-history me-1 text-info"></i> Leaves & Attendance History
         </button>
     </li>
 </ul>
@@ -379,6 +405,7 @@
 
     </div>
 
+    @if ($teacher)
     <!-- Tab 2: Teaching Allocations & Campus -->
     <div class="tab-pane fade" id="academic-pane" role="tabpanel" aria-labelledby="academic-tab">
         <div class="row g-4">
@@ -479,94 +506,73 @@
             </div>
         </div>
     </div>
+    @endif
 
     <!-- Tab 3: Leaves & Attendance -->
     <div class="tab-pane fade" id="leaves-pane" role="tabpanel" aria-labelledby="leaves-tab">
         <div class="row g-4">
-            <!-- Leave Requests History -->
+            <!-- Attendance Records -->
             <div class="col-lg-7">
                 <div class="card shadow-sm border-0 h-100">
-                    <div class="card-header bg-white py-3">
-                        <h5 class="mb-0 fw-bold text-dark d-flex align-items-center gap-2">
-                            <i class="bi bi-calendar2-range text-info"></i> Leave History & Unpaid Leaves
-                        </h5>
-                    </div>
-                    <div class="card-body p-0">
-                        <div class="table-responsive">
-                            <table class="table table-hover align-middle mb-0">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th>Dates</th>
-                                        <th>Leave Type</th>
-                                        <th>Duration</th>
-                                        <th>Reason</th>
-                                        <th>Status</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @forelse ($leaveRequests as $leave)
-                                        @php
-                                            $days = $leave->start_date && $leave->end_date ? ($leave->start_date->diffInDays($leave->end_date) + 1) : 1;
-                                            $isUnpaid = in_array($leave->leave_type, ['unpaid', 'unpaid_leave', 'loss_of_pay', 'lop']);
-                                        @endphp
-                                        <tr>
-                                            <td class="fw-semibold">
-                                                {{ $leave->start_date?->format('d M Y') }}
-                                                @if ($leave->end_date && $leave->end_date->gt($leave->start_date))
-                                                    <div class="small text-muted">&rarr; {{ $leave->end_date->format('d M Y') }}</div>
-                                                @endif
-                                            </td>
-                                            <td>
-                                                <span class="badge {{ $isUnpaid ? 'bg-danger-subtle text-danger border border-danger-subtle' : 'bg-secondary-subtle text-dark border' }}">
-                                                    {{ ucfirst(str_replace('_', ' ', $leave->leave_type)) }}
-                                                    @if ($isUnpaid) (Salary Deductible) @endif
-                                                </span>
-                                            </td>
-                                            <td>{{ $days }} day{{ $days > 1 ? 's' : '' }}</td>
-                                            <td>
-                                                <div class="small">{{ $leave->reason }}</div>
-                                            </td>
-                                            <td>
-                                                @php
-                                                    $leaveStatusBadge = match ($leave->status) {
-                                                        'approved' => 'bg-success',
-                                                        'rejected' => 'bg-danger',
-                                                        default => 'bg-warning text-dark',
-                                                    };
-                                                @endphp
-                                                <span class="badge {{ $leaveStatusBadge }}">
-                                                    {{ ucfirst($leave->status) }}
-                                                </span>
-                                            </td>
-                                        </tr>
-                                    @empty
-                                        <tr>
-                                            <td colspan="5" class="text-center text-muted py-4">
-                                                No leave requests recorded for this staff member.
-                                            </td>
-                                        </tr>
-                                    @endforelse
-                                </tbody>
-                            </table>
+                    <div class="card-header bg-white py-3 d-flex flex-wrap justify-content-between align-items-center gap-2">
+                        <div>
+                            <h5 class="mb-0 fw-bold text-dark d-flex align-items-center gap-2">
+                                <i class="bi bi-clock-history text-success"></i> My Personal Attendance History
+                            </h5>
+                            <div class="text-muted small">Daily check-in, check-out, working hours, and punctuality logs.</div>
                         </div>
+                        <span class="badge bg-success-subtle text-success border border-success-subtle">
+                            {{ count($attendances) }} Total Records
+                        </span>
                     </div>
-                </div>
-            </div>
+                    <div class="card-body p-3">
+                        <!-- Monthly Attendance KPI Cards -->
+                        <div class="row g-2 mb-3">
+                            <div class="col-6 col-sm-3">
+                                <div class="bg-light border rounded p-2 text-center">
+                                    <div class="text-muted small fw-semibold" style="font-size: 0.72rem; text-transform: uppercase;">Days Present</div>
+                                    <div class="fw-bold text-success fs-5">{{ $attendanceStats['days_present'] ?? 0 }}</div>
+                                    <div class="text-muted" style="font-size: 0.7rem;">This Month</div>
+                                </div>
+                            </div>
+                            <div class="col-6 col-sm-3">
+                                <div class="bg-light border rounded p-2 text-center">
+                                    <div class="text-muted small fw-semibold" style="font-size: 0.72rem; text-transform: uppercase;">Total Hours</div>
+                                    <div class="fw-bold text-primary fs-5">{{ $attendanceStats['total_hours'] ?? 0 }}h</div>
+                                    <div class="text-muted" style="font-size: 0.7rem;">Logged</div>
+                                </div>
+                            </div>
+                            <div class="col-6 col-sm-3">
+                                <div class="bg-light border rounded p-2 text-center">
+                                    <div class="text-muted small fw-semibold" style="font-size: 0.72rem; text-transform: uppercase;">Avg Daily</div>
+                                    <div class="fw-bold text-dark fs-5">{{ $attendanceStats['avg_daily_hours'] ?? 0 }}h</div>
+                                    <div class="text-muted" style="font-size: 0.7rem;">Per Shift</div>
+                                </div>
+                            </div>
+                            <div class="col-6 col-sm-3">
+                                <div class="bg-light border rounded p-2 text-center">
+                                    <div class="text-muted small fw-semibold" style="font-size: 0.72rem; text-transform: uppercase;">On-Time Rate</div>
+                                    <div class="fw-bold text-info fs-5">
+                                        @php
+                                            $totalAtt = ($attendanceStats['on_time_count'] ?? 0) + ($attendanceStats['late_count'] ?? 0);
+                                            $rate = $totalAtt > 0 ? round((($attendanceStats['on_time_count'] ?? 0) / $totalAtt) * 100) : 100;
+                                        @endphp
+                                        {{ $rate }}%
+                                    </div>
+                                    <div class="text-muted" style="font-size: 0.7rem;">{{ $attendanceStats['late_count'] ?? 0 }} Late</div>
+                                </div>
+                            </div>
+                        </div>
 
-            <!-- Attendance Records -->
-            <div class="col-lg-5">
-                <div class="card shadow-sm border-0 h-100">
-                    <div class="card-header bg-white py-3">
-                        <h5 class="mb-0 fw-bold text-dark d-flex align-items-center gap-2">
-                            <i class="bi bi-clock-history text-success"></i> Recent Staff Attendance Log
-                        </h5>
-                    </div>
-                    <div class="card-body p-0">
-                        <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                        <!-- Detailed Attendance Table -->
+                        <div class="table-responsive" style="max-height: 480px; overflow-y: auto;">
                             <table class="table table-hover align-middle mb-0">
-                                <thead class="table-light">
+                                <thead class="table-light sticky-top">
                                     <tr>
                                         <th>Date</th>
+                                        <th>Check-In</th>
+                                        <th>Check-Out</th>
+                                        <th>Hours</th>
                                         <th>Status</th>
                                         <th>Notes</th>
                                     </tr>
@@ -574,8 +580,27 @@
                                 <tbody>
                                     @forelse ($attendances as $att)
                                         <tr>
-                                            <td class="fw-semibold">
+                                            <td class="fw-semibold text-nowrap">
                                                 {{ \Carbon\Carbon::parse($att->attendance_date)->format('d M Y, D') }}
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-success-subtle text-success border border-success-subtle font-monospace">
+                                                    <i class="bi bi-box-arrow-in-right me-1"></i>{{ $att->check_in_formatted }}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                @if ($att->check_out)
+                                                    <span class="badge bg-info-subtle text-info border border-info-subtle font-monospace">
+                                                        <i class="bi bi-box-arrow-right me-1"></i>{{ $att->check_out_formatted }}
+                                                    </span>
+                                                @else
+                                                    <span class="badge bg-warning-subtle text-warning border border-warning-subtle">
+                                                        Active
+                                                    </span>
+                                                @endif
+                                            </td>
+                                            <td class="small fw-semibold text-nowrap">
+                                                {{ $att->working_hours_formatted }}
                                             </td>
                                             <td>
                                                 @php
@@ -595,8 +620,74 @@
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="3" class="text-center text-muted py-4">
-                                                No attendance records logged for this teacher yet.
+                                            <td colspan="6" class="text-center text-muted py-4">
+                                                <i class="bi bi-calendar2-x fs-3 d-block text-secondary mb-1"></i>
+                                                No attendance records logged for this staff member yet.
+                                            </td>
+                                        </tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Leave Requests History -->
+            <div class="col-lg-5">
+                <div class="card shadow-sm border-0 h-100">
+                    <div class="card-header bg-white py-3">
+                        <h5 class="mb-0 fw-bold text-dark d-flex align-items-center gap-2">
+                            <i class="bi bi-calendar2-range text-info"></i> Leave History & Balances
+                        </h5>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive" style="max-height: 540px; overflow-y: auto;">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="table-light sticky-top">
+                                    <tr>
+                                        <th>Dates</th>
+                                        <th>Type</th>
+                                        <th>Duration</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @forelse ($leaveRequests as $leave)
+                                        @php
+                                            $days = $leave->start_date && $leave->end_date ? ($leave->start_date->diffInDays($leave->end_date) + 1) : 1;
+                                            $isUnpaid = in_array($leave->leave_type, ['unpaid', 'unpaid_leave', 'loss_of_pay', 'lop']);
+                                        @endphp
+                                        <tr>
+                                            <td class="fw-semibold">
+                                                {{ $leave->start_date?->format('d M Y') }}
+                                                @if ($leave->end_date && $leave->end_date->gt($leave->start_date))
+                                                    <div class="small text-muted">&rarr; {{ $leave->end_date->format('d M Y') }}</div>
+                                                @endif
+                                            </td>
+                                            <td>
+                                                <span class="badge {{ $isUnpaid ? 'bg-danger-subtle text-danger border border-danger-subtle' : 'bg-secondary-subtle text-dark border' }}">
+                                                    {{ ucfirst(str_replace('_', ' ', $leave->leave_type)) }}
+                                                </span>
+                                            </td>
+                                            <td class="small">{{ $days }} day{{ $days > 1 ? 's' : '' }}</td>
+                                            <td>
+                                                @php
+                                                    $leaveStatusBadge = match ($leave->status) {
+                                                        'approved' => 'bg-success',
+                                                        'rejected' => 'bg-danger',
+                                                        default => 'bg-warning text-dark',
+                                                    };
+                                                @endphp
+                                                <span class="badge {{ $leaveStatusBadge }}">
+                                                    {{ ucfirst($leave->status) }}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    @empty
+                                        <tr>
+                                            <td colspan="4" class="text-center text-muted py-4">
+                                                No leave requests recorded for this staff member.
                                             </td>
                                         </tr>
                                     @endforelse
@@ -611,7 +702,7 @@
 
 </div>
 
-@if (! $isSelf && (auth()->user()?->can('staff.update') || auth()->user()?->isSuperAdmin()))
+@if (! $isSelf && $teacher && (auth()->user()?->can('staff.update') || auth()->user()?->isSuperAdmin()))
     <!-- Campus Transfer Modal for Admin -->
     <div class="modal fade" id="transferTeacherModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">

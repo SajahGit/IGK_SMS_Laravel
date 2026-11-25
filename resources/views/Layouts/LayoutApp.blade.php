@@ -81,7 +81,7 @@
         'teacher' => [
             'Overview' => [
                 ['Dashboard', 'teacher.dashboard', 'teacher.dashboard', 'grid-1x2-fill'],
-                ['My Profile & Salary', 'teacher.profile', 'teacher.profile*', 'person-badge'],
+                ['My Profile & Attendance', 'teacher.profile', 'teacher.profile*', 'person-badge'],
             ],
             'Teaching' => [
                 ['My Classes', 'teacher.classes.index', 'teacher.classes.*', 'easel2-fill'],
@@ -100,6 +100,10 @@
             ],
         ],
         'accountant' => [
+            'Overview' => [
+                ['Dashboard', 'accountant.dashboard', 'accountant.dashboard', 'grid-1x2-fill'],
+                ['My Profile & Attendance', 'my-attendance', 'my-attendance*', 'clock-history'],
+            ],
             'Finance' => [
                 ['Dashboard', 'accountant.dashboard', 'accountant.dashboard', 'grid-1x2-fill'],
                 ['Procurement', 'procurement.orders.index', 'procurement.*', 'cart-check'],
@@ -124,6 +128,7 @@
         'registrar' => [
             'Overview' => [
                 ['Dashboard', 'registrar.dashboard', 'registrar.dashboard', 'grid-1x2-fill'],
+                ['My Profile & Attendance', 'my-attendance', 'my-attendance*', 'clock-history'],
             ],
             'Academic administration' => [
                 ['Students', 'admin.students.index', 'admin.students.index', 'people-fill'],
@@ -156,8 +161,11 @@
             ],
         ],
         'librarian' => [
-            'Library' => [
+            'Overview' => [
                 ['Dashboard', 'library.dashboard', 'library.dashboard', 'grid-1x2-fill'],
+                ['My Profile & Attendance', 'my-attendance', 'my-attendance*', 'clock-history'],
+            ],
+            'Library' => [
                 ['Loans', 'library.loans.index', 'library.loans.*', 'arrow-left-right'],
                 ['Copies', 'library.copies.index', 'library.copies.*', 'collection'],
                 ['Authors', 'library.authors.index', 'library.authors.*', 'person-lines-fill'],
@@ -219,7 +227,7 @@
                 @foreach ($items as [$label, $route, $pattern, $icon])
                     @php
                         $permission = match (true) {
-                            str_starts_with($route, 'messages.') || str_starts_with($route, 'admin.salary-deductions.') || str_starts_with($route, 'teacher.profile') => null,
+                            str_starts_with($route, 'messages.') || str_starts_with($route, 'admin.salary-deductions.') || str_starts_with($route, 'teacher.profile') || in_array($route, ['my-attendance', 'my-profile'], true) => null,
                             str_starts_with($route, 'reports.') => str_contains($route, 'attendance') ? 'reports.attendance' : (in_array($route, ['reports.fee-collection', 'reports.defaulters', 'reports.student-ledger'], true) ? 'reports.financial' : 'reports.academic'),
                             str_starts_with($route, 'admin.imports.') => 'imports.create',
                             str_starts_with($route, 'admin.staff-attendance.') => 'staff_attendance.read',
@@ -314,6 +322,9 @@
                 </form>
             @endif
             <span class="topbar-date"><i class="bi bi-calendar3 me-1"></i><time data-live-date data-timezone="{{ config('app.timezone') }}">{{ now()->format('D, d M Y') }}</time></span>
+            @if (! in_array(strtolower($user->role), ['student', 'parent'], true))
+                <a href="{{ route('my-attendance') }}" class="icon-btn text-decoration-none" title="My Attendance History" aria-label="My Attendance"><i class="bi bi-clock-history"></i></a>
+            @endif
             <div class="dropdown">
                 <button class="icon-btn position-relative" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Notifications">
                     <i class="bi bi-bell"></i>

@@ -57,7 +57,6 @@ class LoginController extends Controller
         }
 
         $request->session()->put('two_factor.pending_user_id', $user->id);
-        $request->session()->put('two_factor.remember', $request->boolean('remember'));
 
         return redirect()->route(
             $user->two_factor_enabled_at ? 'two-factor.challenge' : 'two-factor.setup'

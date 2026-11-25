@@ -42,4 +42,9 @@ class Teacher extends Model
     {
         return $this->hasOne(Employee::class);
     }
+
+    public function staffAttendances(): HasMany
+    {
+        return $this->hasMany(StaffAttendance::class, 'teacher_id');
+    }
 }

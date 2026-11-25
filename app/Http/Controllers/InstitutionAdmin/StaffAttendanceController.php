@@ -34,10 +34,12 @@ class StaffAttendanceController extends Controller
     public function store(StoreStaffAttendanceRequest $request): RedirectResponse
     {
         $data = $request->validated();
-        $teacher = Teacher::with('user')->findOrFail($data['teacher_id']);
+        $teacher = Teacher::with(['user', 'employee'])->findOrFail($data['teacher_id']);
         abort_unless(in_array($teacher->status, ['active', 'on_leave'], true), 422, 'Attendance can only be recorded for active staff.');
 
-        DB::transaction(function () use ($data, $teacher) {
+        $employeeId = $teacher->employee?->id ?? \App\Models\Employee::where('teacher_id', $teacher->id)->value('id');
+
+        DB::transaction(function () use ($data, $teacher, $employeeId) {
             $record = StaffAttendance::query()
                 ->where('teacher_id', $teacher->id)
                 ->whereDate('attendance_date', $data['attendance_date'])
@@ -47,6 +49,8 @@ class StaffAttendanceController extends Controller
             if ($record) {
                 $before = $record->only(['check_in', 'check_out', 'notes']);
                 $record->update([
+                    'employee_id' => $employeeId ?? $record->employee_id,
+                    'branch_id' => $teacher->branch_id ?? $record->branch_id,
                     'check_in' => $data['check_in'],
                     'check_out' => $data['check_out'] ?? null,
                     'notes' => $data['notes'] ?? null,
@@ -59,6 +63,8 @@ class StaffAttendanceController extends Controller
 
             $record = StaffAttendance::create([
                 'teacher_id' => $teacher->id,
+                'employee_id' => $employeeId,
+                'branch_id' => $teacher->branch_id,
                 'staff_name' => $teacher->user->name,
                 'attendance_date' => $data['attendance_date'],
                 'check_in' => $data['check_in'],
