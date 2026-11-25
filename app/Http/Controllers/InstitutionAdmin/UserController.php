@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\InstitutionAdmin\StoreUserRequest;
 use App\Http\Requests\InstitutionAdmin\UpdateUserRequest;
 use App\Models\Branch;
+use App\Models\Employee;
+use App\Models\StaffAttendance;
 use App\Models\User;
 use App\Support\AuditLogger;
 use Illuminate\Http\RedirectResponse;
@@ -185,6 +187,56 @@ class UserController extends Controller
             $user->update($updateData);
             $user->touch();
             $user->syncRoles($roleNames);
+
+            // Synchronize linked Teacher, Employee, Student, and StaffAttendance records
+            $isActive = (bool) $user->is_active;
+            if ($teacher = $user->teacher()->withoutGlobalScopes()->first()) {
+                $teacherUpdates = [
+                    'status' => $isActive ? ($teacher->status === 'inactive' ? 'active' : $teacher->status) : 'inactive',
+                ];
+                if ($user->branch_id !== null) {
+                    $teacherUpdates['branch_id'] = $user->branch_id;
+                }
+                $teacher->update($teacherUpdates);
+            }
+
+            $employee = Employee::withoutGlobalScopes()
+                ->where(function ($q) use ($user, $teacher) {
+                    $q->where('user_id', $user->id);
+                    if ($teacher) {
+                        $q->orWhere('teacher_id', $teacher->id);
+                    }
+                })
+                ->first();
+
+            if ($employee) {
+                $empUpdates = [
+                    'employment_status' => $isActive
+                        ? (in_array($employee->employment_status, ['terminated', 'inactive'], true) ? 'active' : $employee->employment_status)
+                        : 'terminated',
+                ];
+                if ($user->branch_id !== null) {
+                    $empUpdates['branch_id'] = $user->branch_id;
+                }
+                $employee->update($empUpdates);
+            }
+
+            if ($user->branch_id !== null && ($student = $user->student()->withoutGlobalScopes()->first())) {
+                $student->update(['branch_id' => $user->branch_id]);
+            }
+
+            if ($teacher || $employee) {
+                StaffAttendance::query()
+                    ->where(function ($q) use ($teacher, $employee) {
+                        if ($teacher) {
+                            $q->where('teacher_id', $teacher->id);
+                        }
+                        if ($employee) {
+                            $q->orWhere('employee_id', $employee->id);
+                        }
+                    })
+                    ->update(['staff_name' => $user->name]);
+            }
 
             if ($oldRoles !== $roleNames) {
                 AuditLogger::log('roles_assigned', $user, ['roles' => $oldRoles], ['roles' => $roleNames]);

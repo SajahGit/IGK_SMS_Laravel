@@ -16,6 +16,7 @@ use App\Services\HrPayrollService;
 use App\Support\AuditLogger;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
@@ -73,9 +74,40 @@ class HrPayrollController extends Controller
         $this->authorize('hr.update');
         $data = $this->validateEmployee($request, $employee);
         $before = $employee->toArray();
-        $employee->update($data);
-        $employee->touch();
-        AuditLogger::log('updated_employee', $employee, $before, $employee->fresh()->toArray());
+
+        DB::transaction(function () use ($employee, $data, $before): void {
+            $employee->update($data);
+            $employee->touch();
+
+            $isActive = ! in_array($employee->employment_status, ['terminated', 'resigned', 'inactive'], true);
+
+            if ($user = $employee->user) {
+                $userUpdates = [];
+                if ($user->id !== auth()->id()) {
+                    $userUpdates['is_active'] = $isActive;
+                }
+                if ($employee->branch_id !== null) {
+                    $userUpdates['branch_id'] = $employee->branch_id;
+                }
+                if ($userUpdates !== []) {
+                    $user->update($userUpdates);
+                }
+            }
+
+            if ($teacher = $employee->teacher()->withoutGlobalScopes()->first()) {
+                $teacher->update([
+                    'branch_id' => $employee->branch_id ?? $teacher->branch_id,
+                    'department_id' => $employee->department_id ?? $teacher->department_id,
+                    'status' => match ($employee->employment_status) {
+                        'active' => 'active',
+                        'on_leave' => 'on_leave',
+                        default => 'inactive',
+                    },
+                ]);
+            }
+
+            AuditLogger::log('updated_employee', $employee, $before, $employee->fresh()->toArray());
+        });
 
         return redirect()->route('admin.hr.employees.index')->with('success', 'Employee updated.');
     }

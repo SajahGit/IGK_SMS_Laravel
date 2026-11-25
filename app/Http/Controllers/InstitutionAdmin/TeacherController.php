@@ -128,6 +128,7 @@ class TeacherController extends Controller
             $user = $teacher->user;
             $user->name = $data['name'];
             $user->email = $data['email'];
+            $user->is_active = $data['status'] !== 'inactive';
             if ($branchId) {
                 $user->branch_id = $branchId;
             }
@@ -144,6 +145,31 @@ class TeacherController extends Controller
                 'status' => $data['status'],
             ]);
             $teacher->touch();
+
+            // Synchronize linked Employee and StaffAttendance records
+            $employee = \App\Models\Employee::withoutGlobalScopes()
+                ->where(function ($q) use ($teacher) {
+                    $q->where('teacher_id', $teacher->id)
+                        ->orWhere('user_id', $teacher->user_id);
+                })
+                ->first();
+
+            if ($employee) {
+                $employee->update([
+                    'department_id' => $data['department_id'] ?? $employee->department_id,
+                    'branch_id' => $branchId ?? $employee->branch_id,
+                    'employment_status' => match ($data['status']) {
+                        'active' => 'active',
+                        'on_leave' => 'on_leave',
+                        'inactive' => 'terminated',
+                        default => $employee->employment_status,
+                    },
+                ]);
+            }
+
+            \App\Models\StaffAttendance::query()
+                ->where('teacher_id', $teacher->id)
+                ->update(['staff_name' => $data['name']]);
         });
 
         return redirect()->route('admin.teachers.index')->with('success', 'Teacher updated successfully.');
