@@ -128,20 +128,23 @@ class HrPayrollService
                     foreach ($unpaidLeaves as $leave) {
                         $leaveStart = Carbon::parse(max($leave->start_date->toDateString(), $periodStart));
                         $leaveEnd = Carbon::parse(min($leave->end_date->toDateString(), $periodEnd));
-                        $days = $leaveStart->diffInDays($leaveEnd) + 1;
-                        $unpaidDays += (int) $days;
+                        $days = abs((int) $leaveStart->diffInDays($leaveEnd)) + 1;
+                        $unpaidDays += $days;
                     }
 
-                    if ($employee->teacher_id) {
-                        $absentAttendanceCount = StaffAttendance::query()
-                            ->where('teacher_id', $employee->teacher_id)
-                            ->whereDate('attendance_date', '>=', $periodStart)
-                            ->whereDate('attendance_date', '<=', $periodEnd)
-                            ->where('notes', 'like', '%absent%')
-                            ->count();
-                        if ($absentAttendanceCount > 0 && $unpaidDays === 0) {
-                            $unpaidDays += $absentAttendanceCount;
-                        }
+                    $absentAttendanceCount = StaffAttendance::query()
+                        ->where(function ($q) use ($employee) {
+                            $q->where('employee_id', $employee->id);
+                            if ($employee->teacher_id) {
+                                $q->orWhere('teacher_id', $employee->teacher_id);
+                            }
+                        })
+                        ->whereDate('attendance_date', '>=', $periodStart)
+                        ->whereDate('attendance_date', '<=', $periodEnd)
+                        ->where('notes', 'like', '%absent%')
+                        ->count();
+                    if ($absentAttendanceCount > 0 && $unpaidDays === 0) {
+                        $unpaidDays += $absentAttendanceCount;
                     }
 
                     if ($autoDeductionMode === 'fixed_amount') {

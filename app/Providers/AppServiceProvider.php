@@ -78,7 +78,11 @@ class AppServiceProvider extends AuthServiceProvider
 
     public function boot(): void
     {
-        Password::defaults(fn () => Password::min(8)->max(32)->mixedCase()->numbers()->uncompromised());
+        Password::defaults(function () {
+            $rule = Password::min(8)->max(32)->mixedCase()->numbers();
+
+            return app()->isProduction() ? $rule->uncompromised() : $rule;
+        });
 
         RateLimiter::for('login', function (Request $request) {
             $email = Str::lower((string) $request->input('email'));
@@ -90,6 +94,30 @@ class AppServiceProvider extends AuthServiceProvider
             $userId = $request->session()->get('two_factor.pending_user_id', 'setup');
 
             return Limit::perMinute(5)->by($userId.'|'.$request->ip());
+        });
+
+        RateLimiter::for('password-reset-request', function (Request $request) {
+            $email = Str::lower(trim((string) $request->input('email', 'guest')));
+
+            return Limit::perMinutes(15, 5)->by($email.'|'.$request->ip());
+        });
+
+        RateLimiter::for('password-reset-verify', function (Request $request) {
+            $email = Str::lower(trim((string) $request->session()->get('password_reset.email', 'guest')));
+
+            return Limit::perMinutes(5, 10)->by($email.'|'.$request->ip());
+        });
+
+        RateLimiter::for('password-reset-resend', function (Request $request) {
+            $email = Str::lower(trim((string) $request->session()->get('password_reset.email', 'guest')));
+
+            return Limit::perMinutes(15, 5)->by($email.'|'.$request->ip());
+        });
+
+        RateLimiter::for('password-reset-update', function (Request $request) {
+            $email = Str::lower(trim((string) $request->input('email', 'guest')));
+
+            return Limit::perMinutes(15, 5)->by($email.'|'.$request->ip());
         });
 
         RateLimiter::for('exports', function (Request $request) {

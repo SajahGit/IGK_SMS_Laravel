@@ -78,13 +78,18 @@ The system enforces 71 dedicated business logics across 7 enterprise domains (se
 
 ---
 
-## Mandatory Two-Factor Authentication (2FA) Architecture & Google Authenticator
+## Mandatory Two-Factor Authentication (2FA) & Administrator Forgot Password OTP
 
 The platform enforces strict administrative multi-factor security:
 1. **Mandatory Administrative 2FA**: Super Admin and Institution Admin accounts must authenticate with RFC 6238 TOTP via Google Authenticator on every login without exception.
 2. **Visual QR Code & Secret Key Pairing**: During onboarding or after reset, `/two-factor/setup` renders an inline SVG QR Code generated via `BaconQrCode` (`ImageRenderer` with `SvgImageBackEnd`) alongside a 16-character manual setup key with instant clipboard copying.
 3. **No Remember Device Bypass**: Admin sessions disable long-term remember cookies, ensuring fresh TOTP validation upon each login, session expiration, and browser restart.
 4. **Emergency Reset & Recovery**: Administrators receive 12 one-time emergency recovery codes. Administrators can also be reset using `php scratch/execute_reset_2fa.php` for fresh client handover.
+5. **Administrator Forgot Password (6-Digit Email OTP + Gmail SMTP)**:
+   - Implemented via `PasswordResetOtp` (`password_reset_otps` table), `PasswordResetOtpService`, `PasswordResetOtpMail`, `PasswordChangedConfirmationMail`, `ForgotPasswordController`, and `ResetPasswordController`.
+   - Strictly restricted to active **Super Admin** and **Institution Admin** accounts (Students, Teachers, and other Staff remain admin-managed).
+   - Uses cryptographically secure 6-digit OTPs (Bcrypt-hashed, 5-min expiry, max 5 attempts, 60s resend cooldown, isolated named rate limiters in `AppServiceProvider`), single-use SHA-256 reset tokens, session/token revocation, and preserves existing Google Authenticator 2FA configuration.
+   - `Password::defaults()` runs `uncompromised()` in `production` and enforces `min(8)->max(32)->mixedCase()->numbers()` in local/testing environments to avoid Windows XAMPP cURL CA certificate errors (`cURL error 60`).
 
 ## Staff & Teacher Personal Attendance Architecture
 

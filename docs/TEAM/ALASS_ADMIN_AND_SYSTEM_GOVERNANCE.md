@@ -20,8 +20,11 @@ As Team Leader and System Governance owner, Alass owns the administrative backbo
    - Complete System Role inclusion (including restored Student role) and dynamic filtering by System Role, Campus/Branch, and Account Status.
    - Live matching totals counter and pagination preservation (`withQueryString()`).
    - Two-Factor Authentication (2FA) enforcement via Google Authenticator with visual SVG QR Code pairing, mandatory 6-digit TOTP verification on every admin login, and device trust disabled.
+   - Administrator Forgot Password via 6-digit Email OTP + Gmail SMTP (`PasswordResetOtpService`), strictly scoped to Super Admin and Institution Admin accounts while preserving 2FA.
+   - User Management branch assignment supporting **`All Branches / Global (Admin only)`** or specific campus selection for Super Admin & Institution Admin.
 3. **Human Resources & Statutory EPF/ETF Payroll (`/admin/payroll`):**
    - Employee master records management and leave approvals.
+   - **Payroll Month** selector (`YYYY-MM`) auto-snapping `period_start` and `period_end` to a complete calendar month.
    - Staff & Employee personal attendance self-service (`/my-attendance`, `/teacher/profile`) with working hours, check-in/out, and monthly KPI metrics.
    - Statutory payroll computation engine (EPF 8% employee, 12% employer; ETF 3%; APIT income tax).
    - Printable night-mode immune official payslips with pixel-perfect A4 printing.

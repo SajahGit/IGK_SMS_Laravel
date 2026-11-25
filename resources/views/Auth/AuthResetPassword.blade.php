@@ -43,6 +43,7 @@
                         <button type="button" class="pw-toggle" id="pwToggle" aria-label="Show password"><i class="bi bi-eye"></i></button>
                     </div>
                     @error('password') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
+                    <div class="form-text small text-muted">8–32 characters with uppercase, lowercase, and at least one number.</div>
                 </div>
                 <div class="mb-3">
                     <label class="form-label" for="password_confirmation">Confirm Password</label>

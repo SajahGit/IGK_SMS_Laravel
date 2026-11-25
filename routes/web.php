@@ -29,13 +29,22 @@ Route::middleware('guest')->group(function () {
         ->middleware('throttle:login')
         ->name('login.attempt');
 
-    // Password reset
+    // Password reset (Administrator Email OTP flow)
     Route::get('/password/forgot', [ForgotPasswordController::class, 'showLinkRequestForm'])->name('password.forgot');
     Route::post('/password/forgot', [ForgotPasswordController::class, 'sendResetLinkEmail'])
-        ->middleware('throttle:3,60')
+        ->middleware('throttle:password-reset-request')
         ->name('password.email');
-    Route::get('/password/reset', [ResetPasswordController::class, 'showResetForm'])->name('password.reset');
-    Route::post('/password/reset', [ResetPasswordController::class, 'reset'])->name('password.update');
+    Route::get('/password/verify-otp', [ForgotPasswordController::class, 'showOtpForm'])->name('password.otp.form');
+    Route::post('/password/verify-otp', [ForgotPasswordController::class, 'verifyOtp'])
+        ->middleware('throttle:password-reset-verify')
+        ->name('password.otp.verify');
+    Route::post('/password/resend-otp', [ForgotPasswordController::class, 'resendOtp'])
+        ->middleware('throttle:password-reset-resend')
+        ->name('password.otp.resend');
+    Route::get('/password/reset/{token?}', [ResetPasswordController::class, 'showResetForm'])->name('password.reset');
+    Route::post('/password/reset', [ResetPasswordController::class, 'reset'])
+        ->middleware('throttle:password-reset-update')
+        ->name('password.update');
 });
 
 Route::get('/two-factor/challenge', [TwoFactorController::class, 'showChallenge'])

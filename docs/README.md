@@ -28,7 +28,10 @@ An enterprise-grade, international-standard School Management and Enterprise Res
 - **Dedicated Super Admin Exclusivity**:
   - Salary Deductions are separated from standard HR payroll generation, maintaining strict audit governance and preventing unauthorized deductions by branch-level accountants.
 - **Connected Staff Transparency**:
-  - Connected teachers and employees can view their full breakdown of automatic attendance deductions and manual deductions directly in their personal profile portal (`/teacher/profile`).
+  - Connected teachers and employees can view their full breakdown of automatic attendance deductions, manual deductions, and **personal daily attendance history** (check-in/out, working hours, punctuality KPIs) directly in `/teacher/profile` and `/my-attendance`.
+- **Mandatory 2FA & Administrator Forgot Password OTP**:
+  - **Super Admin** and **Institution Admin** accounts require mandatory Google Authenticator 2FA (SVG QR code + manual key setup, 6-digit TOTP on every login, no Remember Device bypass).
+  - Administrators can reset forgotten passwords via a secure 3-step **6-digit Email OTP** flow (`smtp.gmail.com` / Gmail SMTP, 5-min expiry, single-use reset token, session revocation, preserving 2FA). Students, teachers, and staff passwords remain administrator-managed.
 
 ### 3. HR & Statutory Payroll Engine
 - **Sri Lanka Statutory Compliance**:

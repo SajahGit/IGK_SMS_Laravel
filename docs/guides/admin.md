@@ -276,9 +276,26 @@ The shared dropdown component covers regular role, campus, and status selects an
    - **Total Hours**: Total working hours accumulated this month.
    - **Avg Daily**: Average shift duration per day.
    - **On-Time Rate**: Punctuality percentage and count of late arrivals.
+   - **Monthly Performance KPI Summary**:
+     - **Days Present**, **Total Hours**, **Avg Daily**, and **On-Time Rate**.
 4. **Data Integrity & Relational Architecture**:
    - `staff_attendance` table stores both `teacher_id` and `employee_id`.
    - Admin records attendance via `/admin/staff-attendance` which automatically synchronizes teacher and employee associations.
+
+## 23. Administrator Forgot Password (6-Digit Email OTP & Gmail SMTP)
+
+1. **Role Policy**:
+   - **Super Admin** and **Institution Admin** accounts can reset their forgotten passwords via the **"Forgot password?"** link on `/login`.
+   - **Students, Teachers, and other Employees/Staff** cannot reset their passwords self-service; an Administrator updates their password via User Management or Student/Staff management.
+2. **OTP Verification & Reset Flow**:
+   - Step 1 (`/password/forgot`): Admin enters their registered email address. The backend generates a cryptographically secure 6-digit OTP (`random_int(100000, 999999)`), hashes it with Bcrypt in `password_reset_otps`, and emails it via Gmail SMTP (5-minute expiry, max 5 attempts, 60-second resend cooldown).
+   - Step 2 (`/password/verify-otp`): Admin enters the 6-digit OTP. Upon verification, the OTP is burned and a single-use 10-minute reset authorization token is issued.
+   - Step 3 (`/password/reset/{token}`): Admin enters and confirms a new strong password (8–32 chars, mixed case, numbers). Existing DB sessions and tokens are invalidated, a confirmation email is sent, and the admin is redirected to `/login` (never auto-logged in).
+   - **Google Authenticator 2FA Preserved:** Existing 2FA secrets and settings remain intact, and logging in with the new password still requires Google Authenticator 2FA.
+3. **User Management Campus Assignment**:
+   - In `/admin/users/create` and `/admin/users/{user}/edit`, **Super Admin** and **Institution Admin** accounts can select either **`All Branches / Global (Admin only)`** or a specific campus branch. Other staff roles require a branch assignment.
+4. **Monthly Payroll Generation (`/admin/hr/payroll`)**:
+   - Use the **Payroll Month** picker (`YYYY-MM`) to automatically populate `Period start` (`YYYY-MM-01`) and `Period end` (last day of the calendar month), ensuring statutory monthly payroll runs always cover one complete calendar month.
 
 ---
 

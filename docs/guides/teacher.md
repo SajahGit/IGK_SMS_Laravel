@@ -12,7 +12,9 @@ Sign in with a **Teacher** account; you land on `/teacher/dashboard`. You only s
 1. Click your name or **Profile** in the navigation bar to access your personal dashboard.
 2. **Personal & Campus Details**: View your employee ID, official email, phone, designation, department, and assigned campus/branch.
 3. **Academic Timetable**: View your assigned weekly class schedule and subjects.
-4. **Leave Summary**: View available leave balance, approved leaves, and pending leave applications.
+4. **Leave & Personal Attendance History**:
+   - View available leave balance, approved leaves, and pending leave applications.
+   - Under **Leaves & Attendance History** (also accessible via `/my-attendance` and the topbar clock icon), inspect your personal daily check-in/check-out times, total working hours, punctuality status (`Present`, `Late`, `Half Day`), notes, and monthly KPI cards (**Days Present**, **Total Hours**, **Avg Daily**, **On-Time Rate**).
 5. **Salary & Deductions Transparency**:
    - Access all past and current monthly payslips.
    - Inspect itemized earnings (Basic salary, allowances).

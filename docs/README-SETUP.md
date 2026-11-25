@@ -87,6 +87,23 @@ DB_PASSWORD=<your-local-mysql-password>
 
 `DB_USERNAME`/`DB_PASSWORD`-ஐ **உங்கள் local MySQL login-க்கு** மாற்றி, `.env`-ஐ team-க்கு அனுப்ப வேண்டாம். Mail-க்கு `MAIL_FROM_ADDRESS="hello@example.com"` போன்ற plain email format பயன்படுத்தவும்; Markdown `mailto:` link அல்ல.
 
+### Gmail SMTP (Forgot Password OTP-க்கு — விருப்பத்தேர்வு / Real Email)
+
+Super Admin / Institution Admin Forgot Password (6-digit Email OTP) real Gmail-க்கு அனுப்ப வேண்டுமெனில் `.env`-ல் (16-character Google App Password கொண்டு):
+
+```dotenv
+MAIL_MAILER=smtp
+MAIL_HOST=smtp.gmail.com
+MAIL_PORT=587
+MAIL_SCHEME=smtp
+MAIL_USERNAME=<your-gmail@gmail.com>
+MAIL_PASSWORD=<your-16-char-app-password>
+MAIL_FROM_ADDRESS="<your-gmail@gmail.com>"
+MAIL_FROM_NAME="IGK School"
+```
+
+*(Offline test-க்கு `MAIL_MAILER=log` வைத்துக்கொள்ளலாம்.)*
+
 ### Team DB பெயர் மற்றும் isolation
 
 ஒவ்வொரு teammate-மும் தனித்தனி laptop-ல்/local MySQL server-ல் `school_management_system_testing_db` என்ற ஒரே பெயரைப் பயன்படுத்தலாம். MySQL instances தனித்தனியாக இருப்பதால் ஒவ்வொருவருக்கும் தனித்த database; அதே seeders ஓட்டியதால் ஒரே sample starting data.

@@ -143,6 +143,16 @@ class HrPayrollController extends Controller
     public function payrollGenerate(Request $request): RedirectResponse
     {
         $this->authorize('payroll.create');
+
+        if ($request->filled('payroll_month') && (! $request->filled('period_start') || ! $request->filled('period_end'))) {
+            $request->validate(['payroll_month' => ['required', 'date_format:Y-m']]);
+            $month = \Carbon\Carbon::createFromFormat('Y-m', (string) $request->input('payroll_month'));
+            $request->merge([
+                'period_start' => $month->copy()->startOfMonth()->toDateString(),
+                'period_end' => $month->copy()->endOfMonth()->toDateString(),
+            ]);
+        }
+
         $data = $request->validate([
             'period_start' => ['required', 'date'],
             'period_end' => ['required', 'date', 'after_or_equal:period_start'],

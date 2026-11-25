@@ -140,6 +140,7 @@
                 <div class="mb-3">
                     <div class="d-flex justify-content-between align-items-center">
                         <label class="form-label small fw-medium" for="password">Password</label>
+                        <a href="{{ route('password.forgot') }}" class="small text-decoration-none">Forgot password?</a>
                     </div>
                     <div class="input-icon">
                         <i class="bi bi-lock"></i>

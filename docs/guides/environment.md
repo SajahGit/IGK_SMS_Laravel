@@ -20,7 +20,24 @@ DB_USERNAME=<your-local-mysql-user>
 DB_PASSWORD=<your-local-mysql-password>
 ```
 
-`.env.example` also sets local log, cache, session, queue, filesystem and mail-to-log defaults. Set `APP_KEY` using `php artisan key:generate`; do not reuse another developer's key.
+`.env.example` also sets local log, cache, session, queue, filesystem and mail defaults. Set `APP_KEY` using `php artisan key:generate`; do not reuse another developer's key.
+
+## Gmail SMTP Configuration (Forgot Password OTP & Notifications)
+
+To send real emails (such as the 6-digit Administrator Forgot Password OTP and Password Change Confirmation) via Gmail SMTP, configure the following variables in your private `.env` using a 16-character **Google App Password** (never your normal Gmail login password):
+
+```dotenv
+MAIL_MAILER=smtp
+MAIL_HOST=smtp.gmail.com
+MAIL_PORT=587
+MAIL_SCHEME=smtp
+MAIL_USERNAME=<your-gmail@gmail.com>
+MAIL_PASSWORD=<your-16-char-google-app-password>
+MAIL_FROM_ADDRESS="<your-gmail@gmail.com>"
+MAIL_FROM_NAME="IGK School"
+```
+
+> **Note:** In Laravel 12 / Symfony Mailer, `MAIL_SCHEME=smtp` on port `587` negotiates STARTTLS automatically. `config/mail.php` also normalizes `MAIL_SCHEME=tls` to `smtp` to prevent scheme errors. For offline local development without email sending, keep `MAIL_MAILER=log`.
 
 Before any migration/seeding command:
 

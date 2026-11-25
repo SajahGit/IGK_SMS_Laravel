@@ -42,11 +42,12 @@
                     @error('roles.0')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
                 </div>
                 <div class="col-md-6">
-                    <label class="form-label">Campus</label>
-                    <select name="branch_id" class="form-select" @required($branches->isNotEmpty())>
-                        <option value="">Global / not assigned</option>
+                    <label class="form-label">Campus / Branch</label>
+                    <select name="branch_id" id="userBranchSelect" class="form-select">
+                        <option value="">All Branches / Global (Admin only)</option>
                         @foreach ($branches as $branch)<option value="{{ $branch->id }}" @selected((string) old('branch_id') === (string) $branch->id)>{{ $branch->name }}</option>@endforeach
                     </select>
+                    <div class="form-text">Super Admin and Institution Admin can use <strong>All Branches / Global</strong> or be assigned to a specific branch.</div>
                 </div>
                 <div class="col-md-6">
                     <div class="form-check">
@@ -68,4 +69,21 @@
         </form>
     </div>
 </div>
+<script>
+    (function () {
+        var roleSelect = document.querySelector('select[name="roles[]"]');
+        var branchSelect = document.getElementById('userBranchSelect');
+        var hasBranches = {{ $branches->isNotEmpty() ? 'true' : 'false' }};
+        if (!roleSelect || !branchSelect) return;
+
+        function syncBranchRequired() {
+            var selected = Array.from(roleSelect.selectedOptions).map(function (o) { return o.value; });
+            var isGlobalAdmin = selected.includes('Super Admin') || selected.includes('Institution Admin');
+            branchSelect.required = hasBranches && !isGlobalAdmin;
+        }
+
+        roleSelect.addEventListener('change', syncBranchRequired);
+        syncBranchRequired();
+    })();
+</script>
 @endsection

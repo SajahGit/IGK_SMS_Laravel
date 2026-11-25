@@ -40,19 +40,23 @@ The shared dropdown regression passed 10 Chromium cases across five configured v
 - **NOT TESTED:** `ConcurrentPaymentsTest` (the single skip), all forms/buttons across all modules, post-2FA admin pages, and OS-level printing.
 - **BLOCKED:** Exam Coordinator has no linked user account; post-2FA admin pages were left unvisited to preserve existing admin accounts.
 
-### Security & Attendance Feature Implementation — 2026-11-25
+### Security, Forgot Password OTP, User Branch & Payroll Fixes — 2026-11-25
 
 1. **Mandatory Google Authenticator 2FA (Super Admin & Institution Admin)**:
    - Generated unique TOTP Secret Keys stored securely using Laravel's `'encrypted'` model cast.
    - Rendered inline SVG QR Codes (`BaconQrCode\Writer` with `SvgImageBackEnd`) alongside 16-character manual setup keys with one-click copy buttons for effortless Google Authenticator scanning.
-   - Enforced 6-digit TOTP validation on setup and on **every single admin login** without exception.
-   - Removed long-term "Remember Device" / "Trust This Device" options for administrative roles to prevent bypassing 2FA across sessions.
-2. **Teacher & Employee Personal Attendance Views**:
+   - Enforced 6-digit TOTP validation on setup and on **every single admin login** without exception, with "Remember Device" / "Trust This Device" disabled.
+2. **Administrator Forgot Password (6-Digit Email OTP + Gmail SMTP)**:
+   - Upgraded Forgot Password to a 3-step OTP flow (`password_reset_otps` migration, `PasswordResetOtpService`, `PasswordResetOtpMail`, `PasswordChangedConfirmationMail`) strictly for **Super Admin** and **Institution Admin** accounts (Students, Teachers, and Staff remain admin-managed).
+   - Configured Gmail SMTP (`smtp.gmail.com:587`, `MAIL_SCHEME=smtp`, with automatic `tls` -> `smtp` normalization in `config/mail.php`) and added clear network/SMTP error reporting.
+   - Guarded `Password::uncompromised()` to `production` in `AppServiceProvider` to prevent Windows XAMPP `cURL error 60` SSL failures during password reset/changes.
+3. **User Management Campus Assignment & Payroll Month Picker**:
+   - Fixed `InstitutionAdminUsersCreate` & `InstitutionAdminUsersEdit` so `Super Admin` and `Institution Admin` can select **`All Branches / Global (Admin only)`** or a specific campus without HTML5 `required` blocking.
+   - Added a **Payroll Month** picker (`YYYY-MM`) to `HrPayrollIndex` and `HrPayrollController@payrollGenerate` that automatically populates `period_start` and `period_end` for the complete calendar month, and updated `HrPayrollService` to check `StaffAttendance` by both `employee_id` and `teacher_id`.
+4. **Teacher & Employee Personal Attendance Views**:
    - Resolved missing `status` and display in `TeacherProfile.blade.php`.
    - Updated `staff_attendance` with `employee_id` and backfilled all existing records.
-   - Teachers view attendance logs on `/teacher/profile` (Tab: "Leaves & Attendance History").
-   - Non-teacher employees (Accountants, Registrars, Librarians, Admin Staff) view their personal attendance records and monthly KPIs via `/my-attendance` and topbar navigation.
-   - Added automated calculations for check-in, check-out, working hours, status badges, and monthly KPIs (Days Present, Total Hours, Avg Daily, On-Time Rate).
+   - Teachers view attendance logs on `/teacher/profile` (Tab: "Leaves & Attendance History"); non-teacher employees view theirs via `/my-attendance` and the topbar shortcut.
 
 ## Resolved Issues
 
