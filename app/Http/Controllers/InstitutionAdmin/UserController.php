@@ -102,6 +102,7 @@ class UserController extends Controller
             ]);
 
             $user->syncRoles($roleNames);
+            \App\Services\EmployeeSyncService::ensureForStaffUser($user);
             AuditLogger::log('roles_assigned', $user, null, ['roles' => $roleNames]);
 
             return $user;

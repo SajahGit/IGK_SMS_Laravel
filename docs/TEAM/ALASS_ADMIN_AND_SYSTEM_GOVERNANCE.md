@@ -23,6 +23,8 @@ As Team Leader and System Governance owner, Alass owns the administrative backbo
    - Administrator Forgot Password via 6-digit Email OTP + Gmail SMTP (`PasswordResetOtpService`), strictly scoped to Super Admin and Institution Admin accounts while preserving 2FA.
    - User Management branch assignment supporting **`All Branches / Global (Admin only)`** or specific campus selection for Super Admin & Institution Admin.
 3. **Human Resources & Statutory EPF/ETF Payroll (`/admin/payroll`):**
+   - Complete HR Employees directory (`EmployeeSyncService`) auto-syncing all Teachers and Staff Users with **Category-Wise Tabs & Filters** (`Teaching Faculty`, `Administration`, `Finance & Accounts`, `Admissions & Registrar`, `Library & Operations`).
+   - Bidirectional record synchronization across `User`, `Teacher`, `Employee`, `Student`, and `StaffAttendance` updates.
    - Employee master records management and leave approvals.
    - **Payroll Month** selector (`YYYY-MM`) auto-snapping `period_start` and `period_end` to a complete calendar month.
    - Staff & Employee personal attendance self-service (`/my-attendance`, `/teacher/profile`) with working hours, check-in/out, and monthly KPI metrics.

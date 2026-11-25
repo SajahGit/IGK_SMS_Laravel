@@ -294,8 +294,9 @@ The shared dropdown component covers regular role, campus, and status selects an
    - **Google Authenticator 2FA Preserved:** Existing 2FA secrets and settings remain intact, and logging in with the new password still requires Google Authenticator 2FA.
 3. **User Management Campus Assignment**:
    - In `/admin/users/create` and `/admin/users/{user}/edit`, **Super Admin** and **Institution Admin** accounts can select either **`All Branches / Global (Admin only)`** or a specific campus branch. Other staff roles require a branch assignment.
-4. **Monthly Payroll Generation (`/admin/hr/payroll`)**:
-   - Use the **Payroll Month** picker (`YYYY-MM`) to automatically populate `Period start` (`YYYY-MM-01`) and `Period end` (last day of the calendar month), ensuring statutory monthly payroll runs always cover one complete calendar month.
+4. **Monthly Payroll Generation & HR Employees (`/admin/hr/payroll`, `/admin/hr/employees`)**:
+   - **HR Employees Directory**: Automatically includes all Teachers and non-teaching Staff (`Super Admin`, `Institution Admin`, `Accountant`, `Registrar`, `Librarian`) via `EmployeeSyncService`, with **Category Tabs** (`Teaching Faculty`, `Administration`, `Finance & Accounts`, `Admissions & Registrar`, `Library & Operations`, `General Staff`) and Campus/Department/Status filters.
+   - **Payroll Month Picker**: Use the **Payroll Month** picker (`YYYY-MM`) to automatically populate `Period start` (`YYYY-MM-01`) and `Period end` (last day of the calendar month), ensuring statutory monthly payroll runs always cover one complete calendar month.
 
 ---
 

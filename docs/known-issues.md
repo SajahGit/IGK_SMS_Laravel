@@ -53,7 +53,11 @@ The shared dropdown regression passed 10 Chromium cases across five configured v
 3. **User Management Campus Assignment & Payroll Month Picker**:
    - Fixed `InstitutionAdminUsersCreate` & `InstitutionAdminUsersEdit` so `Super Admin` and `Institution Admin` can select **`All Branches / Global (Admin only)`** or a specific campus without HTML5 `required` blocking.
    - Added a **Payroll Month** picker (`YYYY-MM`) to `HrPayrollIndex` and `HrPayrollController@payrollGenerate` that automatically populates `period_start` and `period_end` for the complete calendar month, and updated `HrPayrollService` to check `StaffAttendance` by both `employee_id` and `teacher_id`.
-4. **Teacher & Employee Personal Attendance Views**:
+4. **HR Employees Auto-Sync, Category-Wise Filtering & Role-Person Sync**:
+   - Created `EmployeeSyncService` and backfill migration (`2026_11_25_140000_backfill_missing_staff_employees`) so every Teacher and Staff User (`Super Admin`, `Institution Admin`, `Accountant`, `Registrar`, `Librarian`) is automatically registered in `employees`.
+   - Added category tabs & filters (`Teaching Faculty`, `Administration`, `Finance & Accounts`, `Admissions & Registrar`, `Library & Operations`, `General Staff`) plus campus/department/status filters in `HrEmployeesIndex`.
+   - Synchronized linked `User`, `Teacher`, `Employee`, `Student`, and `StaffAttendance` updates across `UserController`, `TeacherController`, and `HrPayrollController`.
+5. **Teacher & Employee Personal Attendance Views**:
    - Resolved missing `status` and display in `TeacherProfile.blade.php`.
    - Updated `staff_attendance` with `employee_id` and backfilled all existing records.
    - Teachers view attendance logs on `/teacher/profile` (Tab: "Leaves & Attendance History"); non-teacher employees view theirs via `/my-attendance` and the topbar shortcut.

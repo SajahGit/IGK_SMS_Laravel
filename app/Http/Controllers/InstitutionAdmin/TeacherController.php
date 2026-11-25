@@ -84,13 +84,15 @@ class TeacherController extends Controller
                 'must_change_password' => true,
             ]);
 
-            Teacher::create([
+            $teacher = Teacher::create([
                 'user_id' => $user->id,
                 'branch_id' => $branchId,
                 'phone' => $data['phone'] ?? null,
                 'department_id' => $data['department_id'] ?? null,
                 'status' => $data['status'],
             ]);
+
+            \App\Services\EmployeeSyncService::ensureForTeacher($teacher);
         });
 
         return redirect()->route('admin.teachers.index')->with('success', 'Teacher created successfully with campus assignment.');

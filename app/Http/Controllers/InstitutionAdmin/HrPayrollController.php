@@ -12,6 +12,7 @@ use App\Models\PayrollEntry;
 use App\Models\PayrollRun;
 use App\Models\Teacher;
 use App\Models\User;
+use App\Services\EmployeeSyncService;
 use App\Services\HrPayrollService;
 use App\Support\AuditLogger;
 use Illuminate\Http\RedirectResponse;
@@ -26,22 +27,62 @@ class HrPayrollController extends Controller
     public function employees(Request $request): View
     {
         $this->authorize('hr.read');
-        $employees = Employee::query()
+
+        $category = (string) $request->query('category', 'all');
+        $branchFilter = $request->query('branch_id');
+        $departmentFilter = $request->query('department_id');
+        $statusFilter = $request->query('employment_status');
+
+        $allForCounts = Employee::query()
+            ->with(['user', 'teacher.user'])
+            ->get(['id', 'user_id', 'teacher_id', 'job_title']);
+
+        $categoryCounts = array_fill_keys(array_keys(EmployeeSyncService::CATEGORIES), 0);
+        foreach ($allForCounts as $item) {
+            $cat = EmployeeSyncService::categoryFor($item);
+            $categoryCounts[$cat] = ($categoryCounts[$cat] ?? 0) + 1;
+        }
+        $totalCount = $allForCounts->count();
+
+        $query = Employee::query()
             ->with(['user', 'teacher.user', 'department', 'branch', 'branchTransfers.fromBranch', 'branchTransfers.toBranch'])
-            ->when($request->filled('search'), fn ($query) => $query->where(function ($nested) use ($request) {
+            ->when($category !== '' && $category !== 'all' && array_key_exists($category, EmployeeSyncService::CATEGORIES), function ($q) use ($category) {
+                EmployeeSyncService::applyCategoryFilter($q, $category);
+            })
+            ->when($branchFilter, fn ($q) => $q->where('branch_id', $branchFilter))
+            ->when($departmentFilter, fn ($q) => $q->where('department_id', $departmentFilter))
+            ->when($statusFilter, fn ($q) => $q->where('employment_status', $statusFilter))
+            ->when($request->filled('search'), fn ($q) => $q->where(function ($nested) use ($request) {
                 $nested->where('employee_no', 'like', '%'.$request->string('search').'%')
                     ->orWhere('job_title', 'like', '%'.$request->string('search').'%')
-                    ->orWhereHas('user', fn ($user) => $user->where('name', 'like', '%'.$request->string('search').'%'))
+                    ->orWhereHas('user', fn ($user) => $user->where('name', 'like', '%'.$request->string('search').'%')
+                        ->orWhere('email', 'like', '%'.$request->string('search').'%'))
                     ->orWhereHas('teacher.user', fn ($user) => $user->where('name', 'like', '%'.$request->string('search').'%'));
-            }))
+            }));
+
+        $employees = $query
+            ->orderBy('job_title')
             ->orderByDesc('updated_at')
             ->latest('id')
-            ->paginate(15)
+            ->paginate(20)
             ->withQueryString();
 
         $branches = Branch::withoutGlobalScopes()->where('is_active', true)->orderBy('name')->get();
+        $departments = Department::orderBy('name')->get();
+        $categories = EmployeeSyncService::CATEGORIES;
 
-        return view('InstitutionAdmin.HrEmployeesIndex', compact('employees', 'branches'));
+        return view('InstitutionAdmin.HrEmployeesIndex', compact(
+            'employees',
+            'branches',
+            'departments',
+            'categories',
+            'category',
+            'categoryCounts',
+            'totalCount',
+            'branchFilter',
+            'departmentFilter',
+            'statusFilter'
+        ));
     }
 
     public function employeeCreate(): View

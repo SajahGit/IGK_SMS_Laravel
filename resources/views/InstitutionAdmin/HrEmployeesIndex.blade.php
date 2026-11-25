@@ -31,15 +31,68 @@
 
 @include('Layouts.LayoutErrors')
 
+<!-- Category Tabs -->
+<div class="d-flex flex-wrap gap-2 mb-3">
+    <a href="{{ route('admin.hr.employees.index', array_filter(['search' => request('search'), 'branch_id' => $branchFilter, 'department_id' => $departmentFilter, 'employment_status' => $statusFilter])) }}"
+       class="btn btn-sm {{ ($category ?? 'all') === 'all' ? 'btn-primary' : 'btn-outline-secondary' }}">
+        All Employees <span class="badge {{ ($category ?? 'all') === 'all' ? 'bg-white text-primary' : 'bg-secondary' }} ms-1">{{ $totalCount ?? $employees->total() }}</span>
+    </a>
+    @foreach ($categories as $catKey => $catLabel)
+        @if (($categoryCounts[$catKey] ?? 0) > 0 || ($category ?? 'all') === $catKey)
+            <a href="{{ route('admin.hr.employees.index', array_filter(['category' => $catKey, 'search' => request('search'), 'branch_id' => $branchFilter, 'department_id' => $departmentFilter, 'employment_status' => $statusFilter])) }}"
+               class="btn btn-sm {{ ($category ?? 'all') === $catKey ? 'btn-primary' : 'btn-outline-secondary' }}">
+                {{ $catLabel }} <span class="badge {{ ($category ?? 'all') === $catKey ? 'bg-white text-primary' : 'bg-secondary' }} ms-1">{{ $categoryCounts[$catKey] ?? 0 }}</span>
+            </a>
+        @endif
+    @endforeach
+</div>
+
 <div class="card shadow-sm border-0 mb-3">
     <div class="card-body">
-        <form method="GET" class="row g-2">
-            <div class="col-md-8">
-                <input class="form-control" name="search" value="{{ request('search') }}" placeholder="Search by employee number, name, or job title">
+        <form method="GET" class="row g-2 align-items-end">
+            <div class="col-md-3">
+                <label class="form-label small text-muted mb-1">Search</label>
+                <input class="form-control form-control-sm" name="search" value="{{ request('search') }}" placeholder="Employee no, name, email, or title">
             </div>
-            <div class="col-md-4">
-                <button class="btn btn-outline-primary"><i class="bi bi-search me-1"></i>Search</button>
-                <a class="btn btn-outline-secondary" href="{{ route('admin.hr.employees.index') }}">Clear</a>
+            <div class="col-md-2">
+                <label class="form-label small text-muted mb-1">Category</label>
+                <select name="category" class="form-select form-select-sm">
+                    <option value="all" @selected(($category ?? 'all') === 'all')>All Categories</option>
+                    @foreach ($categories as $catKey => $catLabel)
+                        <option value="{{ $catKey }}" @selected(($category ?? 'all') === $catKey)>{{ $catLabel }} ({{ $categoryCounts[$catKey] ?? 0 }})</option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small text-muted mb-1">Campus / Branch</label>
+                <select name="branch_id" class="form-select form-select-sm">
+                    <option value="">All Campuses</option>
+                    @foreach ($branches as $branch)
+                        <option value="{{ $branch->id }}" @selected((string) ($branchFilter ?? '') === (string) $branch->id)>{{ $branch->name }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small text-muted mb-1">Department</label>
+                <select name="department_id" class="form-select form-select-sm">
+                    <option value="">All Departments</option>
+                    @foreach ($departments as $dept)
+                        <option value="{{ $dept->id }}" @selected((string) ($departmentFilter ?? '') === (string) $dept->id)>{{ $dept->name }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="col-md-1">
+                <label class="form-label small text-muted mb-1">Status</label>
+                <select name="employment_status" class="form-select form-select-sm">
+                    <option value="">All</option>
+                    <option value="active" @selected(($statusFilter ?? '') === 'active')>Active</option>
+                    <option value="on_leave" @selected(($statusFilter ?? '') === 'on_leave')>On Leave</option>
+                    <option value="terminated" @selected(($statusFilter ?? '') === 'terminated')>Terminated</option>
+                </select>
+            </div>
+            <div class="col-md-2 d-flex gap-1">
+                <button class="btn btn-sm btn-primary flex-grow-1"><i class="bi bi-search me-1"></i>Filter</button>
+                <a class="btn btn-sm btn-outline-secondary" href="{{ route('admin.hr.employees.index') }}">Clear</a>
             </div>
         </form>
     </div>
@@ -51,7 +104,7 @@
             <thead class="table-light">
                 <tr>
                     <th>Employee</th>
-                    <th>Position</th>
+                    <th>Category & Position</th>
                     <th>Campus / Branch</th>
                     <th>Department</th>
                     <th>Hire Date</th>
@@ -62,12 +115,30 @@
             </thead>
             <tbody>
             @forelse ($employees as $employee)
+                @php
+                    $empCat = \App\Services\EmployeeSyncService::categoryFor($employee);
+                    $empCatLabel = $categories[$empCat] ?? 'General Staff';
+                    $empCatBadge = match ($empCat) {
+                        'teaching' => 'bg-info-subtle text-info border border-info-subtle',
+                        'administration' => 'bg-primary-subtle text-primary border border-primary-subtle',
+                        'finance' => 'bg-success-subtle text-success border border-success-subtle',
+                        'registrar' => 'bg-warning-subtle text-warning border border-warning-subtle',
+                        'library' => 'bg-secondary-subtle text-secondary border',
+                        default => 'bg-light text-dark border',
+                    };
+                @endphp
                 <tr>
                     <td>
                         <strong>{{ $employee->employee_no }}</strong>
                         <div class="fw-medium">{{ $employee->user?->name ?? $employee->teacher?->user?->name ?? 'No linked account' }}</div>
+                        @if ($employee->user?->email)
+                            <div class="small text-muted">{{ $employee->user->email }}</div>
+                        @endif
                     </td>
-                    <td>{{ $employee->job_title }}</td>
+                    <td>
+                        <span class="badge {{ $empCatBadge }} mb-1">{{ $empCatLabel }}</span>
+                        <div class="small fw-medium">{{ $employee->job_title }}</div>
+                    </td>
                     <td>
                         <span class="badge bg-primary-subtle text-primary border">
                             <i class="bi bi-building me-1"></i>{{ $employee->branch?->name ?? 'Main Campus' }}
