@@ -11,9 +11,14 @@ class SendPaymentReceivedNotification
     public function handle(PaymentRecorded $event): void
     {
         try {
-            $studentUser = $event->payment->invoice?->student?->user;
+            $student = $event->payment->invoice?->student;
+            $studentUser = $student?->user;
             if ($studentUser) {
                 $studentUser->notify(new PaymentReceivedNotification($event->payment));
+            }
+            $guardianUser = $student?->guardian?->user;
+            if ($guardianUser && $guardianUser->id !== $studentUser?->id) {
+                $guardianUser->notify(new PaymentReceivedNotification($event->payment));
             }
         } catch (Throwable $exception) {
             report($exception);

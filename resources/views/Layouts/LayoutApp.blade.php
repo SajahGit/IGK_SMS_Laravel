@@ -39,6 +39,7 @@
                 ['Exams & Results', 'admin.exams.index', 'admin.exams.*', 'journal-check'],
                 ['Term Results', 'admin.term-results.index', 'admin.term-results.*', 'trophy'],
                 ['Grade Scale', 'admin.grade-scale.edit', 'admin.grade-scale.*', 'sliders'],
+                ['Video & PDF Management', 'admin.learning-materials.index', 'admin.learning-materials.*', 'collection-play-fill'],
             ],
             'Library' => [
                 ['Dashboard', 'library.dashboard', 'library.dashboard', 'grid-1x2-fill'],
@@ -86,6 +87,7 @@
             'Teaching' => [
                 ['My Classes', 'teacher.classes.index', 'teacher.classes.*', 'easel2-fill'],
                 ['Learning Management', 'teacher.lms.index', 'teacher.lms.*', 'book-half'],
+                ['My Learning Materials', 'teacher.learning-materials.index', 'teacher.learning-materials.*', 'collection-play-fill'],
                 ['My Timetable', 'teacher.timetable.index', 'teacher.timetable.*', 'calendar-week'],
                 ['Mark Attendance', 'teacher.attendance.create', 'teacher.attendance.create', 'clipboard2-check-fill'],
                 ['Attendance History', 'teacher.attendance.index', 'teacher.attendance.index', 'clock-history'],
@@ -179,6 +181,7 @@
                 ['My Profile', 'student.profile', 'student.profile*', 'person-badge-fill'],
                 ['Class Timetable', 'student.timetable', 'student.timetable', 'calendar-week'],
                 ['Learning Management', 'student.lms.index', 'student.lms.*', 'book-half'],
+                ['My Learning Materials', 'student.learning-materials.index', 'student.learning-materials.*', 'collection-play-fill'],
                 ['My Hostel', 'student.hostel', 'student.hostel', 'house-door-fill'],
                 ['Cafeteria', 'student.cafeteria', 'student.cafeteria*', 'cup-hot-fill'],
                 ['My Attendance', 'student.attendance', 'student.attendance', 'calendar2-check-fill'],
@@ -332,26 +335,38 @@
                         <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">{{ $user->unreadNotifications()->count() }}</span>
                     @endif
                 </button>
-                <div class="dropdown-menu dropdown-menu-end p-2 notification-dropdown-menu" style="min-width: 320px">
-                    <div class="d-flex justify-content-between align-items-center px-2 py-1">
-                        <strong>Notifications</strong>
+                <div class="dropdown-menu dropdown-menu-end p-2 notification-dropdown-menu shadow-lg" style="min-width: 330px; max-width: 380px; max-height: 380px; overflow-y: auto;">
+                    <div class="d-flex justify-content-between align-items-center px-2 py-1 mb-1 border-bottom border-secondary border-opacity-25">
+                        <strong class="small text-uppercase text-secondary">Notifications</strong>
                         <form method="POST" action="{{ route('notifications.read-all') }}">
                             @csrf
-                            <button class="btn btn-sm btn-link p-0">Mark all read</button>
+                            <button class="btn btn-sm btn-link text-decoration-none p-0 small">Mark all read</button>
                         </form>
                     </div>
-                    @forelse ($user->notifications()->latest()->limit(5)->get() as $notification)
-                        <form method="POST" action="{{ route('notifications.read', $notification) }}" class="border-top py-2 px-2">
+                    @forelse ($user->notifications()->latest()->limit(8)->get() as $notification)
+                        <form method="POST" action="{{ route('notifications.read', $notification) }}" class="mb-1">
                             @csrf
-                            <button class="btn btn-link text-start text-decoration-none p-0 w-100">
-                                <span class="d-block fw-semibold">{{ $notification->data['title'] ?? 'Notification' }}</span>
-                                <span class="small text-muted">{{ \Illuminate\Support\Str::limit($notification->data['body'] ?? '', 90) }}</span>
-                                @if (! $notification->read_at)<span class="badge bg-primary ms-1">New</span>@endif
+                            <button class="dropdown-item rounded-2 py-2 px-2 text-wrap text-start {{ $notification->read_at ? 'opacity-75' : 'bg-primary bg-opacity-10' }}">
+                                <div class="d-flex justify-content-between align-items-center gap-2">
+                                    <span class="fw-semibold small text-body">{{ $notification->data['title'] ?? 'Notification' }}</span>
+                                    @if (! $notification->read_at)
+                                        <span class="badge bg-primary rounded-pill" style="font-size: 0.65rem;">New</span>
+                                    @endif
+                                </div>
+                                @if (! empty($notification->data['body']))
+                                    <span class="d-block small text-secondary mt-1">{{ \Illuminate\Support\Str::limit($notification->data['body'], 95) }}</span>
+                                @endif
+                                <span class="d-block text-secondary mt-1" style="font-size: 0.7rem;">{{ $notification->created_at?->diffForHumans() }}</span>
                             </button>
                         </form>
                     @empty
-                        <div class="text-muted small px-2 py-3">No notifications yet.</div>
+                        <div class="text-secondary small text-center px-2 py-3">
+                            <i class="bi bi-bell-slash d-block fs-5 mb-1"></i>No notifications yet.
+                        </div>
                     @endforelse
+                    <div class="border-top border-secondary border-opacity-25 pt-2 mt-1 text-center">
+                        <a href="{{ route('notifications.index') }}" class="small text-decoration-none fw-semibold">View all notifications</a>
+                    </div>
                 </div>
             </div>
             <button class="icon-btn" data-theme-toggle title="Switch theme" aria-label="Switch theme"><i data-theme-icon class="bi bi-sun"></i></button>
@@ -387,20 +402,41 @@
                 $activeAnnouncements = \App\Models\Announcement::activeForUser($user)->take(2)->get();
             @endphp
             @if ($activeAnnouncements->isNotEmpty())
-                <div class="mb-4 no-print">
+                <div class="mb-3 no-print" id="globalAnnouncementsBar">
                     @foreach ($activeAnnouncements as $announcement)
-                        <div class="alert alert-info d-flex align-items-start gap-3 shadow-sm mb-2 p-3">
-                            <i class="bi bi-megaphone-fill fs-4 mt-1 text-primary flex-shrink-0"></i>
+                        <div class="alert alert-info alert-dismissible fade show d-flex align-items-start gap-3 shadow-sm mb-2 py-2 px-3"
+                             data-announcement-id="{{ $announcement->id }}"
+                             role="alert">
+                            <i class="bi bi-megaphone-fill fs-5 mt-1 text-info flex-shrink-0"></i>
                             <div class="flex-grow-1">
-                                <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-1">
-                                    <strong class="text-body fw-bold fs-6">{{ $announcement->title }}</strong>
-                                    <span class="badge bg-body-secondary text-body-secondary small"><i class="bi bi-clock me-1"></i>{{ $announcement->published_at->diffForHumans() }}</span>
+                                <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+                                    <strong class="fw-semibold">{{ $announcement->title }}</strong>
+                                    <span class="badge bg-info bg-opacity-25 text-info-emphasis small">
+                                        <i class="bi bi-clock me-1"></i>{{ $announcement->published_at->diffForHumans() }}
+                                    </span>
                                 </div>
-                                <div class="small text-body" style="line-height: 1.5;">{{ $announcement->body }}</div>
+                                <div class="small mt-1 opacity-90" style="line-height: 1.45;">{{ $announcement->body }}</div>
                             </div>
+                            <button type="button" class="btn-close dismiss-announcement-btn" data-bs-dismiss="alert" aria-label="Close" data-announcement-id="{{ $announcement->id }}"></button>
                         </div>
                     @endforeach
                 </div>
+                <script>
+                document.addEventListener('DOMContentLoaded', () => {
+                    document.querySelectorAll('[data-announcement-id].alert').forEach(el => {
+                        const id = el.getAttribute('data-announcement-id');
+                        if (id && localStorage.getItem('dismissed_announcement_' + id) === '1') {
+                            el.remove();
+                        }
+                    });
+                    document.querySelectorAll('.dismiss-announcement-btn').forEach(btn => {
+                        btn.addEventListener('click', () => {
+                            const id = btn.getAttribute('data-announcement-id');
+                            if (id) localStorage.setItem('dismissed_announcement_' + id, '1');
+                        });
+                    });
+                });
+                </script>
             @endif
 
             @yield('content')

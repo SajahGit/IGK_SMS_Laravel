@@ -33,7 +33,9 @@ class PaymentReceivedNotification extends Notification
             'body' => 'Receipt '.$this->payment->receipt_no.' for '.Money::format($this->payment->amount).' was recorded.',
             'payment_id' => $this->payment->id,
             'invoice_id' => $this->payment->invoice_id,
-            'url' => url('/'),
+            'url' => in_array(strtolower((string) ($notifiable->role ?? '')), ['parent', 'guardian'], true)
+                ? route('guardian.invoices', [], false)
+                : route('student.invoices', [], false),
         ];
     }
 }

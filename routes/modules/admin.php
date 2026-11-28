@@ -294,3 +294,22 @@ Route::post('announcements', [AnnouncementController::class, 'store'])->middlewa
 Route::put('announcements/{announcement}', [AnnouncementController::class, 'update'])->middleware('permission:announcements.update')->name('announcements.update');
 Route::delete('announcements/{announcement}', [AnnouncementController::class, 'destroy'])->middleware(['permission:announcements.delete', 'role:admin'])->name('announcements.destroy');
 Route::get('audit-logs', [AuditLogController::class, 'index'])->middleware(['permission:audit_logs.read', 'role:admin'])->name('audit-logs.index');
+
+// ---- Secure Video & PDF Learning Materials Management (Admin) ----
+Route::middleware('role:admin')->prefix('learning-materials')->name('learning-materials.')->group(function () {
+    Route::get('/', [\App\Http\Controllers\InstitutionAdmin\LearningMaterialController::class, 'index'])->name('index');
+    Route::get('/create', [\App\Http\Controllers\InstitutionAdmin\LearningMaterialController::class, 'create'])->name('create');
+    Route::post('/', [\App\Http\Controllers\InstitutionAdmin\LearningMaterialController::class, 'store'])->name('store');
+    Route::get('/{material}/edit', [\App\Http\Controllers\InstitutionAdmin\LearningMaterialController::class, 'edit'])->name('edit');
+    Route::put('/{material}', [\App\Http\Controllers\InstitutionAdmin\LearningMaterialController::class, 'update'])->name('update');
+    Route::post('/{material}/toggle-status', [\App\Http\Controllers\InstitutionAdmin\LearningMaterialController::class, 'toggleStatus'])->name('toggle-status');
+    Route::post('/{material}/toggle-download', [\App\Http\Controllers\InstitutionAdmin\LearningMaterialController::class, 'toggleDownload'])->name('toggle-download');
+    Route::post('/{material}/expire-now', [\App\Http\Controllers\InstitutionAdmin\LearningMaterialController::class, 'expireNow'])->name('expire-now');
+    Route::delete('/{material}', [\App\Http\Controllers\InstitutionAdmin\LearningMaterialController::class, 'destroy'])->name('destroy');
+    Route::post('/{material}/share-links', [\App\Http\Controllers\InstitutionAdmin\LearningMaterialController::class, 'generateShareLink'])->name('share-links.store');
+    Route::post('/share-links/{shareLink}/revoke', [\App\Http\Controllers\InstitutionAdmin\LearningMaterialController::class, 'revokeShareLink'])->name('share-links.revoke');
+    Route::post('/settings', [\App\Http\Controllers\InstitutionAdmin\LearningMaterialController::class, 'updateSettings'])->name('settings.update');
+    Route::post('/users/{user}/toggle-access', [\App\Http\Controllers\InstitutionAdmin\LearningMaterialController::class, 'toggleUserAccess'])->name('users.toggle-access');
+    Route::post('/users/bulk-access', [\App\Http\Controllers\InstitutionAdmin\LearningMaterialController::class, 'bulkUserAccess'])->name('users.bulk-access');
+    Route::post('/categories', [\App\Http\Controllers\InstitutionAdmin\LearningMaterialController::class, 'storeCategory'])->name('categories.store');
+});

@@ -93,3 +93,11 @@ To prevent git merge conflicts in Fork:
    - Shared `public/js/app.js` and `public/css/glass.css` enforce downward `bottom-start` positioning, field-aligned widths, and internal scrolling for long searchable/country menus across authenticated role layouts.
    - Regular selects, including Active Campus, use the searchable component while preserving the original select value/change event. Special country, nationality, and phone controls keep their dedicated shared components.
    - The database-free component regression and its role-page coverage limit are documented in [Global Dropdown UI](../guides/global-dropdown-ui.md).
+
+
+---
+
+## Core UI, Notification & Session Updates (2026-11-28)
+- **UI Theme Consistency**: Fixed Light/Dark mode table, button, and dropdown contrast across Learning Materials views and `public/css/glass.css` (`.glass-card`, `.topbar .notification-dropdown-menu` alignment, `pagination::bootstrap-5`, and `#selectedRecipientBanner` `d-none` fix in `Messages/Create.blade.php`).
+- **Session Expiry**: Configured `419` / `TokenMismatchException` graceful handling in `bootstrap/app.php`.
+- **Cross-Branch Cafeteria Eager-Loading**: `CafeteriaController@index` bypasses `BranchOwned` on `inventoryItem`, `student`, and `items.cafeteriaItem`, with null-safe rendering in `CafeteriaIndex.blade.php`.

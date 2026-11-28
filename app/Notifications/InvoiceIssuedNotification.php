@@ -33,7 +33,9 @@ class InvoiceIssuedNotification extends Notification
             'body' => 'Invoice '.$this->invoice->invoice_no.' for '.Money::format($this->invoice->total)
                 .' is due on '.$this->invoice->due_date->toDateString().'.',
             'invoice_id' => $this->invoice->id,
-            'url' => url('/'),
+            'url' => in_array(strtolower((string) ($notifiable->role ?? '')), ['parent', 'guardian'], true)
+                ? route('guardian.invoices', [], false)
+                : route('student.invoices', [], false),
         ];
     }
 }

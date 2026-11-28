@@ -13,3 +13,11 @@ Targeted PHPUnit feature suites verified the following modules on 2026-11-25:
 - `HrEmployeesCategoryFilterTest` + `HrEmployeeEditTest`: 4 tests, 36 assertions (PASS)
 - `Phase1RbacAndModuleTest`: 20 tests, 108 assertions (PASS)
 - `InternationalMultiBranchAndPayrollTest`: passed within combined 22-test run (216 assertions, PASS)
+
+
+---
+
+## 2026-11-28 Verification Addendum (Learning Materials, Notifications & Finance Sync)
+- **Automated Verification (`php vendor/bin/phpunit`):**
+  - `LearningMaterialsModuleTest`, `NotificationViewTest`, `RoleLoginVerificationTest`, `FinanceEndToEndWorkflowTest`, `FinanceInvoiceWorkflowTest`, `Phase4FinanceModuleTest`, `AccountantFinanceAccessTest`, `AccountingReportTest`, `ReportsParityTest`: **68 tests, 625 assertions passed**.
+  - Earlier 8-suite finance baseline (`ConcurrentPaymentsTest` included): **52 tests, 317 assertions, 1 skipped** (SQLite concurrency lock test).

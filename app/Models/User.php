@@ -21,6 +21,10 @@ class User extends Authenticatable
         'role',
         'branch_id',
         'is_active',
+        'lms_material_access',
+        'lms_video_access',
+        'lms_pdf_access',
+        'lms_can_upload_materials',
         'must_change_password',
         'last_login_at',
         'two_factor_secret',
@@ -31,6 +35,10 @@ class User extends Authenticatable
 
     protected $attributes = [
         'is_active' => true,
+        'lms_material_access' => true,
+        'lms_video_access' => true,
+        'lms_pdf_access' => true,
+        'lms_can_upload_materials' => true,
         'must_change_password' => false,
     ];
 
@@ -65,6 +73,10 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'is_active' => 'boolean',
+            'lms_material_access' => 'boolean',
+            'lms_video_access' => 'boolean',
+            'lms_pdf_access' => 'boolean',
+            'lms_can_upload_materials' => 'boolean',
             'must_change_password' => 'boolean',
             'last_login_at' => 'datetime',
             'two_factor_secret' => 'encrypted',
@@ -92,6 +104,11 @@ class User extends Authenticatable
     public function guardian(): HasOne
     {
         return $this->hasOne(Guardian::class);
+    }
+
+    public function uploadedLearningMaterials(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(LearningMaterial::class, 'uploaded_by');
     }
 
     public function isAdmin(): bool

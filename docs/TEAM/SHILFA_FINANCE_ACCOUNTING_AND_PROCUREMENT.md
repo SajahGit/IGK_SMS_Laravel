@@ -141,3 +141,10 @@ Shilfa owns the financial operations of the institution, including student billi
 # Run all accountant, billing, ledger, and multi-campus finance tests
 php vendor/bin/phpunit tests/Feature/AccountantAllBranchFinanceTest.php tests/Feature/AccountantFinanceAccessTest.php tests/Feature/FinanceEndToEndWorkflowTest.php tests/Feature/AccountsModuleCompletionTest.php tests/Feature/ConcurrentPaymentsTest.php
 ```
+
+
+---
+
+## Finance & Guardian Synchronization Audit (2026-11-28)
+- **Student Profile Invoice Summary**: `InstitutionAdmin\StudentController@show` now excludes `cancelled` and `draft` invoices from `invoicesSummary` (`total_billed`, `total_paid`, `balance`).
+- **Guardian Notifications**: `SendInvoiceIssuedNotification` and `SendPaymentReceivedNotification` now notify both the student's user account and their linked guardian's user account, with role-specific relative URLs (`student.invoices` / `guardian.invoices`).

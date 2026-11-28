@@ -47,3 +47,15 @@ Route::put('/lms/courses/{course}/assignments/{assignment}', [LmsController::cla
 Route::delete('/lms/courses/{course}/assignments/{assignment}', [LmsController::class, 'destroyAssignment'])->name('lms.assignments.destroy');
 Route::put('/lms/courses/{course}/assignments/{assignment}/submissions/{submission}', [LmsController::class, 'gradeSubmission'])
     ->name('lms.submissions.grade');
+
+// ---- My Learning Materials (Secure Video & PDF) ----
+Route::prefix('learning-materials')->name('learning-materials.')->group(function () {
+    Route::get('/', [\App\Http\Controllers\Teacher\LearningMaterialController::class, 'index'])->name('index');
+    Route::get('/create', [\App\Http\Controllers\Teacher\LearningMaterialController::class, 'create'])->name('create');
+    Route::post('/', [\App\Http\Controllers\Teacher\LearningMaterialController::class, 'store'])->name('store');
+    Route::get('/{material}/edit', [\App\Http\Controllers\Teacher\LearningMaterialController::class, 'edit'])->name('edit');
+    Route::put('/{material}', [\App\Http\Controllers\Teacher\LearningMaterialController::class, 'update'])->name('update');
+    Route::delete('/{material}', [\App\Http\Controllers\Teacher\LearningMaterialController::class, 'destroy'])->name('destroy');
+    Route::post('/{material}/share-links', [\App\Http\Controllers\Teacher\LearningMaterialController::class, 'generateShareLink'])->name('share-links.store');
+    Route::post('/share-links/{shareLink}/revoke', [\App\Http\Controllers\Teacher\LearningMaterialController::class, 'revokeShareLink'])->name('share-links.revoke');
+});

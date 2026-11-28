@@ -196,3 +196,12 @@ All operational and architectural documentation files are maintained inside the 
 - [Local Developer Setup Guide](./docs/README-SETUP.md)
 - [Manual Functional Test Checklist](./docs/IGK_SCHOOL_ERP_MANUAL_FUNCTIONAL_TEST_CHECKLIST.md)
 - [Known Issues & Bug Register](./docs/known-issues.md)
+
+
+---
+
+## Latest Module Additions (2026-11-28)
+
+- **Secure Video & PDF Learning Materials**: Common Learning Materials Library across Admin, Teacher, and Student/Authorized Member portals (`LearningMaterialService`, `LearningMaterialController`, `LearningMaterialDeliveryController`).
+- **Notifications Inbox & Detail View**: `/notifications` (`notifications.index`) and `/notifications/{notification}` (`notifications.show`) with dynamic role-aware URL resolution on the active host.
+- **Finance & Guardian Synchronization**: Student profile `invoicesSummary` excludes `cancelled` and `draft` invoices; `InvoiceIssued` and `PaymentRecorded` notify both students and linked guardians.

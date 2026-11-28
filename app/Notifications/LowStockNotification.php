@@ -23,7 +23,7 @@ class LowStockNotification extends Notification
             'title' => 'Low stock alert',
             'body' => count($this->items).' inventory item(s) are at or below their reorder level: '.$names.$more.'.',
             'item_count' => count($this->items),
-            'url' => url('/'),
+            'url' => route('admin.inventory.index', [], false),
         ];
     }
 }

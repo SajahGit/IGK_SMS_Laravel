@@ -311,3 +311,14 @@ The shared dropdown component covers regular role, campus, and status selects an
 | Accountant | Finance only (fee structures, invoices, payments, receipts) |
 | Student | Own data only (results, invoices, report card) |
 | Parent | Linked children only |
+
+
+---
+
+## Video & PDF Learning Materials Management (`/admin/learning-materials`)
+
+1. **Upload & Lifecycle**: Upload videos (`mp4`, `webm`, `ogg`, `mov`) and PDFs (`pdf`) with optional thumbnails, category, course/subject metadata, visibility (`library` / `private`), active/inactive status, and optional expiry (`expires_at`). Expiring a material revokes access without deleting the stored file.
+2. **Download Control**: Toggle `allow_download` per material. When OFF, authenticated downloads return `403`, the Download button is hidden for all users, and the video player uses custom controls without browser download/PiP menus plus browser-level capture deterrents.
+3. **Member & Bulk Access**: Grant or revoke **Video Access** (`lms_video_access`), **PDF Access** (`lms_pdf_access`), and **Upload Permission** (`lms_can_upload_materials`) individually or in bulk by **Selected Checkboxes**, **Role**, **Student Class**, or **All Members** with live search-as-you-type.
+4. **Secure Share Links & Logs**: Generate and revoke `/secure-material/{token}` links, review most-viewed items, and audit `material_access_logs`.
+5. **Notifications (`/notifications`)**: Clicking any top-bar notification opens its detail page (`/notifications/{id}`) and resolves the related page link on the active host.

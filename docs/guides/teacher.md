@@ -58,3 +58,11 @@ Open **Timetable** to inspect your active weekly class slots, period timings, an
 1. Send confidential 1-on-1 private messages to students, guardians, and administrative staff.
 2. Instant message filtering: Search recipients by name, role, or campus branch.
 3. Real-time notifications: Unread indicators alert you to new communications immediately.
+
+
+---
+
+## 7. My Learning Materials (`/teacher/learning-materials`)
+1. When enabled by Admin (`teacher_uploads`, `teacher_video_uploads`, `teacher_pdf_uploads`, and per-user `lms_can_upload_materials`), upload videos and PDFs directly to the Common Learning Materials Library.
+2. Edit or delete your own uploaded materials and generate/revoke secure `/secure-material/{token}` share links.
+3. Admin-controlled download restrictions (`allow_download`) and expiry policies cannot be overridden by teachers.

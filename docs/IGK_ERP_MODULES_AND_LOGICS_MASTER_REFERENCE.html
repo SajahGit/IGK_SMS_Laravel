@@ -2132,5 +2132,16 @@
     </p>
 </div>
 
+
+<hr style="margin-top: 24px; border: 0; border-top: 1px solid #cbd5e1;">
+<h2>2026-11-28 Module, Notification &amp; Synchronization Addendum</h2>
+<ul>
+  <li><strong>Secure Video &amp; PDF Learning Materials:</strong> Added Common Learning Materials Library across Admin (<code>/admin/learning-materials</code>), Teacher (<code>/teacher/learning-materials</code>), and Student/Authorized Member (<code>/learning-materials</code>) portals backed by <code>material_categories</code>, <code>learning_materials</code>, <code>material_share_links</code>, <code>material_access_logs</code>, and <code>video_progress</code>.</li>
+  <li><strong>Private Storage &amp; Range Streaming:</strong> Files are stored privately on <code>Storage::disk("local")</code> (<code>storage/app/private</code>) and streamed via 64 KB HTTP <code>206 Partial Content</code> chunks or served inline to PDF.js. Expiring a material blocks non-admin access (<code>410</code>/<code>403</code>) without deleting the stored video or record.</li>
+  <li><strong>Granular Access &amp; Download Controls:</strong> Admin can grant/revoke <code>lms_video_access</code>, <code>lms_pdf_access</code>, and <code>lms_can_upload_materials</code> individually or in bulk (Selected Checkboxes, Role, Student Class, All Members). When <code>allow_download</code> is OFF, downloads return <code>403</code>, native browser download menus are replaced with custom controls, and browser-side capture deterrents apply.</li>
+  <li><strong>Notifications &amp; Session Hardening:</strong> Added <code>/notifications</code> and <code>/notifications/{id}</code> detail views with host-independent role-aware action links (<code>NotificationController::resolveActionUrl()</code>), <code>SESSION_LIFETIME=480</code>, and graceful <code>419</code> redirects.</li>
+  <li><strong>Finance &amp; Guardian Synchronization:</strong> <code>InstitutionAdmin\StudentController@show</code> excludes <code>cancelled</code> and <code>draft</code> invoices from <code>invoicesSummary</code>; <code>SendInvoiceIssuedNotification</code> and <code>SendPaymentReceivedNotification</code> notify both students and linked guardians.</li>
+  <li><strong>Verification:</strong> 68 PHPUnit tests (625 assertions) passed across Learning Materials, Notifications, Roles, and Finance suites.</li>
+</ul>
 </body>
 </html>

@@ -25,13 +25,19 @@ class CafeteriaController extends Controller
     public function index(): View
     {
         $items = CafeteriaItem::withoutGlobalScope(BranchOwned::class)
-            ->with(['inventoryItem.branch', 'branch'])
+            ->with([
+                'inventoryItem' => fn ($q) => $q->withoutGlobalScope(BranchOwned::class)->with('branch'),
+                'branch',
+            ])
             ->orderByDesc('updated_at')
             ->latest('id')
             ->get();
 
         $orders = CafeteriaOrder::query()
-            ->with(['student.user', 'items.cafeteriaItem'])
+            ->with([
+                'student' => fn ($q) => $q->withoutGlobalScope(BranchOwned::class)->with('user'),
+                'items.cafeteriaItem' => fn ($q) => $q->withoutGlobalScope(BranchOwned::class),
+            ])
             ->orderByDesc('updated_at')
             ->latest('id')
             ->paginate(25)

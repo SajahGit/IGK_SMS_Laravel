@@ -178,3 +178,13 @@
 **Checklist Created:** IGK_SCHOOL_ERP_MANUAL_FUNCTIONAL_TEST_CHECKLIST.md  
 **Status:** Ready for manual execution
 
+
+
+---
+
+## Secure Video & PDF Learning Materials & Notifications Checklist
+- [ ] **Admin Upload & Expiry**: Upload a Video and PDF in `/admin/learning-materials`, toggle `allow_download` OFF, trigger `Expire Now`, and verify the file remains in `storage/app/private` while non-admin access & share links return `410`/`403`.
+- [ ] **Member & Bulk Access**: Grant/revoke Video-only or PDF-only access by Checkbox, Role, or Student Class; verify live search-as-you-type works without losing cursor focus.
+- [ ] **Teacher Restrictions**: Verify permitted teacher uploads appear in the Common Library, while other teachers' materials and Admin download/expiry controls cannot be modified.
+- [ ] **Student Player & PDF Viewer**: Verify video resume prompt, speed dropdown (`0.5x–2.0x`), custom controls when download is OFF, and PDF.js page/zoom controls.
+- [ ] **Notifications**: Trigger an invoice/payment/material notification, click it in the top-bar bell dropdown, verify `/notifications/{id}` opens, and verify **Open Related Page** navigates on the active host.

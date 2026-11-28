@@ -148,12 +148,13 @@ class StudentController extends Controller
             'percentage' => $attendanceTotal > 0 ? round(($attendancePresent / $attendanceTotal) * 100, 1) : 0,
         ];
 
-        $totalBilled = $student->invoices->sum('total');
-        $totalPaid = $student->invoices->sum('amount_paid');
+        $billableInvoices = $student->invoices->whereNotIn('status', ['cancelled', 'draft']);
+        $totalBilled = $billableInvoices->sum('total');
+        $totalPaid = $billableInvoices->sum('amount_paid');
         $invoicesSummary = [
             'total_billed' => $totalBilled,
             'total_paid' => $totalPaid,
-            'balance' => $totalBilled - $totalPaid,
+            'balance' => $billableInvoices->sum('balance'),
         ];
 
         $availableBranches = Branch::withoutGlobalScopes()

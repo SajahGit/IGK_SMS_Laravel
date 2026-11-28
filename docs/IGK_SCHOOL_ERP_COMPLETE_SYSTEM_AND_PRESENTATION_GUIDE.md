@@ -820,3 +820,10 @@ The platform has achieved 100% resolution across all major blockers, audited und
 * **Multi-Branch Cafeteria & Stock Governance (BUG-010 & BUG-012):** Central and campus inventory linking, 1-click fresh stock provisioning, and inline stock replenishment.
 * **Night-Mode Immune Physical Printing (BUG-014):** Standardized `@page { size: A4 portrait; margin: 10mm 12mm; }` across all printable PDFs, eliminating page clipping and horizontal stretch.
 * **Delivery Packages Hosted in `G:\ALL DOCS\packages\`:** Standalone ZIP archives for all 5 team engineering domains and 1 shared core foundation are maintained in `G:\ALL DOCS\packages\`, keeping the repository lightweight and exclusively containing system-related source code.
+
+
+---
+
+## 2026-11-28 Module & Synchronization Addendum
+- **Secure Video & PDF Learning Materials**: Added Common Learning Materials Library across Admin, Teacher, and Student portals with private storage, Range `206` streaming, PDF.js viewer, `allow_download` enforcement, non-destructive expiry, SHA-256 `/secure-material/{token}` links, and bulk Video/PDF access controls.
+- **Notifications & Finance Sync**: Added `/notifications` + `/notifications/{notification}` detail view with host-independent role-aware links, Guardian notifications on invoice issue & payment receipt, and excluded `cancelled`/`draft` invoices from `StudentController@show` `invoicesSummary`.

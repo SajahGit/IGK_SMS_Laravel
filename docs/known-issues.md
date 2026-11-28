@@ -135,3 +135,10 @@ The full codebase is structured into 5 isolated domains and 1 shared foundation 
 * `HASFA_REPORTS_PACKAGE.zip` (11 Master Reports & LMS - 37 items)
 * `SHILFA_FINANCE_PACKAGE.zip` (Finance & Accounting - 70 items)
 * `CORE_SHARED_SYSTEM_PACKAGE.zip` (Shared Laravel Base - 20 items)
+
+
+---
+
+## Learning Materials Capture Deterrent Note (2026-11-28)
+- **Browser-Based Screenshot/Recording Deterrents**: When `allow_download` is OFF, the LMS removes native browser download menus, disables right-click/PiP, overlays a user watermark, and activates a blackout shield on tab/window blur and common capture/print shortcuts. However, web browsers cannot 100% prevent OS-level screen recording tools or external cameras.
+- **PHP Upload Size Limits**: Default local `php.ini` (`upload_max_filesize=64M`, `post_max_size=64M`) caps video uploads at 64 MB unless raised in server configuration.

@@ -25,7 +25,9 @@ class TermResultsPublished extends Notification
             'body' => $this->term->name.' results are now available for '.$this->schoolClass->full_name.'.',
             'term_id' => $this->term->id,
             'class_id' => $this->schoolClass->id,
-            'url' => url('/'),
+            'url' => in_array(strtolower((string) ($notifiable->role ?? '')), ['parent', 'guardian'], true)
+                ? route('guardian.dashboard', [], false)
+                : route('student.results', [], false),
             'published_at' => now()->toIso8601String(),
         ];
     }

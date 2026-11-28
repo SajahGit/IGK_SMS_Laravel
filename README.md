@@ -186,3 +186,12 @@ All operational and architectural documentation files are maintained inside the 
 - [Local Developer Setup Guide](./docs/README-SETUP.md)
 - [Manual Functional Test Checklist](./docs/IGK_SCHOOL_ERP_MANUAL_FUNCTIONAL_TEST_CHECKLIST.md)
 - [Known Issues & Bug Register](./docs/known-issues.md)
+
+
+---
+
+## Recent Modules & Synchronization Updates (2026-11-28)
+
+- **Secure Video & PDF Learning Materials (`/admin/learning-materials`, `/teacher/learning-materials`, `/learning-materials`)**: Common Learning Materials Library (no assignment system) with private `local` disk storage (`storage/app/private`), HTTP Range `206` chunked video streaming, PDF.js viewer, per-material `allow_download` enforcement, non-destructive expiry (files preserved on disk; access/share links expire), SHA-256 hashed `/secure-material/{token}` links, and granular per-user / bulk **Video Access**, **PDF Access**, and **Upload Permission** controls.
+- **Notifications & Session Hardening**: Added `/notifications` and `/notifications/{notification}` detail views with host-independent role-aware action routing, Guardian notifications on `InvoiceIssued` and `PaymentRecorded`, `SESSION_LIFETIME=480`, and graceful `419` session-expiry redirects.
+- **Compact & Full Seeding**: Added `CompactDemoSeeder` (`php artisan migrate:fresh --seed --seeder=CompactDemoSeeder`) and included `LearningMaterialsDemoSeeder` in `FullSampleDataSeeder`.

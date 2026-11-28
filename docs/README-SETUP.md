@@ -206,3 +206,13 @@ DROP DATABASE `replace_with_confirmed_unused_database_name`;
 ## 9. Team ownership மற்றும் ZIP
 
 Module பிரிவு [IGK_ERP_TEAM_MODULE_OWNERSHIP_MATRIX.md](./IGK_ERP_TEAM_MODULE_OWNERSHIP_MATRIX.md)-ல். ZIP-ல் source, manifests, `.env.example`, guides, migrations, seeders, tests மட்டும் சேர்க்கவும். `.env`, DB dump, `vendor`, `node_modules`, `public\build`, `storage\logs`, generated cache-ஐ சேர்க்க வேண்டாம்.
+
+
+---
+
+## Compact Demo Seeding & Session Configuration
+
+- **Full Demo Data (All Modules):** `php artisan migrate:fresh --seed` (`FullSampleDataSeeder`, includes `LearningMaterialsDemoSeeder`).
+- **Compact Demo Data (Fast Minimal Dataset):** `php artisan migrate:fresh --seed --seeder=CompactDemoSeeder`.
+- **Session Lifetime:** `.env` uses `SESSION_LIFETIME=480` (8 hours) with graceful `419` / `TokenMismatchException` redirect handling in `bootstrap/app.php`.
+- **Private Media Storage:** Learning materials (videos, PDFs, thumbnails) are stored on Laravel's `local` disk (`storage/app/private`) and served exclusively via authenticated controller routes.

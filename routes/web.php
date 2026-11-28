@@ -77,6 +77,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/password/change', [PasswordChangeController::class, 'showChangeForm'])->name('password.change');
     Route::post('/password/change', [PasswordChangeController::class, 'update'])->name('password.change.update');
     Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
+    Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+    Route::get('/notifications/{notification}', [NotificationController::class, 'show'])->name('notifications.show');
     Route::post('/notifications/{notification}/read', [NotificationController::class, 'read'])->name('notifications.read');
     Route::post('/notifications/read-all', [NotificationController::class, 'readAll'])->name('notifications.read-all');
 
@@ -93,6 +95,17 @@ Route::middleware('auth')->group(function () {
     Route::post('/branch-context', [BranchController::class, 'switchContext'])->name('branch-context');
     Route::get('/my-attendance', [\App\Http\Controllers\Teacher\ProfileController::class, 'myAttendance'])->name('my-attendance');
     Route::get('/my-profile', [\App\Http\Controllers\Teacher\ProfileController::class, 'show'])->name('my-profile');
+
+    // ---- Secure Video & PDF Delivery, Progress & Share Links ----
+    Route::get('/learning-materials', [\App\Http\Controllers\Student\LearningMaterialController::class, 'index'])->name('learning-materials.library');
+    Route::get('/learning-materials/{material}/view', [\App\Http\Controllers\Student\LearningMaterialController::class, 'show'])->name('learning-materials.view');
+    Route::get('/learning-materials/{material}/stream', [\App\Http\Controllers\LearningMaterialDeliveryController::class, 'stream'])->name('learning-materials.stream');
+    Route::get('/learning-materials/{material}/thumbnail', [\App\Http\Controllers\LearningMaterialDeliveryController::class, 'thumbnail'])->name('learning-materials.thumbnail');
+    Route::get('/learning-materials/{material}/download', [\App\Http\Controllers\LearningMaterialDeliveryController::class, 'download'])->name('learning-materials.download');
+    Route::post('/learning-materials/{material}/progress', [\App\Http\Controllers\LearningMaterialDeliveryController::class, 'saveProgress'])->name('learning-materials.progress');
+    Route::get('/secure-material/{token}', [\App\Http\Controllers\LearningMaterialDeliveryController::class, 'openShareLink'])
+        ->middleware('throttle:60,1')
+        ->name('secure-material.show');
 });
 
 // ---- Each module has its own route file (one owner per file) ----

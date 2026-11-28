@@ -7,3 +7,10 @@ The shared dropdown behavior, safe database instructions, and current verificati
 The application-owned documentation inventory contains 62 Markdown files after adding this guide, excluding generated dependencies and vendored packages. Historical/archive reports and unrelated setup/team guides were left unchanged to preserve their original context; this update covers documents relevant to shared UI, dropdown behavior, or QA status rather than inserting identical notes into every unrelated file.
 
 The update does not claim that every authenticated page or all eight role-specific dropdowns were browser-tested. The shared regression is PASS; role-page coverage remains incomplete as recorded in `QA/Final-Reports/STAGE4_BROWSER_TESTING_REPORT.md`.
+
+
+---
+
+## 2026-11-28 Documentation & PDF Sync Update
+- Updated `README.md`, `docs/README.md`, `docs/README-SETUP.md`, `docs/architecture.md`, `docs/guides/{admin,teacher,student}.md`, `docs/TEAM/*.md`, `docs/IGK_SCHOOL_ERP_COMPLETE_SYSTEM_AND_PRESENTATION_GUIDE.md`, `docs/IGK_SCHOOL_ERP_MANUAL_FUNCTIONAL_TEST_CHECKLIST.md`, `docs/known-issues.md`, and `QA/` reports.
+- Regenerated `docs/IGK_ERP_COMPLETE_SYSTEM_DOCUMENTATION.pdf` and `docs/IGK_ERP_MODULES_AND_LOGICS_MASTER_REFERENCE.pdf`.

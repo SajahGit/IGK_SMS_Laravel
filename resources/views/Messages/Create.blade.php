@@ -71,7 +71,7 @@
                         </div>
 
                         <!-- Selected Recipient Confirmation Banner -->
-                        <div id="selectedRecipientBanner" class="alert alert-success border-success-subtle bg-success-subtle text-success py-2 px-3 mb-3 d-flex justify-content-between align-items-center" style="display: none;">
+                        <div id="selectedRecipientBanner" class="alert alert-success border-success-subtle bg-success-subtle text-success py-2 px-3 mb-3 d-none justify-content-between align-items-center">
                             <div class="d-flex align-items-center gap-2">
                                 <i class="bi bi-check-circle-fill fs-5"></i>
                                 <div>
@@ -334,7 +334,8 @@ document.addEventListener('DOMContentLoaded', function () {
             selectedBannerName.textContent = member.name;
             selectedBannerRole.textContent = member.roleLabel;
             selectedBannerMeta.textContent = member.meta;
-            selectedBanner.style.display = 'flex';
+            selectedBanner.classList.remove('d-none');
+            selectedBanner.classList.add('d-flex');
             searchInput.value = member.name;
         }
         resultsPanel.style.display = 'none';
@@ -382,7 +383,8 @@ document.addEventListener('DOMContentLoaded', function () {
         if (this.value) {
             selectRecipient(this.value);
         } else {
-            selectedBanner.style.display = 'none';
+            selectedBanner.classList.add('d-none');
+            selectedBanner.classList.remove('d-flex');
         }
     });
 

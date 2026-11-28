@@ -83,3 +83,12 @@ Guardians have centralized visibility over all their registered children across 
 3. **Academic Monitoring**: Review report cards, exam marks, and teacher remarks.
 4. **Fee Management**: Review invoices for all children, view consolidated family fee balances, and download official receipts.
 5. **Direct Teacher Contact**: Message class teachers directly regarding student progress or attendance justifications.
+
+
+---
+
+## 7. Common Learning Materials Library (`/learning-materials`)
+1. Browse, live-search, and filter active Videos and PDFs according to your assigned permissions (`lms_video_access` / `lms_pdf_access`).
+2. **Video Player**: Supports resume-from-last-position (`video_progress`), Continue Watching, playback speed (`0.5x–2.0x`), fullscreen, and volume. When download is OFF, native download menus are hidden and browser-side capture deterrents apply.
+3. **PDF Viewer**: Built-in PDF.js viewer with page navigation and zoom controls.
+4. **Notifications**: Click any bell notification to view its full details (`/notifications/{id}`) and jump to the related invoice, result, message, or material page.

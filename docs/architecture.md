@@ -195,3 +195,18 @@ The platform enforces strict administrative multi-factor security:
 | No General Ledger/Chart of Accounts | SOP excludes double-entry accounting from MVP |
 | No SMS/email gateway | Post-MVP; announcements cover communication need |
 | Telescope dev-only | Must not be installed in production (`--dev`, `TELESCOPE_ENABLED=false`) |
+
+
+---
+
+## Secure Video & PDF Learning Materials Architecture
+
+| Component | Implementation |
+|---|---|
+| Tables | `material_categories`, `learning_materials`, `material_share_links`, `material_access_logs`, `video_progress`, plus `users.lms_material_access`, `users.lms_video_access`, `users.lms_pdf_access`, `users.lms_can_upload_materials` |
+| Private Storage | `Storage::disk('local')` (`storage/app/private/learning_materials/...`); no public symlink URLs |
+| Video Streaming | 64 KB chunked HTTP `206 Partial Content` Range streaming via `LearningMaterialService::streamVideo()` |
+| PDF Delivery | Inline authenticated response via `streamPdfInline()` rendered with PDF.js + iframe fallback |
+| Expiry Policy | Setting `expiry_enabled` / `expires_at` or triggering `expire-now` blocks non-admin library & share-link access (`410`/`403`) **without** deleting the underlying file or DB record |
+| Share Links | Cryptographically random token stored as SHA-256 `token_hash`; `/secure-material/{token}` always enforces login, active account, type permission, non-revoked, and non-expired checks |
+| Notifications | `NotificationController::resolveActionUrl()` normalizes stored URLs to the current host and routes by notification class + user role; `SendInvoiceIssuedNotification` and `SendPaymentReceivedNotification` notify both student and guardian |

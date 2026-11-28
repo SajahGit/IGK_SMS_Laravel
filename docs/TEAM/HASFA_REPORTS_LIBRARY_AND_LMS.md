@@ -96,3 +96,10 @@ Hasfa owns data analytics, statutory compliance reporting, document exports, the
 # Run all reports parity, CSV streaming, and PDF generation tests
 php vendor/bin/phpunit tests/Feature/ReportsParityTest.php tests/Feature/StudentRegisterExportTest.php tests/Feature/PdfDocumentsTest.php tests/Feature/Phase5AnnouncementsAuditReportsTest.php
 ```
+
+
+---
+
+## Secure Video & PDF Learning Materials Update (2026-11-28)
+- Added `LearningMaterialService`, `InstitutionAdmin\LearningMaterialController`, `Teacher\LearningMaterialController`, `Student\LearningMaterialController`, and `LearningMaterialDeliveryController`.
+- Implemented private `local` disk storage (`storage/app/private`), 64 KB HTTP `206` Range streaming, PDF.js viewer, `allow_download` enforcement, non-destructive expiry (files kept on disk; access/share links blocked), SHA-256 `/secure-material/{token}` links, live search-as-you-type, and per-user/bulk Video & PDF access permissions.

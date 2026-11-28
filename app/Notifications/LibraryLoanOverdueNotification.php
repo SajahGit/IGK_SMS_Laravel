@@ -23,7 +23,7 @@ class LibraryLoanOverdueNotification extends Notification
             'body' => '"'.$title.'" was due on '.$this->loan->due_at->toDateString()
                 .'. Please return it to avoid fines.',
             'loan_id' => $this->loan->id,
-            'url' => url('/'),
+            'url' => route('library.loans.index', [], false),
         ];
     }
 }

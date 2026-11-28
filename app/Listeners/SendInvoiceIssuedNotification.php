@@ -11,9 +11,14 @@ class SendInvoiceIssuedNotification
     public function handle(InvoiceIssued $event): void
     {
         try {
-            $studentUser = $event->invoice->student?->user;
+            $student = $event->invoice->student;
+            $studentUser = $student?->user;
             if ($studentUser) {
                 $studentUser->notify(new InvoiceIssuedNotification($event->invoice));
+            }
+            $guardianUser = $student?->guardian?->user;
+            if ($guardianUser && $guardianUser->id !== $studentUser?->id) {
+                $guardianUser->notify(new InvoiceIssuedNotification($event->invoice));
             }
         } catch (Throwable $exception) {
             report($exception);

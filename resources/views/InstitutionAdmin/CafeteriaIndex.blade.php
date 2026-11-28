@@ -249,24 +249,28 @@
                         @endif
                     </td>
                     <td>
-                        <div class="d-flex align-items-center gap-2">
-                            <span class="fw-bold fs-6 {{ $item->inventoryItem->quantity_on_hand <= $item->inventoryItem->reorder_level ? 'text-danger' : 'text-dark' }}">
-                                {{ $item->inventoryItem->quantity_on_hand }} {{ $item->inventoryItem->unit }}
-                            </span>
-                            @if ($item->inventoryItem->branch)
-                                <span class="badge bg-light text-secondary border small">{{ $item->inventoryItem->branch->name }}</span>
-                            @else
-                                <span class="badge bg-light text-secondary border small">Central</span>
-                            @endif
-                        </div>
-                        {{-- Quick Restock Form --}}
-                        <form method="POST" action="{{ route('admin.cafeteria.stock.restock', $item->inventory_item_id) }}" class="d-flex align-items-center gap-1 mt-1">
-                            @csrf
-                            <input type="number" name="quantity" min="1" max="10000" class="form-control form-control-sm" style="width: 75px;" placeholder="+qty" required>
-                            <button type="submit" class="btn btn-sm btn-outline-success py-0 px-2" title="Quickly add fresh stock">
-                                <i class="bi bi-plus-lg"></i> Restock
-                            </button>
-                        </form>
+                        @if ($item->inventoryItem)
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="fw-bold fs-6 {{ $item->inventoryItem->quantity_on_hand <= $item->inventoryItem->reorder_level ? 'text-danger' : 'text-body' }}">
+                                    {{ $item->inventoryItem->quantity_on_hand }} {{ $item->inventoryItem->unit }}
+                                </span>
+                                @if ($item->inventoryItem->branch)
+                                    <span class="badge bg-body-secondary text-secondary border small">{{ $item->inventoryItem->branch->name }}</span>
+                                @else
+                                    <span class="badge bg-body-secondary text-secondary border small">Central</span>
+                                @endif
+                            </div>
+                            {{-- Quick Restock Form --}}
+                            <form method="POST" action="{{ route('admin.cafeteria.stock.restock', $item->inventory_item_id) }}" class="d-flex align-items-center gap-1 mt-1">
+                                @csrf
+                                <input type="number" name="quantity" min="1" max="10000" class="form-control form-control-sm" style="width: 75px;" placeholder="+qty" required>
+                                <button type="submit" class="btn btn-sm btn-outline-success py-0 px-2" title="Quickly add fresh stock">
+                                    <i class="bi bi-plus-lg"></i> Restock
+                                </button>
+                            </form>
+                        @else
+                            <span class="text-muted small">Inventory item unavailable</span>
+                        @endif
                     </td>
                     <td>
                         <span class="fw-semibold text-success">{{ number_format((float) $item->price, 2) }}</span>

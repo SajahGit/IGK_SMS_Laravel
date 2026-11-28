@@ -55,3 +55,8 @@ Route::get('/lms/courses/{course}', [LmsController::class, 'show'])->name('lms.c
 Route::get('/lms/courses/{course}/materials/{material}/download', [LmsController::class, 'downloadMaterial'])->name('lms.materials.download');
 Route::post('/lms/courses/{course}/assignments/{assignment}/submission', [LmsController::class, 'submit'])
     ->name('lms.submissions.store');
+
+Route::prefix('learning-materials')->name('learning-materials.')->group(function () {
+    Route::get('/', [\App\Http\Controllers\Student\LearningMaterialController::class, 'index'])->name('index');
+    Route::get('/{material}', [\App\Http\Controllers\Student\LearningMaterialController::class, 'show'])->name('show');
+});

@@ -33,7 +33,9 @@ class InvoiceOverdueNotification extends Notification
             'body' => 'Invoice '.$this->invoice->invoice_no.' has an outstanding balance of '
                 .Money::format($this->invoice->balance).' (due '.$this->invoice->due_date->toDateString().').',
             'invoice_id' => $this->invoice->id,
-            'url' => url('/'),
+            'url' => in_array(strtolower((string) ($notifiable->role ?? '')), ['parent', 'guardian'], true)
+                ? route('guardian.invoices', [], false)
+                : route('student.invoices', [], false),
         ];
     }
 }

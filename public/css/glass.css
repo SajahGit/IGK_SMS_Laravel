@@ -925,3 +925,19 @@ td.text-muted.text-center { padding: 2rem 1rem !important; }
 .sidebar, .topbar { background: var(--glass-bg-strong); }
 .sidebar-backdrop { background: rgba(5, 10, 14, .6); }
 .table-responsive { contain: none; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+/* ---------- Notification dropdown viewport alignment & glass-card ---------- */
+.topbar .notification-dropdown-menu {
+    right: 0 !important;
+    left: auto !important;
+    top: calc(100% + 8px) !important;
+    transform: none !important;
+    width: min(360px, calc(100vw - 24px)) !important;
+    min-width: 280px !important;
+}
+.glass-card {
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius);
+    box-shadow: var(--glass-shadow), inset 0 1px 0 var(--glass-highlight);
+}

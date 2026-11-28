@@ -161,3 +161,11 @@ php vendor/bin/phpunit tests/Feature/SuperAdminAllCampusesTest.php tests/Feature
 # Test Users Search and Filter
 php artisan test --filter=RoleLoginVerificationTest
 ```
+
+
+---
+
+## Governance, Notifications & Session Updates (2026-11-28)
+- **Admin Video & PDF Governance**: Global toggles (`enabled`, `student_access`, `teacher_uploads`, `teacher_video_uploads`, `teacher_pdf_uploads`) and per-member/bulk (`selected`, `role`, `class`, `all`) Video/PDF/Upload permissions.
+- **Notifications**: Added `/notifications` and `/notifications/{notification}` with `NotificationController::resolveActionUrl()` normalizing stale `localhost` URLs to the active host and routing by notification type + user role; top-bar dropdown fixed in `public/css/glass.css` to prevent viewport clipping.
+- **Session Hardening**: `SESSION_LIFETIME=480` and graceful `419` / `TokenMismatchException` redirect handling in `bootstrap/app.php`.

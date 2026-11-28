@@ -20,6 +20,7 @@ class FullSampleDataSeeder extends Seeder
         $this->call(LibraryBranchDemoSeeder::class);   // branch-visible library loans and fines
         $this->call(CafeteriaStudentDemoSeeder::class); // branch-visible menu and orders for the demo student
         $this->call(TeacherLearningDemoSeeder::class); // demo exams, course modules and past-paper PDFs
+        $this->call(LearningMaterialsDemoSeeder::class); // secure video & PDF learning materials
         $this->call(ExtendedScopeDemoSeeder::class);   // pending online payment, biometric events and expired API token
     }
 }

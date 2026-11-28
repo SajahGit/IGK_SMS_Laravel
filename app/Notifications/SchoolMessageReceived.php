@@ -27,7 +27,7 @@ class SchoolMessageReceived extends Notification
         return [
             'title' => 'Private message from ' . $senderName . ' (' . $senderRole . ')',
             'body' => Str::limit($latestMessage?->body ?? 'You received a new private message.', 90),
-            'url' => route('messages.show', $this->conversation),
+            'url' => route('messages.show', $this->conversation, false),
         ];
     }
 }
